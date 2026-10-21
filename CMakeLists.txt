@@ -44,8 +44,10 @@ add_library(daylight_airwindows STATIC
     ${DAYLIGHT_EFFECT_SOURCES})
 target_include_directories(daylight_airwindows SYSTEM PUBLIC third_party/airwin_consolidated)
 # The original Airwindows code is compiled as-is (no changes, no warnings shown).
+# The original code uses M_PI etc. MSVC only provides those with _USE_MATH_DEFINES.
+target_compile_definitions(daylight_airwindows PRIVATE _USE_MATH_DEFINES)
 if(MSVC)
-    target_compile_options(daylight_airwindows PRIVATE /w)
+    target_compile_options(daylight_airwindows PRIVATE /w /bigobj)
 else()
     target_compile_options(daylight_airwindows PRIVATE -w)
 endif()
