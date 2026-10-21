@@ -368,6 +368,12 @@ void testPresets()
     check (! store.rename (store.fileFor (info, "Preset 2"), "Warm Tape", renamed), "rename onto existing refused");
     check (store.rename (store.fileFor (info, "Preset 2"), "Bright", renamed) && renamed.existsAsFile(), "rename");
     check (store.rename (renamed, "BRIGHT", renamed) && renamed.getFileNameWithoutExtension() == "BRIGHT", "rename case only");
+    {
+        bool onDisk = false;
+        for (auto& f : store.list (info))
+            onDisk = onDisk || f.getFileNameWithoutExtension() == "BRIGHT";   // exact spelling, as the OS lists it
+        check (onDisk, "case-only rename visible on disk");
+    }
 
     check (PresetStore::remove (renamed) && ! renamed.existsAsFile(), "remove preset");
     check (store.list (info).size() == 2, "list after remove");

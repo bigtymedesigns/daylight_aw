@@ -155,7 +155,9 @@ bool PresetStore::rename (const juce::File& presetFile, const juce::String& newN
         return false;
 
     auto target = presetFile.getSiblingFile (clean + extension);
-    if (target == presetFile)
+    // Compare exact spelling: juce::File's == ignores case on Windows/macOS, which would turn
+    // a case-only rename ("Bright" -> "BRIGHT") into a silent no-op.
+    if (target.getFullPathName() == presetFile.getFullPathName())
     {
         renamed = presetFile;
         return true;
