@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "PluginEditor.h"
 #include "BinaryData.h"
 #include "Fonts.h"
@@ -424,10 +425,15 @@ public:
                 g.setColour (t.horizonColor.withMultipliedAlpha (t.horizonOpacity));
                 g.drawLine (20.0f, h - 63.0f, w - figW - 30.0f, h - 63.5f, 1.0f);
             }
-            if (t.figure.isValid())
+            // The figure sits in the bottom-right corner, but only when no group frame is there
+            // (a full last row would run through it).
+            const juce::Rectangle<float> figArea (w - figW, h - figH, figW, figH);
+            const bool figureFree = std::none_of (owner.frames.begin(), owner.frames.end(),
+                                                  [&] (const auto& f) { return f.bounds.intersects (figArea.reduced (8.0f)); });
+            if (t.figure.isValid() && figureFree)
             {
                 g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
-                g.drawImage (t.figure, juce::Rectangle<float> (w - figW, h - figH, figW, figH),
+                g.drawImage (t.figure, figArea,
                              juce::RectanglePlacement::xRight | juce::RectanglePlacement::yBottom | juce::RectanglePlacement::onlyReduceInSize);
             }
 
