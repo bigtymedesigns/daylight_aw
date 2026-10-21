@@ -1,0 +1,12 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Dither",
+      "controls": [
+        "Quant",
+        "DeRez"
+      ]
+    }
+  ]
+}

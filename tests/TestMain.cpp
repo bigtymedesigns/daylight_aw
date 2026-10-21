@@ -10,6 +10,8 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "gui/PluginEditor.h"
+
 #include "PluginProcessor.h"
 #include "gui/Layout.h"
 #include "gui/Settings.h"
@@ -277,6 +279,102 @@ void testState()
     }
 }
 
+
+// ---------------------------------------------------------------------------------------------
+void testPresets()
+{
+    std::cout << "Presets ..." << std::endl;
+    juce::TemporaryFile tempDir;
+    const auto root = tempDir.getFile();
+    root.createDirectory();
+    PresetStore store (root);
+
+    check (PresetStore::sanitiseName ("a/b:c*d") == "a b c d", "sanitise: illegal characters");
+    check (PresetStore::sanitiseName ("  ..hidden. ") == "hidden", "sanitise: dots and spaces");
+    check (PresetStore::sanitiseName ("CON") == "CON_", "sanitise: Windows reserved name");
+    check (PresetStore::sanitiseName ("  ").isEmpty(), "sanitise: empty");
+    check (PresetStore::sanitiseName (juce::String::repeatedString ("x", 100)).length() == 64, "sanitise: length limit");
+
+    const auto& info = *findEffect ("totape9");
+    auto p = makeProcessor();
+    p->selectEffect ("totape9");
+    auto* fx = p->getEffectHost();
+
+    std::vector<float> values;
+    for (int i = 0; i < fx->getNumParams(); ++i)
+        values.push_back (std::fmod (0.123f + 0.311f * (float) i, 1.0f));
+
+    check (store.save (info, "Warm Tape", fx->getParamNames(), values), "save preset");
+    check (store.save (info, "Preset 10", fx->getParamNames(), values), "save second preset");
+    check (store.save (info, "Preset 2", fx->getParamNames(), values), "save third preset");
+    check (! store.save (info, "", fx->getParamNames(), values), "refuse empty name");
+
+    auto files = store.list (info);
+    check (files.size() == 3, "list presets");
+    if (files.size() == 3)
+        check (files[0].getFileNameWithoutExtension() == "Preset 2" && files[1].getFileNameWithoutExtension() == "Preset 10",
+               "natural sort order");
+
+    PresetData data;
+    check (PresetStore::load (store.fileFor (info, "Warm Tape"), data), "load preset");
+    check (data.name == "Warm Tape" && data.effectId == "totape9", "preset name and effect");
+    check ((int) data.values.size() == fx->getNumParams(), "all values stored");
+
+    // apply: exact values, by name
+    check (p->applyPreset (data), "apply preset");
+    bool exact = true;
+    for (int i = 0; i < fx->getNumParams(); ++i)
+        exact = exact && p->getSlot (i).get() == values[(size_t) i];
+    check (exact, "preset values restored exactly");
+    check (p->getPresetName() == "Warm Tape" && ! p->isPresetModified(), "preset loaded, not modified");
+
+    p->getSlot (0).setValueNotifyingHost (0.9f);
+    check (p->isPresetModified(), "edit marks preset modified");
+
+    // session remembers preset name + modified state
+    juce::MemoryBlock mb;
+    p->getStateInformation (mb);
+    auto p2 = makeProcessor();
+    p2->setStateInformation (mb.getData(), (int) mb.getSize());
+    check (p2->getPresetName() == "Warm Tape" && p2->isPresetModified(), "session keeps preset name and '*'");
+
+    // unknown names ignored, missing names -> defaults
+    PresetData partial;
+    partial.name = "Partial";
+    partial.effectId = "totape9";
+    partial.values = { { "Input", 0.25f }, { "NoSuchParam", 0.9f } };
+    check (p->applyPreset (partial), "apply partial preset");
+    check (p->getSlot (0).get() == 0.25f, "named value applied");
+    check (p->getSlot (1).get() == fx->getDefault (1), "missing value -> effect default");
+
+    PresetData other = data;
+    other.effectId = "galactic";
+    check (! p->applyPreset (other), "refuse preset of another effect");
+
+    // reset clears the preset name
+    p->resetToDefaults();
+    check (p->getPresetName().isEmpty(), "reset clears preset name");
+
+    // broken / foreign files
+    auto broken = root.getChildFile ("broken.dlpreset");
+    broken.replaceWithText ("{ not json");
+    check (! PresetStore::load (broken, data), "broken file rejected");
+    broken.replaceWithText ("{\"hello\": 1}");
+    check (! PresetStore::load (broken, data), "foreign json rejected");
+    check (! PresetStore::load (root.getChildFile ("missing.dlpreset"), data), "missing file rejected");
+
+    // rename
+    juce::File renamed;
+    check (! store.rename (store.fileFor (info, "Preset 2"), "Warm Tape", renamed), "rename onto existing refused");
+    check (store.rename (store.fileFor (info, "Preset 2"), "Bright", renamed) && renamed.existsAsFile(), "rename");
+    check (store.rename (renamed, "BRIGHT", renamed) && renamed.getFileNameWithoutExtension() == "BRIGHT", "rename case only");
+
+    check (PresetStore::remove (renamed) && ! renamed.existsAsFile(), "remove preset");
+    check (store.list (info).size() == 2, "list after remove");
+
+    root.deleteRecursively();
+}
+
 void testLayouts()
 {
     std::cout << "Layouts ..." << std::endl;
@@ -333,9 +431,12 @@ void renderSnapshots (const juce::File& dir)
     {
         settings->setTheme (theme);
 
-        auto shoot = [&] (DaylightProcessor& p, const juce::String& name)
+        auto shoot = [&] (DaylightProcessor& p, const juce::String& name, bool settingsOpen = false)
         {
             std::unique_ptr<juce::AudioProcessorEditor> ed (p.createEditor());
+            if (settingsOpen)
+                if (auto* d = dynamic_cast<DaylightEditor*> (ed.get()))
+                    d->showSettingsPanel();
             auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 1.0f);
             juce::PNGImageFormat png;
             auto f = dir.getChildFile (name + "_" + toString (theme) + ".png");
@@ -354,6 +455,33 @@ void renderSnapshots (const juce::File& dir)
             p->selectEffect (e.id);
             shoot (*p, e.id);
         }
+
+        {
+            // presets + settings panel, with a few presets (in a temporary folder)
+            juce::TemporaryFile tempDir;
+            PresetStore::setDefaultRootForTesting (tempDir.getFile());
+            auto p = makeProcessor();
+            p->selectEffect ("totape9");
+            auto* fx = p->getEffectHost();
+            std::vector<float> v;
+            for (int i = 0; i < fx->getNumParams(); ++i)
+                v.push_back (p->getSlot (i).get());
+            PresetStore store (PresetStore::defaultRoot());
+            for (auto n : { "Warm Tape", "Bright Bus", "Lo-fi Cassette" })
+                store.save (fx->getInfo(), n, fx->getParamNames(), v);
+            PresetData d;
+            PresetStore::load (store.fileFor (fx->getInfo(), "Warm Tape"), d);
+            p->applyPreset (d);
+            p->getSlot (0).setValueNotifyingHost (0.8f);
+            shoot (*p, "zz_totape9_settings", true);
+
+            auto small = makeProcessor();
+            small->selectEffect ("deess");
+            shoot (*small, "zz_deess_settings", true);
+
+            tempDir.getFile().deleteRecursively();
+            PresetStore::setDefaultRootForTesting ({});
+        }
     }
     settings->setTheme (originalTheme);
 }
@@ -367,6 +495,7 @@ int main (int argc, char* argv[])
     testPassThroughAndBypass();
     testState();
     testLayouts();
+    testPresets();
     testAllEffects();
 
     for (int i = 1; i + 1 < argc; ++i)

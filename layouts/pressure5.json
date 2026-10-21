@@ -1,0 +1,27 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Compressor",
+      "controls": [
+        {
+          "param": "Pressre",
+          "label": "Pressure"
+        },
+        "Speed",
+        {
+          "param": "Mewines",
+          "label": "Mewiness"
+        },
+        "PawClaw"
+      ]
+    },
+    {
+      "title": "Output",
+      "controls": [
+        "Output",
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

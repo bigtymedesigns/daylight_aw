@@ -54,6 +54,16 @@ Tick each line. Write down anything odd, with the effect name and what you did.
 - [ ] ConsoleXChannel: tabs 1/2/3 at the bottom switch pages
 - [ ] Sound changes as expected; no clicks when moving controls (other than what the effect itself does)
 
+### Presets
+- [ ] Settings panel (click the effect name): "Save preset" asks for a name; Enter saves, Esc cancels
+- [ ] The menu bar shows "ToTape9 · My preset"; moving a knob adds "*"; loading the preset again removes it
+- [ ] Saving with an existing name asks "Replace it?" first
+- [ ] Right-click a preset: Rename, Move to trash, Show in folder all work
+- [ ] Presets are per effect: a DeEss instance doesn't list ToTape9 presets
+- [ ] A preset saved in one instance shows up in another instance of the same effect (reopen the panel)
+- [ ] Save the project with a preset loaded and edited, reopen: the name and the "*" are back
+- [ ] Files are in `Documents\big_tyme_designs\Daylight_aw\Presets\<Effect>\` and open in a text editor
+
 ### Host integration
 - [ ] The REAPER parameter list (the "Param" button) shows the effect's real parameter names
 - [ ] Automation: write automation for 2 controls, play back; the knobs move

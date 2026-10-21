@@ -1,0 +1,41 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Cabinet",
+      "controls": [
+        {
+          "param": "CabType",
+          "label": "Type"
+        },
+        {
+          "param": "CabSize",
+          "label": "Size"
+        },
+        {
+          "param": "OffAxis",
+          "label": "Off-axis"
+        }
+      ]
+    },
+    {
+      "title": "Room",
+      "controls": [
+        {
+          "param": "Intense",
+          "label": "Intensity"
+        },
+        {
+          "param": "Rm Loud",
+          "label": "Room"
+        }
+      ]
+    },
+    {
+      "title": "Output",
+      "controls": [
+        "Output"
+      ]
+    }
+  ]
+}

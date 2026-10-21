@@ -1,4 +1,4 @@
-# Daylight_aw build spec (v0.1, Stage A)
+# Daylight_aw build spec (v0.2)
 
 ## Identity
 
@@ -84,6 +84,17 @@ unchanged. Broken data is ignored.
 - **Static drawing.** Paper, figure, horizon, frames and titles are cached in one image, so idle
   CPU is close to zero.
 
+## User presets
+
+- One JSON file per preset: `Documents/big_tyme_designs/Daylight_aw/Presets/<Effect name>/<Preset>.dlpreset`.
+- Contents: format, plugin, effect id, effect name, effect version, and `values` as a list of {name, value 0..1}.
+- On load, values are matched by parameter name. Unknown names are ignored; missing ones get the effect default.
+- Trims, bypass and A/B are not stored. A preset loads into the active A/B slot.
+- Writes are atomic. Names are sanitised for Windows and macOS (illegal characters, reserved names, 64 characters).
+- Delete moves the file to the system trash.
+- The menu bar shows `Effect · Preset`, with `*` when any value differs from the loaded or saved preset.
+  The name and the snapshot are saved with the session.
+
 ## Data-driven pipeline
 
 `manifest/effects.json` → `tools/gen_effects.py` → `cmake/Effects.cmake` + `src/generated/EffectList.gen.cpp`.
@@ -104,7 +115,7 @@ CI fails if the generated files are stale (`--check`).
 
 - **A** (this build). Engine with all 21 V1 effects, selector, generic and 3 hand layouts, themes,
   zoom, trims, A/B, about, CI.
-- **B.** Hand-made layouts for all 21 V1 effects.
-- **C.** User presets (`.dlpreset`, per effect: save / rename / delete), polish.
+- **B** (done, v0.2). Hand-made layouts for all 21 V1 effects.
+- **C** (presets done, v0.2). User presets (`.dlpreset`, per effect: save / load / rename / trash). Next: polish from test feedback.
 - **D.** Release routine, upstream sync, signed/notarised Mac builds (optional, needs an Apple
   developer account).

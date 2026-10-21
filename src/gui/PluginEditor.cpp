@@ -12,6 +12,18 @@ constexpr int kRowsTop = 62, kRowH = 146, kGap = 10, kMargin = 12;
 constexpr float kSlotW = (float) (kWindowWidth - 2 * kMargin - (kControlsPerRow - 1) * kGap) / (float) kControlsPerRow;
 
 
+juce::String menuLabel (const DaylightProcessor& p)
+{
+    if (auto* fx = p.getEffectHost())
+    {
+        juce::String label (fx->getInfo().name);
+        if (p.getPresetName().isNotEmpty())
+            label << juce::String::fromUTF8 (" \xc2\xb7 ") << p.getPresetName() << (p.isPresetModified() ? "*" : "");
+        return label;
+    }
+    return p.hasUnknownEffect() ? p.getUnknownEffectId() : juce::String ("Choose effect");
+}
+
 juce::String layoutJsonFor (const juce::String& effectId)
 {
     int size = 0;
@@ -62,6 +74,21 @@ public:
 
         if (! ctx.processor.hasEffect() && ! ctx.processor.hasUnknownEffect())
             openSelector();
+
+        startTimerHz (5);   // keeps the "*" (preset edited) marker current
+    }
+
+    /** Processor sent a change: rebuild only when the effect itself changed, else just refresh. */
+    void processorChanged()
+    {
+        if (ctx.processor.getEffectHost() != builtHost || ctx.processor.hasUnknownEffect() != builtUnknown)
+        {
+            rebuild();
+            return;
+        }
+        refreshTopRow();
+        if (settingsPanel != nullptr)
+            settingsPanel->refresh();
     }
 
     ~Content() override { stopTimer(); }
@@ -76,6 +103,8 @@ public:
     // Called on effect change, theme change, page change.
     void rebuild()
     {
+        builtHost = ctx.processor.getEffectHost();
+        builtUnknown = ctx.processor.hasUnknownEffect();
         controls.clear();
         tabs.clear();
         frames.clear();
@@ -160,7 +189,7 @@ public:
         if (selector != nullptr)
             selector->setBounds (panelArea.withTrimmedBottom (getHeight() >= kLargeHeight ? 48 : 0));
         if (settingsPanel != nullptr)
-            settingsPanel->setBounds (panelArea.withHeight (juce::jmin (panelArea.getHeight(), 200)));
+            settingsPanel->setBounds (panelArea.withHeight (juce::jmin (panelArea.getHeight(), 300)));
         if (about != nullptr)
             about->setBounds (kMargin, 50, 300, 230);
         if (confirm != nullptr)
@@ -304,9 +333,7 @@ public:
             g.strokePath (p, juce::PathStrokeType (1.0f));
 
             auto& proc = owner.ctx.processor;
-            juce::String label = proc.hasEffect() ? juce::String (proc.getEffectHost()->getInfo().name)
-                               : proc.hasUnknownEffect() ? proc.getUnknownEffectId()
-                               : juce::String ("Choose effect");
+            const auto label = menuLabel (proc);
 
             auto trig = triggerArea();
             const bool open = owner.selector != nullptr || owner.settingsPanel != nullptr;
@@ -572,7 +599,19 @@ private:
         }
     }
 
-    void timerCallback() override {}
+    void timerCallback() override
+    {
+        const auto label = menuLabel (ctx.processor);
+        if (label != shownMenuLabel)
+        {
+            shownMenuLabel = label;
+            menuBar.repaint();
+        }
+    }
+
+    EffectHost* builtHost = nullptr;
+    bool builtUnknown = false;
+    juce::String shownMenuLabel;
 
     UiContext& ctx;
     EffectLayout layout;
@@ -648,6 +687,12 @@ void DaylightEditor::applyZoom()
     setSize (juce::roundToInt ((float) content->getWidth() * z), juce::roundToInt ((float) content->getHeight() * z));
 }
 
+void DaylightEditor::showSettingsPanel()
+{
+    if (content != nullptr && ctx.processor.hasEffect())
+        content->openSettings();
+}
+
 void DaylightEditor::resized()
 {
     if (content != nullptr)
@@ -658,7 +703,7 @@ void DaylightEditor::changeListenerCallback (juce::ChangeBroadcaster* source)
 {
     if (source == static_cast<juce::ChangeBroadcaster*> (&ctx.processor))
     {
-        content->rebuild();
+        content->processorChanged();
         applyZoom();
         return;
     }

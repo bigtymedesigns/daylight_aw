@@ -1,0 +1,18 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Compressor",
+      "controls": [
+        "Compress"
+      ]
+    },
+    {
+      "title": "Output",
+      "controls": [
+        "Output",
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

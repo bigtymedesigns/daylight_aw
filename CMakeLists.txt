@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum macOS version")
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Universal binary on macOS")
 
-project(Daylight_aw VERSION 0.1.0 LANGUAGES C CXX)
+project(Daylight_aw VERSION 0.2.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -89,6 +89,7 @@ set(DAYLIGHT_SOURCES
     src/dsp/EffectHost.cpp
     src/dsp/EffectRegistry.cpp
     src/generated/EffectList.gen.cpp
+    src/presets/PresetStore.cpp
     src/gui/Components.cpp
     src/gui/Fonts.cpp
     src/gui/Layout.cpp

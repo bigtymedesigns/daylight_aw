@@ -72,23 +72,47 @@ private:
 };
 
 // =============================================================================================
-/** Presets (left, coming in the next test build) + settings (right). */
-class SettingsPanel : public PanelBase
+/** Presets for this effect (left) + settings: zoom, theme, trims, reset, effect info. */
+class SettingsPanel : public PanelBase,
+                      private juce::ListBoxModel
 {
 public:
     SettingsPanel (UiContext& c, std::function<void()> onThemeOrZoomChanged);
+    ~SettingsPanel() override;
     void paint (juce::Graphics&) override;
     void resized() override;
     void refresh();
 
 private:
+    enum class NameMode { none, saving, renaming };
+
+    // presets
+    int getNumRows() override { return presetFiles.size(); }
+    void paintListBoxItem (int row, juce::Graphics&, int width, int height, bool selected) override;
+    void listBoxItemClicked (int row, const juce::MouseEvent&) override;
+    void rescanPresets();
+    void loadPreset (const juce::File&);
+    void showPresetMenu (const juce::File&);
+    void startNaming (NameMode, const juce::File& file = {});
+    void confirmName();
+    void stopNaming();
+
     std::function<void()> onChanged;
     juce::OwnedArray<PillButton> zoomButtons, themeButtons;
-    PillButton openThemeFolder, resetButton, infoButton, savePreset;
+    PillButton openThemeFolder, resetButton, infoButton, savePreset, nameOk, nameCancel;
     juce::Slider inTrim, outTrim;
     std::unique_ptr<juce::SliderParameterAttachment> inAttach, outAttach;
     bool showInfo = false;
     juce::Rectangle<int> left, right;
+
+    PresetStore store { PresetStore::defaultRoot() };
+    juce::Array<juce::File> presetFiles;
+    juce::ListBox presetList;
+    juce::TextEditor nameEditor;
+    NameMode nameMode = NameMode::none;
+    juce::File renamingFile;
+    bool confirmReplace = false;
+    juce::String message;
 };
 
 // =============================================================================================

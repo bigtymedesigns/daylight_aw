@@ -1,0 +1,24 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Head bump",
+      "controls": [
+        {
+          "param": "HeadBmp",
+          "label": "Bump"
+        },
+        {
+          "param": "HeadFrq",
+          "label": "Freq"
+        }
+      ]
+    },
+    {
+      "title": "Mix",
+      "controls": [
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

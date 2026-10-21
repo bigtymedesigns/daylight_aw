@@ -1,0 +1,13 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Clip",
+      "controls": [
+        "Boost",
+        "Ceiling",
+        "Mode"
+      ]
+    }
+  ]
+}

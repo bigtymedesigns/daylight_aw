@@ -306,6 +306,56 @@ void DaylightProcessor::resetToDefaults()
     for (int i = 0; i < effectHost->getNumParams(); ++i)
         d.push_back (effectHost->getDefault (i));
     applyEffectValues (d);
+    presetName = {};
+    presetSnapshot.clear();
+    sendChangeMessage();
+}
+
+bool DaylightProcessor::applyPreset (const PresetData& preset)
+{
+    if (effectHost == nullptr || preset.effectId != effectHost->getInfo().id)
+        return false;
+
+    const auto& names = effectHost->getParamNames();
+    std::vector<float> v;
+    for (int i = 0; i < effectHost->getNumParams(); ++i)
+        v.push_back (effectHost->getDefault (i));
+
+    for (const auto& [name, value] : preset.values)
+    {
+        const int index = names.indexOf (name);
+        if (index >= 0)
+            v[(size_t) index] = value;
+    }
+
+    applyEffectValues (v);
+    presetName = preset.name;
+    presetSnapshot = captureEffectValues();
+    sendChangeMessage();
+    return true;
+}
+
+void DaylightProcessor::markPresetSaved (const juce::String& name)
+{
+    presetName = name;
+    presetSnapshot = captureEffectValues();
+    sendChangeMessage();
+}
+
+bool DaylightProcessor::isPresetModified() const
+{
+    if (presetName.isEmpty())
+        return false;
+
+    const auto now = captureEffectValues();
+    if (now.size() != presetSnapshot.size())
+        return true;
+
+    for (size_t i = 0; i < now.size(); ++i)
+        if (std::abs (now[i] - presetSnapshot[i]) > 1.0e-6f)
+            return true;
+
+    return false;
 }
 
 void DaylightProcessor::switchAB (int which)
@@ -368,6 +418,16 @@ void DaylightProcessor::getStateInformation (juce::MemoryBlock& destData)
 
     auto* ui = root.createNewChildElement ("UI");
     ui->setAttribute ("tab", lastTab);
+
+    if (presetName.isNotEmpty())
+    {
+        auto* pr = root.createNewChildElement ("Preset");
+        pr->setAttribute ("name", presetName);
+        juce::StringArray vals;
+        for (auto v : presetSnapshot)
+            vals.add (juce::String (v, 7));
+        pr->setAttribute ("snapshot", vals.joinIntoString (","));
+    }
 
     const auto text = root.toString (juce::XmlElement::TextFormat().singleLine());
     destData.replaceAll (text.toRawUTF8(), text.getNumBytesAsUTF8());
@@ -441,6 +501,22 @@ void DaylightProcessor::setStateInformation (const void* data, int sizeInBytes)
 
     if (auto* ui = xml->getChildByName ("UI"))
         lastTab = juce::jmax (0, ui->getIntAttribute ("tab", 0));
+
+    presetName = {};
+    presetSnapshot.clear();
+    if (auto* pr = xml->getChildByName ("Preset"); pr != nullptr && effectHost != nullptr)
+    {
+        juce::StringArray vals;
+        vals.addTokens (pr->getStringAttribute ("snapshot"), ",", {});
+        std::vector<float> v;
+        for (auto& x : vals)
+            v.push_back (juce::jlimit (0.0f, 1.0f, x.getFloatValue()));
+        if ((int) v.size() == effectHost->getNumParams())
+        {
+            presetName = pr->getStringAttribute ("name").substring (0, 64);
+            presetSnapshot = std::move (v);
+        }
+    }
 
     sendChangeMessage();
 }

@@ -6,6 +6,7 @@
 
 #include "Identity.h"
 #include "dsp/EffectHost.h"
+#include "presets/PresetStore.h"
 
 namespace dlaw
 {
@@ -82,6 +83,17 @@ public:
     /** Resets all of the effect's parameters to the effect's own defaults (message thread). */
     void resetToDefaults();
 
+    // ---- presets (message thread) --------------------------------------------------------------
+    /** Applies a preset of this effect (parameters by name; missing ones go to the effect default). */
+    bool applyPreset (const PresetData&);
+    /** Records that the current values were just saved as this preset. */
+    void markPresetSaved (const juce::String& name);
+    /** Called when the current preset was renamed or deleted on disk. */
+    void setPresetName (const juce::String& name) { presetName = name; sendChangeMessage(); }
+    juce::String getPresetName() const { return presetName; }
+    /** True when a preset is loaded and any value differs from it ("*" in the menu bar). */
+    bool isPresetModified() const;
+
     // ---- A/B (message thread) --------------------------------------------------------------
     int getActiveAB() const noexcept { return activeAB; }
     void switchAB (int which);
@@ -112,6 +124,9 @@ private:
 
     mutable juce::SpinLock nameLock;
     std::array<juce::String, (size_t) kNumSlots> slotNames;
+
+    juce::String presetName;
+    std::vector<float> presetSnapshot;
 
     std::array<std::vector<float>, 2> abValues;
     int activeAB = 0;

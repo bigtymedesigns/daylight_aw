@@ -1,0 +1,19 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Reverb",
+      "controls": [
+        "Type",
+        "Size",
+        "Gating"
+      ]
+    },
+    {
+      "title": "Mix",
+      "controls": [
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

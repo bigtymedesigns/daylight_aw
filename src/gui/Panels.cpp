@@ -382,7 +382,8 @@ bool ConfirmDialog::keyPressed (const juce::KeyPress& k)
 SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed)
     : PanelBase (c), onChanged (std::move (changed)),
       openThemeFolder (c, "Open theme folder"), resetButton (c, "Reset to defaults"),
-      infoButton (c, "Effect info"), savePreset (c, "Save preset")
+      infoButton (c, "Effect info"), savePreset (c, "Save preset"),
+      nameOk (c, "Save"), nameCancel (c, "Cancel")
 {
     int i = 0;
     for (auto level : GlobalSettings::zoomLevels)
@@ -417,12 +418,42 @@ SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed)
 
     resetButton.onClick = [this] { ctx.processor.resetToDefaults(); };
     infoButton.onClick = [this] { showInfo = ! showInfo; infoButton.setToggleState (showInfo, juce::dontSendNotification); repaint(); };
-    infoButton.setClickingTogglesState (false);
     addAndMakeVisible (resetButton);
     addAndMakeVisible (infoButton);
 
-    savePreset.setEnabled (false);
+    // ---- presets ----
+    savePreset.onClick = [this] { startNaming (NameMode::saving); };
+    savePreset.setEnabled (ctx.processor.hasEffect());
     addAndMakeVisible (savePreset);
+
+    nameEditor.setFont (fonts::medium (13.0f));
+    nameEditor.setIndents (6, 4);
+    nameEditor.setTitle ("Preset name");
+    nameEditor.setInputRestrictions (64);
+    nameEditor.onReturnKey = [this] { confirmName(); };
+    nameEditor.onEscapeKey = [this] { stopNaming(); };
+    nameEditor.onTextChange = [this]
+    {
+        confirmReplace = false;
+        nameOk.setButtonText (nameMode == NameMode::renaming ? "Rename" : "Save");
+        message = {};
+        resized();
+        repaint();
+    };
+    addChildComponent (nameEditor);
+
+    nameOk.primary = true;
+    nameOk.onClick = [this] { confirmName(); };
+    nameCancel.onClick = [this] { stopNaming(); };
+    addChildComponent (nameOk);
+    addChildComponent (nameCancel);
+
+    presetList.setModel (this);
+    presetList.setRowHeight (24);
+    presetList.setOutlineThickness (0);
+    presetList.setTitle ("Presets");
+    presetList.setColour (juce::ListBox::backgroundColourId, juce::Colours::transparentBlack);
+    addAndMakeVisible (presetList);
 
     for (auto* s : { &inTrim, &outTrim })
     {
@@ -439,7 +470,13 @@ SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed)
     inAttach = std::make_unique<juce::SliderParameterAttachment> (c.processor.getInputTrim(), inTrim, nullptr);
     outAttach = std::make_unique<juce::SliderParameterAttachment> (c.processor.getOutputTrim(), outTrim, nullptr);
 
+    rescanPresets();
     refresh();
+}
+
+SettingsPanel::~SettingsPanel()
+{
+    presetList.setModel (nullptr);
 }
 
 void SettingsPanel::refresh()
@@ -452,9 +489,213 @@ void SettingsPanel::refresh()
     themeButtons[1]->setToggleState (th == ThemeId::dark, juce::dontSendNotification);
     themeButtons[2]->setToggleState (th == ThemeId::user, juce::dontSendNotification);
     openThemeFolder.setVisible (th == ThemeId::user);
+    nameEditor.applyColourToAllText (ctx.theme.panelText);
+    presetList.repaint();
     repaint();
 }
 
+// ---- presets ------------------------------------------------------------------------------------
+void SettingsPanel::rescanPresets()
+{
+    presetFiles.clear();
+    if (auto* fx = ctx.processor.getEffectHost())
+        presetFiles = store.list (fx->getInfo());
+    presetList.updateContent();
+    presetList.repaint();
+    resized();
+    repaint();
+}
+
+void SettingsPanel::paintListBoxItem (int row, juce::Graphics& g, int width, int height, bool)
+{
+    if (! juce::isPositiveAndBelow (row, presetFiles.size()))
+        return;
+
+    const auto& t = ctx.theme;
+    const auto name = presetFiles[row].getFileNameWithoutExtension();
+    const bool current = name == ctx.processor.getPresetName();
+
+    if (current)
+    {
+        g.setColour (t.panelText.withAlpha (0.1f));
+        g.fillRoundedRectangle (juce::Rectangle<float> (0.0f, 1.0f, (float) width, (float) height - 2.0f), 4.0f);
+    }
+
+    g.setColour (t.panelText);
+    g.setFont (current ? fonts::extraBold (12.5f) : fonts::medium (12.5f));
+    g.drawText (name, juce::Rectangle<int> (6, 0, width - 12, height), juce::Justification::centredLeft, true);
+}
+
+void SettingsPanel::listBoxItemClicked (int row, const juce::MouseEvent& e)
+{
+    if (! juce::isPositiveAndBelow (row, presetFiles.size()))
+        return;
+
+    if (e.mods.isPopupMenu())
+        showPresetMenu (presetFiles[row]);
+    else
+        loadPreset (presetFiles[row]);
+}
+
+void SettingsPanel::loadPreset (const juce::File& file)
+{
+    PresetData data;
+    if (! PresetStore::load (file, data))
+        message = "Couldn't read this preset.";
+    else if (! ctx.processor.applyPreset (data))
+        message = "This preset is for a different effect.";
+    else
+        message = {};
+    rescanPresets();
+}
+
+void SettingsPanel::showPresetMenu (const juce::File& file)
+{
+    juce::PopupMenu m;
+    m.addItem (1, "Load");
+    m.addItem (2, "Rename...");
+    m.addItem (3, "Move to trash");
+    m.addSeparator();
+    m.addItem (4, "Show in folder");
+
+    juce::Component::SafePointer<SettingsPanel> safe (this);
+    m.showMenuAsync (juce::PopupMenu::Options().withParentComponent (getTopLevelComponent()).withMousePosition(),
+                     [safe, file] (int choice)
+                     {
+                         if (safe == nullptr)
+                             return;
+                         auto& self = *safe;
+                         switch (choice)
+                         {
+                             case 1: self.loadPreset (file); break;
+                             case 2: self.startNaming (NameMode::renaming, file); break;
+                             case 3:
+                                 if (PresetStore::remove (file))
+                                 {
+                                     if (file.getFileNameWithoutExtension() == self.ctx.processor.getPresetName())
+                                         self.ctx.processor.setPresetName ({});
+                                     self.message = {};
+                                 }
+                                 else
+                                     self.message = "Couldn't remove this preset.";
+                                 self.rescanPresets();
+                                 break;
+                             case 4: file.revealToUser(); break;
+                             default: break;
+                         }
+                     });
+}
+
+void SettingsPanel::startNaming (NameMode mode, const juce::File& file)
+{
+    auto* fx = ctx.processor.getEffectHost();
+    if (fx == nullptr)
+        return;
+
+    nameMode = mode;
+    renamingFile = file;
+    confirmReplace = false;
+    message = {};
+
+    juce::String initial;
+    if (mode == NameMode::renaming)
+        initial = file.getFileNameWithoutExtension();
+    else if (ctx.processor.getPresetName().isNotEmpty())
+        initial = ctx.processor.getPresetName();
+    else
+    {
+        int n = presetFiles.size() + 1;
+        while (store.fileFor (fx->getInfo(), "Preset " + juce::String (n)).exists())
+            ++n;
+        initial = "Preset " + juce::String (n);
+    }
+
+    nameEditor.setText (initial, false);
+    nameEditor.selectAll();
+    nameOk.setButtonText (mode == NameMode::renaming ? "Rename" : "Save");
+    savePreset.setVisible (false);
+    nameEditor.setVisible (true);
+    nameOk.setVisible (true);
+    nameCancel.setVisible (true);
+    resized();
+    nameEditor.grabKeyboardFocus();
+    repaint();
+}
+
+void SettingsPanel::stopNaming()
+{
+    nameMode = NameMode::none;
+    confirmReplace = false;
+    nameEditor.setVisible (false);
+    nameOk.setVisible (false);
+    nameCancel.setVisible (false);
+    savePreset.setVisible (true);
+    resized();
+    repaint();
+}
+
+void SettingsPanel::confirmName()
+{
+    auto* fx = ctx.processor.getEffectHost();
+    if (fx == nullptr || nameMode == NameMode::none)
+        return;
+
+    const auto clean = PresetStore::sanitiseName (nameEditor.getText());
+    if (clean.isEmpty())
+    {
+        message = "Please type a name.";
+        resized();
+        repaint();
+        return;
+    }
+
+    if (nameMode == NameMode::renaming)
+    {
+        const auto oldName = renamingFile.getFileNameWithoutExtension();
+        juce::File renamed;
+        if (! store.rename (renamingFile, clean, renamed))
+        {
+            message = "\"" + clean + "\" already exists.";
+            resized();
+            repaint();
+            return;
+        }
+        if (oldName == ctx.processor.getPresetName())
+            ctx.processor.setPresetName (renamed.getFileNameWithoutExtension());
+    }
+    else
+    {
+        const auto target = store.fileFor (fx->getInfo(), clean);
+        if (target.exists() && ! confirmReplace)
+        {
+            confirmReplace = true;
+            nameOk.setButtonText ("Replace");
+            message = "\"" + clean + "\" exists. Replace it?";
+            resized();
+            repaint();
+            return;
+        }
+
+        std::vector<float> values;
+        for (int i = 0; i < fx->getNumParams(); ++i)
+            values.push_back (ctx.processor.getSlot (i).get());
+
+        if (! store.save (fx->getInfo(), clean, fx->getParamNames(), values))
+        {
+            message = "Couldn't save. Is the Documents folder writable?";
+            resized();
+            repaint();
+            return;
+        }
+        ctx.processor.markPresetSaved (clean);
+    }
+
+    message = {};
+    stopNaming();
+    rescanPresets();
+}
+
+// ---- layout + drawing -------------------------------------------------------------------------
 void SettingsPanel::resized()
 {
     auto r = getLocalBounds().reduced (14, 12);
@@ -468,7 +709,23 @@ void SettingsPanel::resized()
     r.removeFromLeft (14);
     right = r;
 
-    savePreset.setBounds (left.withTrimmedTop (22).withHeight (24).withWidth (juce::jmin (left.getWidth(), 110)));
+    // presets column
+    auto pc = left.withTrimmedTop (22);
+    if (nameMode == NameMode::none)
+    {
+        savePreset.setBounds (pc.removeFromTop (24).withWidth (juce::jmin (left.getWidth(), 110)));
+    }
+    else
+    {
+        nameEditor.setBounds (pc.removeFromTop (26));
+        pc.removeFromTop (4);
+        auto buttons = pc.removeFromTop (24);
+        nameOk.setBounds (buttons.removeFromLeft (buttons.getWidth() / 2 - 3));
+        buttons.removeFromLeft (6);
+        nameCancel.setBounds (buttons);
+    }
+    pc.removeFromTop (message.isNotEmpty() ? 32 : 6);
+    presetList.setBounds (pc);
 
     auto z = look.withTrimmedTop (38).withHeight (24);
     const int zw = z.getWidth() / 4;
@@ -499,18 +756,23 @@ void SettingsPanel::paint (juce::Graphics& g)
 
     // Presets column
     auto* fx = ctx.processor.getEffectHost();
-    drawHeading (g, "PRESETS" + (fx != nullptr ? kDot + juce::String (fx->getInfo().name).toUpperCase() : juce::String()), left.withHeight (16));
-    g.setColour (t.panelText.withAlpha (0.8f));
-    g.setFont (fonts::medium (12.5f));
-    if (showInfo && fx != nullptr)
+    drawHeading (g, "PRESETS", left.withHeight (16));
+
+    if (message.isNotEmpty())
     {
-        juce::String text = fx->getInfo().description;
-        if (fx->getInfo().isDither)
-            text << "\n\nThis is a dither: keep the output trim at 0 dB.";
-        g.drawFittedText (text, left.withTrimmedTop (52), juce::Justification::topLeft, 8);
+        g.setColour (t.panelText);
+        g.setFont (fonts::semiBold (11.5f));
+        g.drawFittedText (message, presetList.getBounds().withY (presetList.getY() - 30).withHeight (28),
+                          juce::Justification::centredLeft, 2);
     }
-    else
-        g.drawFittedText ("User presets arrive in the next test build.", left.withTrimmedTop (52), juce::Justification::topLeft, 3);
+
+    if (presetFiles.isEmpty() && fx != nullptr)
+    {
+        g.setColour (t.panelText.withAlpha (0.7f));
+        g.setFont (fonts::medium (12.0f));
+        g.drawFittedText ("No presets for " + juce::String (fx->getInfo().name) + " yet.",
+                          presetList.getBounds().reduced (6, 4).withHeight (34), juce::Justification::topLeft, 2);
+    }
 
     drawHeading (g, "SETTINGS", look.withHeight (16));
     g.setColour (t.panelText);
@@ -534,7 +796,17 @@ void SettingsPanel::paint (juce::Graphics& g)
     g.drawText ("Output trim", trims.withTrimmedTop (68).withHeight (16), juce::Justification::centredLeft);
     g.drawText (fmt (outTrim.getValue()), trims.withTrimmedTop (68).withHeight (16), juce::Justification::centredRight);
 
-    drawHeading (g, "EFFECT", right.withHeight (16));
+    drawHeading (g, "EFFECT" + (fx != nullptr ? kDot + juce::String (fx->getInfo().name).toUpperCase() : juce::String()),
+                 right.withHeight (16));
+    if (showInfo && fx != nullptr)
+    {
+        juce::String text = fx->getInfo().description;
+        if (fx->getInfo().isDither)
+            text << "\n\nThis is a dither: keep the output trim at 0 dB.";
+        g.setColour (t.panelText.withAlpha (0.85f));
+        g.setFont (fonts::medium (12.0f));
+        g.drawFittedText (text, right.withTrimmedTop (84), juce::Justification::topLeft, 10);
+    }
 }
 
 // =============================================================================================

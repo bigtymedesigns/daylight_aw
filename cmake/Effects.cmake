@@ -45,7 +45,24 @@ set(DAYLIGHT_EFFECT_SOURCES
 )
 
 set(DAYLIGHT_LAYOUT_FILES
+    layouts/adclip8.json
+    layouts/buttercomp2.json
+    layouts/cabs.json
+    layouts/capacitor2.json
+    layouts/console9buss.json
+    layouts/console9channel.json
     layouts/consolexchannel.json
+    layouts/cstrip.json
+    layouts/deess.json
+    layouts/density2.json
+    layouts/dubsub2.json
+    layouts/everytrim.json
     layouts/galactic.json
+    layouts/monitoring3.json
+    layouts/notjustanotherdither.json
+    layouts/pocketverbs.json
+    layouts/pressure5.json
+    layouts/purestgain.json
     layouts/totape9.json
+    layouts/tube2.json
 )

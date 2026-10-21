@@ -1,0 +1,19 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Density",
+      "controls": [
+        "Density",
+        "Highpass"
+      ]
+    },
+    {
+      "title": "Output",
+      "controls": [
+        "Output",
+        "Dry/Wet"
+      ]
+    }
+  ]
+}
