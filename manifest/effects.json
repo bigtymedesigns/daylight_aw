@@ -1,0 +1,34 @@
+{
+  "formatVersion": 1,
+  "comment": "Single source of truth for every effect. Run tools/gen_effects.py after editing. Never remove or rename an 'id' once released.",
+  "upstream": {
+    "consolidated": {
+      "repository": "https://github.com/baconpaul/airwin2rack",
+      "commit": "d8fe3010bc6dce91e30ee2f2ef15dd3683533a97",
+      "path": "third_party/airwin_consolidated"
+    }
+  },
+  "effects": [
+    { "id": "purestgain",           "upstream": "PurestGain",           "version": 1, "category": "Utility",       "included": true, "description": "PurestGain is a high-res noise shaped gain, with smoothed fader." },
+    { "id": "tube2",                "upstream": "Tube2",                "version": 1, "category": "Saturation",    "included": true, "description": "Tube2 extends Tube, with more sophisticated processing and input trim." },
+    { "id": "console9channel",      "upstream": "Console9Channel",      "version": 1, "category": "Consoles",      "included": true, "description": "Console9Channel is just the summing from ConsoleX." },
+    { "id": "console9buss",         "upstream": "Console9Buss",         "version": 1, "category": "Consoles",      "included": true, "description": "Console9Buss is just the summing from ConsoleX." },
+    { "id": "notjustanotherdither", "upstream": "NotJustAnotherDither", "version": 1, "category": "Dithers",       "included": true, "dither": true, "description": "NotJustAnotherDither is a next-gen wordlength reducer for 24 bit with DeRez." },
+    { "id": "deess",                "upstream": "DeEss",                "version": 1, "category": "Brightness",    "included": true, "description": "DeEss is the best de-essing solution there is. A go-to utility plugin." },
+    { "id": "buttercomp2",          "upstream": "ButterComp2",          "version": 1, "category": "Dynamics",      "included": true, "description": "ButterComp2 is improved ButterComp with an output control and sound upgrades." },
+    { "id": "dubsub2",              "upstream": "DubSub2",              "version": 1, "category": "Bass",          "included": true, "description": "DubSub2 is the essence of the Airwindows head bump." },
+    { "id": "adclip8",              "upstream": "ADClip8",              "version": 1, "category": "Clipping",      "included": true, "description": "ADClip8 is a stacked-up Airwindows loudenator based on ClipOnly2." },
+    { "id": "monitoring3",          "upstream": "Monitoring3",          "version": 1, "category": "Utility",       "included": true, "dither": true, "description": "Monitoring3 is Monitoring, but with Ten Nines into Dark as the wordlength reducer." },
+    { "id": "density2",             "upstream": "Density2",             "version": 1, "category": "Distortion",    "included": true, "description": "Density2 is a different color for Density, some old code I had that people wanted." },
+    { "id": "capacitor2",           "upstream": "Capacitor2",           "version": 1, "category": "Filter",        "included": true, "description": "Capacitor2 is Capacitor with extra analog modeling and mojo." },
+    { "id": "pocketverbs",          "upstream": "PocketVerbs",          "version": 1, "category": "Reverb",        "included": true, "description": "PocketVerbs is my popular old special effects reverbs plugin!" },
+    { "id": "galactic",             "upstream": "Galactic",             "version": 1, "category": "Reverb",        "included": true, "description": "Galactic is a super-reverb designed specially for pads and space ambient." },
+    { "id": "everytrim",            "upstream": "EveryTrim",            "version": 1, "category": "Utility",       "included": true, "description": "EveryTrim is Left/Right, Mid/Side, and Master in one plugin." },
+    { "id": "pressure5",            "upstream": "Pressure5",            "version": 1, "category": "Dynamics",      "included": true, "description": "Pressure5 expands Pressure4 with after-boost and built-in ClipOnly2." },
+    { "id": "cabs",                 "upstream": "Cabs",                 "version": 1, "category": "Amp Sims",      "included": true, "description": "Cabs is an Airwindows guitar speaker cabinet simulator." },
+    { "id": "totape9",              "upstream": "ToTape9",              "version": 1, "category": "Tape",          "included": true, "description": "ToTape9 is Airwindows tape emulation and brightness compression." },
+    { "id": "cstrip",               "upstream": "CStrip",               "version": 1, "category": "Channel Strips","included": true, "description": "CStrip is an Airwindows channel strip." },
+    { "id": "consolexchannel",      "upstream": "ConsoleXChannel",      "version": 1, "category": "Channel Strips","included": true, "description": "ConsoleXChannel is the channel strip of the ConsoleX system: filters, dynamics, EQ, pan and fader." },
+    { "id": "ultrasonic",           "upstream": "Ultrasonic",           "version": 1, "category": "Brightness",    "included": true, "description": "Ultrasonic is a very clean, plain, high quality supersonic filter, for using inside digital mixes." }
+  ]
+}

@@ -1,0 +1,30 @@
+Daylight_aw - macOS install (AU + VST3)
+=======================================
+
+1. Quit your DAW.
+2. Copy:
+     Daylight_aw.component  ->  ~/Library/Audio/Plug-Ins/Components/
+     Daylight_aw.vst3       ->  ~/Library/Audio/Plug-Ins/VST3/
+   (In Finder: Go > Go to Folder... and paste the path. "~" means your home folder.)
+
+3. These test builds are not signed by Apple, so macOS blocks them at first.
+   Open Terminal (Applications > Utilities > Terminal) and paste these two lines:
+
+     xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/Components/Daylight_aw.component
+     xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Daylight_aw.vst3
+
+4. Make macOS pick up the new Audio Unit (or just restart the Mac):
+
+     killall -9 AudioComponentRegistrar
+
+5. Start the DAW and rescan plugins. Logic: Logic Pro > Settings > Plug-in Manager > Reset & Rescan.
+   Look for "Daylight_aw" by "big_tyme_designs".
+
+Optional check in Terminal - should end with "AU VALIDATION SUCCEEDED":
+     auval -v aufx Dlaw Btyd
+
+Your presets, favourites and the User theme live in:
+    ~/Documents/big_tyme_designs/Daylight_aw/
+
+Daylight_aw is free and open source (GNU AGPL v3). Not an official Airwindows release.
+All sound comes from the original Airwindows code by Chris Johnson (MIT).

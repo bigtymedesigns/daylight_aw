@@ -1,0 +1,193 @@
+# Builds, tests and packages Daylight_aw on every push.
+#   Windows  -> VST3 (x64)
+#   macOS    -> VST3 + AU (universal: Apple silicon + Intel), validated with auval
+#   Linux    -> tests, GUI snapshots, sanitizers (the plugin is not distributed for Linux yet)
+# Pushing a tag like v0.1.0 also creates a GitHub Release with the zips attached.
+
+name: build
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PLUGINVAL_VERSION: v1.0.4
+
+jobs:
+  # ------------------------------------------------------------------------------------------
+  linux:
+    name: Linux tests + snapshots
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generated files are up to date
+        run: python3 tools/gen_effects.py --check
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build xvfb libx11-dev libxext-dev libxrandr-dev \
+            libxinerama-dev libxcursor-dev libfreetype-dev libfontconfig1-dev libasound2-dev
+
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --target DaylightTests Daylight_aw_VST3
+
+      - name: Tests (null tests, state, layouts) + GUI snapshots
+        run: xvfb-run -a ./build/DaylightTests_artefacts/Release/DaylightTests --snapshots snapshots
+
+      - name: pluginval
+        run: |
+          curl -sSL -o pv.zip https://github.com/Tracktion/pluginval/releases/download/${PLUGINVAL_VERSION}/pluginval_Linux.zip
+          unzip -q pv.zip
+          xvfb-run -a ./pluginval --strictness-level 10 --validate-in-process \
+            --validate build/Daylight_aw_artefacts/Release/VST3/Daylight_aw.vst3
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gui-snapshots
+          path: snapshots/
+
+  # ------------------------------------------------------------------------------------------
+  sanitizers:
+    name: Linux sanitizers (ASan + UBSan)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build xvfb libx11-dev libxext-dev libxrandr-dev \
+            libxinerama-dev libxcursor-dev libfreetype-dev libfontconfig1-dev libasound2-dev
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DDAYLIGHT_SANITIZERS=ON
+      - name: Build
+        run: cmake --build build --target DaylightTests
+      - name: Tests
+        env:
+          ASAN_OPTIONS: detect_leaks=0:abort_on_error=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+        run: xvfb-run -a ./build/DaylightTests_artefacts/Debug/DaylightTests --snapshots snapshots
+
+  # ------------------------------------------------------------------------------------------
+  windows:
+    name: Windows VST3
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build
+        run: cmake --build build --config Release --parallel --target Daylight_aw_VST3 DaylightTests
+
+      - name: Tests
+        run: .\build\DaylightTests_artefacts\Release\DaylightTests.exe
+
+      - name: pluginval
+        shell: bash
+        run: |
+          curl -sSL -o pv.zip https://github.com/Tracktion/pluginval/releases/download/${PLUGINVAL_VERSION}/pluginval_Windows.zip
+          7z x -y pv.zip > /dev/null
+          ./pluginval.exe --strictness-level 10 --validate-in-process \
+            --validate build/Daylight_aw_artefacts/Release/VST3/Daylight_aw.vst3
+
+      - name: Package
+        shell: bash
+        run: |
+          mkdir -p dist/Daylight_aw
+          cp -r build/Daylight_aw_artefacts/Release/VST3/Daylight_aw.vst3 dist/Daylight_aw/
+          cp docs/INSTALL_WINDOWS.txt dist/Daylight_aw/INSTALL.txt
+          cp LICENSE THIRD_PARTY_NOTICES.md dist/Daylight_aw/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Daylight_aw-Windows-VST3
+          path: dist/
+
+  # ------------------------------------------------------------------------------------------
+  macos:
+    name: macOS VST3 + AU (universal)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel 4 --target Daylight_aw_VST3 Daylight_aw_AU DaylightTests
+
+      - name: Tests
+        run: ./build/DaylightTests_artefacts/Release/DaylightTests
+
+      - name: Sign (ad-hoc, so the plugins load on Apple silicon)
+        run: |
+          codesign --force --deep --sign - build/Daylight_aw_artefacts/Release/VST3/Daylight_aw.vst3
+          codesign --force --deep --sign - build/Daylight_aw_artefacts/Release/AU/Daylight_aw.component
+          lipo -info build/Daylight_aw_artefacts/Release/AU/Daylight_aw.component/Contents/MacOS/Daylight_aw
+
+      - name: auval (Audio Unit validation)
+        run: |
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R build/Daylight_aw_artefacts/Release/AU/Daylight_aw.component ~/Library/Audio/Plug-Ins/Components/
+          killall -9 AudioComponentRegistrar || true
+          sleep 2
+          auval -a | grep -i Btyd || true
+          auval -strict -v aufx Dlaw Btyd
+
+      - name: pluginval
+        run: |
+          curl -sSL -o pv.zip https://github.com/Tracktion/pluginval/releases/download/${PLUGINVAL_VERSION}/pluginval_macOS.zip
+          unzip -q pv.zip
+          ./pluginval.app/Contents/MacOS/pluginval --strictness-level 10 --validate-in-process \
+            --validate build/Daylight_aw_artefacts/Release/VST3/Daylight_aw.vst3
+
+      - name: Package
+        run: |
+          mkdir -p dist/Daylight_aw
+          cp -R build/Daylight_aw_artefacts/Release/VST3/Daylight_aw.vst3 dist/Daylight_aw/
+          cp -R build/Daylight_aw_artefacts/Release/AU/Daylight_aw.component dist/Daylight_aw/
+          cp docs/INSTALL_MAC.txt dist/Daylight_aw/INSTALL.txt
+          cp LICENSE THIRD_PARTY_NOTICES.md dist/Daylight_aw/
+          # zip with ditto so bundle attributes survive
+          cd dist && ditto -c -k --keepParent Daylight_aw ../Daylight_aw-macOS.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Daylight_aw-macOS-VST3-AU
+          path: Daylight_aw-macOS.zip
+
+  # ------------------------------------------------------------------------------------------
+  release:
+    name: GitHub Release (tags only)
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, sanitizers, windows, macos]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Zip
+        run: |
+          cd artifacts/Daylight_aw-Windows-VST3 && zip -qr ../../Daylight_aw-${GITHUB_REF_NAME}-Windows-VST3.zip . && cd ../..
+          cp artifacts/Daylight_aw-macOS-VST3-AU/Daylight_aw-macOS.zip Daylight_aw-${GITHUB_REF_NAME}-macOS-VST3-AU.zip
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Daylight_aw-*-Windows-VST3.zip
+            Daylight_aw-*-macOS-VST3-AU.zip
+          generate_release_notes: true

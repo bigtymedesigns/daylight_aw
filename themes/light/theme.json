@@ -1,0 +1,43 @@
+{
+  "formatVersion": 1,
+  "name": "Light",
+  "author": "big_tyme_designs",
+  "tokens": {
+    "paper.color": "#E2DFD7",
+    "paper.textureStrength": 1.0,
+    "horizon.color": "#2B2A28",
+    "horizon.opacity": 0.10,
+
+    "ink.text": "#2B2A28",
+    "ink.muted": "#55524B",
+    "ink.groupTitle": "#3A3834",
+
+    "frame.color": "#2B2A28",
+    "frame.opacity": 0.55,
+    "frame.glowColor": "#ECE8DC",
+    "frame.glowRadius": 0,
+    "frame.glowStrength": 0,
+
+    "knob.fill": "#1B1A18",
+    "knob.edge": "#0F0E0D",
+    "knob.pointer": "#ECE8DF",
+    "knob.shadow": "#1E1C1833",
+    "knob.ticks": "#2B2A28",
+
+    "bar.fill": "#EEEBE4D9",
+    "bar.border": "#2B2A2866",
+    "bar.glow": 0,
+
+    "panel.fill": "#F0EDE6F7",
+    "panel.border": "#2B2A2866",
+    "panel.text": "#2B2A28",
+    "panel.glow": 0,
+
+    "button.outline": "#2B2A28",
+    "button.activeFill": "#2B2A28",
+    "button.activeText": "#F1EEE7",
+
+    "logo.color": "#2B2A28",
+    "logo.glow": 0
+  }
+}

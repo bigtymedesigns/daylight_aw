@@ -1,0 +1,7 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    { "title": "Space", "controls": [ "Replace", "Brightness", "Detune", "Bigness" ] },
+    { "title": "Mix",   "controls": [ "Dry/Wet" ] }
+  ]
+}

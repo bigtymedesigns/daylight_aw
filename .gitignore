@@ -1,0 +1,20 @@
+# build output
+build/
+build-*/
+out/
+cmake-build-*/
+
+# editors / OS
+.vs/
+.vscode/
+.idea/
+*.user
+.DS_Store
+Thumbs.db
+
+# python
+__pycache__/
+*.pyc
+
+# test output
+snapshots/

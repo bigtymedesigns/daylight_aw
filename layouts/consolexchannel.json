@@ -1,0 +1,24 @@
+{
+  "formatVersion": 1,
+  "pages": [
+    { "name": "Filters + dynamics", "groups": [
+      { "title": "Filter",     "controls": [ "Highpas", "Lowpass" ] },
+      { "title": "Bands",      "controls": [ "Air", "Fire", "Stone" ] },
+      { "title": "Fire comp",  "controls": [ "FC Thrs", "FC Rati", "FC Atk", "FC Rls" ] },
+      { "title": "Xover",      "controls": [ "Range" ] },
+      { "title": "Stone comp", "controls": [ "SC Thrs", "SC Rati", "SC Atk", "SC Rls" ] }
+    ] },
+    { "name": "Gates + treble", "groups": [
+      { "title": "Fire gate",  "controls": [ "FG Thrs", "FG Rati", "FG Sust", "FG Rls" ] },
+      { "title": "Stone gate", "controls": [ "SG Thrs", "SG Rati", "SG Sust", "SG Rls" ] },
+      { "title": "Treble",     "controls": [ "Tr Freq", "Treble", "Tr Reso" ] }
+    ] },
+    { "name": "EQ + channel", "groups": [
+      { "title": "High mid",   "controls": [ "HM Freq", "HighMid", "HM Reso" ] },
+      { "title": "Channel",    "controls": [ "Pan", "Fader" ] },
+      { "title": "Low mid",    "controls": [ "LM Freq", "LowMid", "LM Reso" ] },
+      { "title": "Top",        "controls": [ "Top dB" ] },
+      { "title": "Bass",       "controls": [ "Bs Freq", "Bass", "Bs Reso" ] }
+    ] }
+  ]
+}
