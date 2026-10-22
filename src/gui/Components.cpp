@@ -192,7 +192,7 @@ void PillButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
     const auto& t = ctx.theme;
     auto r = getLocalBounds().toFloat().reduced (0.5f);
     const bool filled = primary || (fillOn && getToggleState());
-    const float radius = 4.0f;
+    const float radius = t.corner * 0.67f;
 
     juce::Path shape;
     shape.addRoundedRectangle (r.getX(), r.getY(), r.getWidth(), r.getHeight(), radius, radius,
@@ -237,6 +237,41 @@ void BypassButton::paint (juce::Graphics& g)
     const bool on = ctx.processor.getBypass().get();
     auto b = getLocalBounds().toFloat();
 
+    if (t.listView)
+    {
+        // plain button with a checkbox, like a DAW's own controls
+        const auto font = fonts::medium (13.5f);
+        const float tw = fonts::width (font, "Bypass");
+        auto btn = juce::Rectangle<float> (b.getRight() - (tw + 42.0f), b.getCentreY() - 12.0f, tw + 40.0f, 24.0f);
+        g.setColour (t.barFill.withAlpha (1.0f).brighter (0.15f));
+        g.fillRoundedRectangle (btn, t.corner + 1.0f);
+        g.setColour (t.buttonOutline);
+        g.drawRoundedRectangle (btn.reduced (0.5f), t.corner + 1.0f, 1.0f);
+        auto box = juce::Rectangle<float> (btn.getX() + 9.0f, btn.getCentreY() - 7.0f, 14.0f, 14.0f);
+        if (on)
+        {
+            g.setColour (t.buttonActiveFill);
+            g.fillRoundedRectangle (box, 2.0f);
+            juce::Path tick;
+            tick.startNewSubPath (box.getX() + 3.2f, box.getCentreY());
+            tick.lineTo (box.getX() + 6.0f, box.getBottom() - 3.5f);
+            tick.lineTo (box.getRight() - 3.0f, box.getY() + 3.5f);
+            g.setColour (t.buttonActiveText);
+            g.strokePath (tick, juce::PathStrokeType (1.6f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+        }
+        else
+        {
+            g.setColour (t.barFill.withAlpha (1.0f));
+            g.fillRoundedRectangle (box, 2.0f);
+            g.setColour (t.buttonOutline);
+            g.drawRoundedRectangle (box.reduced (0.5f), 2.0f, 1.0f);
+        }
+        g.setColour (t.text);
+        g.setFont (font);
+        g.drawText ("Bypass", btn.withTrimmedLeft (28.0f), juce::Justification::centredLeft, false);
+        return;
+    }
+
     // label
     g.setFont (fonts::extraBold (11.0f).withExtraKerningFactor (0.1f));
     g.setColour (t.text);
@@ -269,6 +304,160 @@ void BypassButton::mouseUp (const juce::MouseEvent& e)
         attachment.setValueAsCompleteGesture (ctx.processor.getBypass().get() ? 0.0f : 1.0f);
 }
 
+
+// =============================================================================================
+TrimKnob::TrimKnob (UiContext& c, juce::AudioParameterFloat& p, const juce::String& l)
+    : ctx (c), param (p), label (l),
+      attachment (p, [this] (float v) { db = v; repaint(); }, nullptr)
+{
+    attachment.sendInitialUpdate();
+    setTitle (label);
+    setTooltip ("Drag (Shift = fine) or scroll. Double-click: 0 dB.");
+}
+
+juce::Rectangle<float> TrimKnob::trackArea() const
+{
+    return { 7.0f, 20.0f, (float) getWidth() - 14.0f, 16.0f };
+}
+
+juce::Rectangle<float> TrimKnob::knobArea() const
+{
+    return juce::Rectangle<float> (40.0f, 40.0f).withCentre ({ (float) getWidth() * 0.5f, 20.0f + 22.0f });
+}
+
+void TrimKnob::set (float newDb, bool asGesture)
+{
+    newDb = juce::jlimit (param.range.start, param.range.end, std::round (newDb * 10.0f) / 10.0f);
+    if (newDb == db)
+        return;
+    if (asGesture)
+        attachment.setValueAsPartOfGesture (newDb);
+    else
+        attachment.setValueAsCompleteGesture (newDb);
+}
+
+void TrimKnob::paint (juce::Graphics& g)
+{
+    const auto& t = ctx.theme;
+    const bool active = hover || dragging;
+    const auto text = (db > 0.0f ? "+" : db < 0.0f ? "-" : "") + juce::String (std::abs (db), 1) + " dB";
+
+    if (t.listView)
+    {
+        // small fader: name and value above the track
+        g.setColour (t.panelText);
+        g.setFont (fonts::medium (13.0f));
+        g.drawText (label, juce::Rectangle<float> (0.0f, 0.0f, (float) getWidth(), 16.0f), juce::Justification::centredLeft, true);
+        g.setColour (t.valueText);
+        g.drawText (text, juce::Rectangle<float> (0.0f, 0.0f, (float) getWidth(), 16.0f), juce::Justification::centredRight, true);
+
+        const auto track = trackArea();
+        g.setColour (active ? t.sliderTrack.brighter (0.12f) : t.sliderTrack);
+        g.fillRoundedRectangle (track, juce::jmin (2.0f, t.corner));
+        g.setColour (t.sliderCentre);
+        g.fillRect (juce::Rectangle<float> (track.getCentreX() - 0.5f, track.getY(), 1.0f, track.getHeight()));
+        const float hx = track.getX() + 6.5f + param.convertTo0to1 (db) * (track.getWidth() - 13.0f);
+        auto handle = juce::Rectangle<float> (13.0f, 14.0f).withCentre ({ hx, track.getCentreY() });
+        g.setColour (t.sliderHandle);
+        g.fillRoundedRectangle (handle, 3.0f);
+        g.setColour (t.sliderHandleBorder);
+        g.drawRoundedRectangle (handle.reduced (0.5f), 3.0f, 1.0f);
+        return;
+    }
+    const auto k = knobArea();
+    const auto c = k.getCentre();
+    const float s = k.getWidth() / 64.0f * 1.4f;   // 44 px design knob drawn at ~40 px
+
+    g.setColour (t.panelText);
+    auto nameFont = fonts::semiBold (12.5f);
+    g.setFont (nameFont);
+    const auto nameArea = juce::Rectangle<float> (0.0f, 0.0f, (float) getWidth(), 16.0f);
+    g.drawText (label, nameArea, juce::Justification::centred, true);
+    if (active)
+    {
+        const float w = juce::jmin ((float) getWidth() - 8.0f, fonts::width (nameFont, label));
+        g.fillRect (juce::Rectangle<float> (nameArea.getCentreX() - w * 0.5f, nameArea.getBottom() - 1.0f, w, 1.4f));
+    }
+
+    // centre tick (0 dB) and end ticks
+    g.setColour (t.knobTicks);
+    for (float a : { -135.0f, 0.0f, 135.0f })
+        g.drawLine ({ polar (c, 15.5f * s, a), polar (c, 18.5f * s, a) }, a == 0.0f ? 1.4f : 1.6f);
+
+    g.setColour (t.knobShadow);
+    g.fillEllipse (juce::Rectangle<float> (28.0f * s, 28.0f * s).withCentre (c.translated (0.0f, 1.8f * s)));
+
+    auto disc = knobOutline (t.knobStyle, 14.0f, 99);
+    disc.applyTransform (juce::AffineTransform::scale (s).translated (c));
+    g.setColour (t.knobFill);
+    g.fillPath (disc);
+    g.setColour (t.knobEdge);
+    g.strokePath (disc, juce::PathStrokeType (1.3f));
+    drawKnobEdgeDetail (g, t.knobStyle, c, 14.0f, s, 99, t.knobEdge, t.knobFill);
+
+    const float angle = -135.0f + 270.0f * param.convertTo0to1 (db);
+    g.setColour (t.knobPointer);
+    g.drawLine ({ polar (c, 2.0f * s, angle), polar (c, 11.5f * s, angle) }, 2.2f);
+
+    g.setColour (t.panelText);
+    g.setFont (active ? fonts::extraBold (12.5f) : fonts::semiBold (12.5f));
+    g.drawText (text, juce::Rectangle<float> (0.0f, k.getBottom() + 3.0f, (float) getWidth(), 16.0f), juce::Justification::centred, true);
+}
+
+void TrimKnob::mouseDown (const juce::MouseEvent& e)
+{
+    dragging = true;
+    dragFine = e.mods.isShiftDown();
+    dragStartDb = db;
+    dragAnchorY = ctx.theme.listView ? e.position.x : e.position.y;
+    attachment.beginGesture();
+    repaint();
+}
+
+void TrimKnob::mouseDrag (const juce::MouseEvent& e)
+{
+    if (! dragging)
+        return;
+    const bool fine = e.mods.isShiftDown();
+    const bool horizontal = ctx.theme.listView;
+    const float pos = horizontal ? e.position.x : e.position.y;
+    if (fine != dragFine)
+    {
+        dragFine = fine;          // re-anchor: switching precision never jumps the value
+        dragStartDb = db;
+        dragAnchorY = pos;
+    }
+    const float range = param.range.end - param.range.start;
+    if (horizontal)
+    {
+        const float pixels = trackArea().getWidth() * (fine ? ParamControl::kFineFactor : 1.0f);
+        set (dragStartDb + (pos - dragAnchorY) / pixels * range, true);
+        return;
+    }
+    const float pixels = ParamControl::kDragPixels * (fine ? ParamControl::kFineFactor : 1.0f);
+    set (dragStartDb + (dragAnchorY - e.position.y) / pixels * range, true);
+}
+
+void TrimKnob::mouseUp (const juce::MouseEvent&)
+{
+    if (dragging)
+    {
+        attachment.endGesture();
+        dragging = false;
+        repaint();
+    }
+}
+
+void TrimKnob::mouseDoubleClick (const juce::MouseEvent&) { set (0.0f, false); }
+
+void TrimKnob::mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& w)
+{
+    const float step = e.mods.isShiftDown() ? 0.1f : 0.5f;
+    const float dir = (w.deltaY != 0.0f ? w.deltaY : w.deltaX) * (w.isReversed ? -1.0f : 1.0f);
+    if (dir != 0.0f)
+        set (db + (dir > 0.0f ? step : -step), false);
+}
+
 // =============================================================================================
 ParamControl::ParamControl (UiContext& c, const ControlSpec& s)
     : ctx (c), spec (s),
@@ -296,6 +485,9 @@ ParamControl::~ParamControl() = default;
 
 juce::Rectangle<float> ParamControl::controlArea() const
 {
+    if (ctx.theme.listView)   // fader row: name | track | value
+        return { 244.0f, ((float) getHeight() - 20.0f) * 0.5f, 240.0f, 20.0f };
+
     auto b = getLocalBounds().toFloat();
     const float total = 18.0f + 2.0f + 64.0f + 2.0f + 18.0f;
     const float top = b.getCentreY() - total * 0.5f;
@@ -304,6 +496,9 @@ juce::Rectangle<float> ParamControl::controlArea() const
 
 juce::Rectangle<float> ParamControl::valueArea() const
 {
+    if (ctx.theme.listView)
+        return { 492.0f, 0.0f, (float) getWidth() - 496.0f, (float) getHeight() };
+
     auto k = controlArea();
     return { (float) getLocalBounds().getX(), k.getBottom() + 2.0f, (float) getWidth(), 18.0f };
 }
@@ -324,6 +519,8 @@ float ParamControl::snap (float v) const
 
 juce::String ParamControl::valueText() const
 {
+    if (auto* fx = ctx.processor.getEffectHost(); fx != nullptr && ctx.theme.listView)
+        return fx->getDisplayText (spec.param, value);   // exactly as the original reports it
     if (auto* fx = ctx.processor.getEffectHost())
         return formatValue (fx->getDisplayText (spec.param, value), hover || dragging);
     return {};
@@ -333,6 +530,34 @@ void ParamControl::paint (juce::Graphics& g)
 {
     const auto& t = ctx.theme;
     const bool active = hover || dragging;
+
+    if (t.listView)
+    {
+        // ---- fader row, like a DAW's own view of a plugin without a GUI ----
+        g.setColour (t.text);
+        g.setFont (fonts::medium (13.5f));
+        g.drawText (spec.label, juce::Rectangle<float> (0.0f, 0.0f, 236.0f, (float) getHeight()), juce::Justification::centredRight, true);
+
+        const auto track = controlArea();
+        g.setColour (active ? t.sliderTrack.brighter (0.12f) : t.sliderTrack);
+        g.fillRoundedRectangle (track, juce::jmin (2.0f, t.corner));
+        g.setColour (t.sliderCentre);
+        g.fillRect (juce::Rectangle<float> (track.getCentreX() - 0.5f, track.getY(), 1.0f, track.getHeight()));
+
+        const float hx = track.getX() + 7.5f + value * (track.getWidth() - 15.0f);   // handle stays inside the track
+        auto handle = juce::Rectangle<float> (15.0f, 16.0f).withCentre ({ hx, track.getCentreY() });
+        g.setColour (t.sliderHandle);
+        g.fillRoundedRectangle (handle, 3.0f);
+        g.setColour (t.sliderHandleBorder);
+        g.drawRoundedRectangle (handle.reduced (0.5f), 3.0f, 1.0f);
+        g.setColour (t.sliderCentre);
+        g.fillRect (juce::Rectangle<float> (hx - 0.5f, handle.getY() + 4.0f, 1.0f, 8.0f));
+
+        g.setColour (t.valueText);
+        g.setFont (fonts::medium (13.5f));
+        g.drawText (valueText(), valueArea(), juce::Justification::centredLeft, true);
+        return;
+    }
     auto k = controlArea();
     const float s = k.getWidth() / 64.0f;
     auto c = k.getCentre();
@@ -462,7 +687,7 @@ void ParamControl::mouseDown (const juce::MouseEvent& e)
     dragging = true;
     dragFine = e.mods.isShiftDown();
     dragStartValue = value;
-    dragAnchorY = e.position.y;
+    dragAnchorY = ctx.theme.listView ? e.position.x : e.position.y;
     attachment.beginGesture();
     repaint();
 }
@@ -473,12 +698,22 @@ void ParamControl::mouseDrag (const juce::MouseEvent& e)
         return;
 
     const bool fine = e.mods.isShiftDown();
+    const bool horizontal = ctx.theme.listView;   // faders move sideways, knobs up/down
+    const float pos = horizontal ? e.position.x : e.position.y;
     if (fine != dragFine)
     {
         // re-anchor so switching precision never jumps the value
         dragFine = fine;
         dragStartValue = value;
-        dragAnchorY = e.position.y;
+        dragAnchorY = pos;
+    }
+
+    if (horizontal)
+    {
+        // relative drag along the track: clicking never makes the value jump
+        const float pixels = controlArea().getWidth() * (fine ? kFineFactor : 1.0f);
+        setFromGesture (juce::jlimit (0.0f, 1.0f, dragStartValue + (pos - dragAnchorY) / pixels));
+        return;
     }
 
     const float pixels = kDragPixels * (fine ? kFineFactor : 1.0f);

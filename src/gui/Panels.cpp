@@ -16,7 +16,7 @@ void PanelBase::paint (juce::Graphics& g)
     auto r = getLocalBounds().toFloat().reduced (1.0f);
 
     juce::Path box;
-    box.addRoundedRectangle (r, 6.0f);
+    box.addRoundedRectangle (r, ctx.theme.corner);
     if (t.panelGlow > 0.0f)
         juce::DropShadow (t.frameGlowColor.withAlpha (t.panelGlow), 16, {}).drawForPath (g, box);
     else
@@ -49,10 +49,10 @@ struct SelectorPanel::CategoryRow : public juce::Component
         const bool on = owner.category == key && owner.search.isEmpty();
         if (on || isMouseOver())
         {
-            g.setColour (t.panelText.withAlpha (on ? 0.13f : 0.06f));
-            g.fillRoundedRectangle (getLocalBounds().toFloat(), 4.0f);
+            g.setColour (on ? t.selectFill : t.panelText.withAlpha (0.06f));
+            g.fillRoundedRectangle (getLocalBounds().toFloat(), t.corner * 0.67f);
         }
-        g.setColour (t.panelText);
+        g.setColour (on ? t.selectText : t.panelText);
         g.setFont (on ? fonts::extraBold (13.0f) : fonts::medium (13.0f));
         g.drawText (label, getLocalBounds().reduced (8, 0), juce::Justification::centredLeft, true);
         g.setColour (t.panelText.withAlpha (0.7f));
@@ -89,8 +89,8 @@ struct SelectorPanel::Row : public juce::Component
 
         if (hov)
         {
-            g.setColour (t.panelText.withAlpha (0.08f));
-            g.fillRoundedRectangle (getLocalBounds().toFloat(), 4.0f);
+            g.setColour (t.selectFill);
+            g.fillRoundedRectangle (getLocalBounds().toFloat(), t.corner * 0.67f);
         }
 
         auto r = getLocalBounds().reduced (8, 0);
@@ -171,6 +171,7 @@ void SelectorPanel::rebuildCategories()
     categoryRows.clear();
     categoryRows.add (new CategoryRow (*this, "Favourites", juce::String::fromUTF8 ("\xe2\x98\x85 Favourites")));
     categoryRows.add (new CategoryRow (*this, "Recent", "Recently used"));
+    categoryRows.add (new CategoryRow (*this, "New", "New"));
     categoryRows.add (new CategoryRow (*this, "All", "All effects"));
 
     juce::StringArray cats;
@@ -192,6 +193,13 @@ void SelectorPanel::refresh()
         if (r->key == "Favourites")      r->count = ctx.settings.getFavourites().size();
         else if (r->key == "Recent")     r->count = ctx.settings.getRecent().size();
         else if (r->key == "All")        r->count = (int) getAllEffects().size();
+        else if (r->key == "New")
+        {
+            r->count = 0;
+            for (auto& e : getAllEffects())
+                if (isNewEffect (e))
+                    ++r->count;
+        }
         else
         {
             r->count = 0;
@@ -226,7 +234,7 @@ void SelectorPanel::rebuildList()
     else
     {
         for (auto& e : getAllEffects())
-            if (category == "All" || category == e.category)
+            if (category == "All" || category == e.category || (category == "New" && isNewEffect (e)))
                 items.push_back (&e);
     }
 
@@ -252,7 +260,8 @@ juce::Component* SelectorPanel::refreshComponentForRow (int row, bool, juce::Com
     }
 
     r->info = juce::isPositiveAndBelow (row, (int) items.size()) ? items[(size_t) row] : nullptr;
-    r->showCategory = search.getText().isNotEmpty() || category == "Favourites" || category == "Recent" || category == "All";
+    r->showCategory = search.getText().isNotEmpty() || category == "Favourites" || category == "Recent"
+                      || category == "All" || category == "New";
     r->repaint();
     return r;
 }
@@ -278,8 +287,8 @@ void SelectorPanel::resized()
     int y = 0;
     for (auto* row : categoryRows)
     {
-        row->setBounds (0, y, left.getWidth(), 22);
-        y += 23;
+        row->setBounds (0, y, left.getWidth(), 20);
+        y += 21;
     }
     categoryHolder.setBounds (left.withHeight (juce::jmin (left.getHeight(), y)));
 
@@ -308,6 +317,7 @@ void SelectorPanel::paint (juce::Graphics& g)
                        : category == "Favourites" ? juce::String ("FAVOURITES")
                        : category == "Recent" ? juce::String ("RECENTLY USED")
                        : category == "All" ? juce::String ("ALL EFFECTS")
+                       : category == "New" ? juce::String ("NEW IN THE LATEST UPDATE")
                        : category.toUpperCase();
     drawHeading (g, title, heading);
 
@@ -384,7 +394,8 @@ SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed, std::
     : PanelBase (c), onChanged (std::move (changed)), onShowInfo (std::move (showInfoFn)),
       openThemeFolder (c, "Open theme folder"), resetButton (c, "Reset to defaults"),
       infoButton (c, "Effect info"), savePreset (c, "Save preset"),
-      nameOk (c, "Save"), nameCancel (c, "Cancel")
+      nameOk (c, "Save"), nameCancel (c, "Cancel"),
+      inTrim (c, c.processor.getInputTrim(), "Input"), outTrim (c, c.processor.getOutputTrim(), "Output")
 {
     int i = 0;
     for (auto level : GlobalSettings::zoomLevels)
@@ -397,17 +408,18 @@ SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed, std::
         ++i;
     }
 
-    const juce::StringArray names { "Light", "Dark", "User" };
-    for (int k = 0; k < 3; ++k)
+    const juce::StringArray names { "Light", "Dark", "User", "Original" };
+    const ThemeId ids[] = { ThemeId::light, ThemeId::dark, ThemeId::user, ThemeId::original };
+    for (int k = 0; k < 4; ++k)
     {
         auto* b = themeButtons.add (new PillButton (c, names[k]));
         b->joinedLeft = k > 0;
-        b->joinedRight = k < 2;
-        b->onClick = [this, k]
+        b->joinedRight = k < 3;
+        b->fontSize = 11.5f;
+        b->onClick = [this, id = ids[k]]
         {
-            const auto id = k == 0 ? ThemeId::light : k == 1 ? ThemeId::dark : ThemeId::user;
             if (id == ThemeId::user)
-                ensureUserThemeExists (ctx.settings.getTheme() == ThemeId::dark ? ThemeId::dark : ThemeId::light);
+                ensureUserThemeExists (ctx.settings.getTheme() == ThemeId::user ? ThemeId::light : ctx.settings.getTheme());
             ctx.settings.setTheme (id);
             if (onChanged) onChanged();
         };
@@ -465,20 +477,8 @@ SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed, std::
     presetList.setColour (juce::ListBox::backgroundColourId, juce::Colours::transparentBlack);
     addAndMakeVisible (presetList);
 
-    for (auto* s : { &inTrim, &outTrim })
-    {
-        s->setSliderStyle (juce::Slider::LinearHorizontal);
-        s->setTextBoxStyle (juce::Slider::NoTextBox, true, 0, 0);
-        s->setDoubleClickReturnValue (true, 0.0);
-        s->setMouseDragSensitivity (250);
-        s->setVelocityModeParameters (1.0, 1, 0.0, false, juce::ModifierKeys::shiftModifier);
-        s->onValueChange = [this] { repaint(); };
-        addAndMakeVisible (*s);
-    }
-    inTrim.setTitle ("Input trim");
-    outTrim.setTitle ("Output trim");
-    inAttach = std::make_unique<juce::SliderParameterAttachment> (c.processor.getInputTrim(), inTrim, nullptr);
-    outAttach = std::make_unique<juce::SliderParameterAttachment> (c.processor.getOutputTrim(), outTrim, nullptr);
+    addAndMakeVisible (inTrim);
+    addAndMakeVisible (outTrim);
 
     rescanPresets();
     refresh();
@@ -498,6 +498,8 @@ void SettingsPanel::refresh()
     themeButtons[0]->setToggleState (th == ThemeId::light, juce::dontSendNotification);
     themeButtons[1]->setToggleState (th == ThemeId::dark, juce::dontSendNotification);
     themeButtons[2]->setToggleState (th == ThemeId::user, juce::dontSendNotification);
+    themeButtons[3]->setToggleState (th == ThemeId::original, juce::dontSendNotification);
+    resized();   // trims are knobs or faders depending on the theme
     openThemeFolder.setVisible (th == ThemeId::user);
     tooltipButtons[0]->setToggleState (ctx.settings.getTooltips(), juce::dontSendNotification);
     tooltipButtons[1]->setToggleState (! ctx.settings.getTooltips(), juce::dontSendNotification);
@@ -529,11 +531,11 @@ void SettingsPanel::paintListBoxItem (int row, juce::Graphics& g, int width, int
 
     if (current)
     {
-        g.setColour (t.panelText.withAlpha (0.1f));
-        g.fillRoundedRectangle (juce::Rectangle<float> (0.0f, 1.0f, (float) width, (float) height - 2.0f), 4.0f);
+        g.setColour (t.selectFill);
+        g.fillRoundedRectangle (juce::Rectangle<float> (0.0f, 1.0f, (float) width, (float) height - 2.0f), t.corner * 0.67f);
     }
 
-    g.setColour (t.panelText);
+    g.setColour (current ? t.selectText : t.panelText);
     g.setFont (current ? fonts::extraBold (12.5f) : fonts::medium (12.5f));
     g.drawText (name, juce::Rectangle<int> (6, 0, width - 12, height), juce::Justification::centredLeft, true);
 }
@@ -708,18 +710,27 @@ void SettingsPanel::confirmName()
 }
 
 // ---- layout + drawing -------------------------------------------------------------------------
-void SettingsPanel::resized()
+SettingsPanel::Columns SettingsPanel::columns() const
 {
     auto r = getLocalBounds().reduced (14, 12);
-    const int colW = (r.getWidth() - 3 * 14) / 4;
+    Columns c;
+    c.presets = r.removeFromLeft (138);
+    r.removeFromLeft (14);
+    c.look = r.removeFromLeft (200);
+    r.removeFromLeft (14);
+    c.trims = r.removeFromLeft (130);
+    r.removeFromLeft (14);
+    c.effect = r;
+    return c;
+}
 
-    left = r.removeFromLeft (colW);
-    r.removeFromLeft (14);
-    auto look = r.removeFromLeft (colW);
-    r.removeFromLeft (14);
-    auto trims = r.removeFromLeft (colW);
-    r.removeFromLeft (14);
-    right = r;
+void SettingsPanel::resized()
+{
+    const auto cols = columns();
+    left = cols.presets;
+    auto look = cols.look;
+    auto trims = cols.trims;
+    right = cols.effect;
 
     // presets column
     auto pc = left.withTrimmedTop (22);
@@ -745,13 +756,23 @@ void SettingsPanel::resized()
         zoomButtons[i]->setBounds (z.getX() + i * zw, z.getY(), i == 3 ? z.getWidth() - 3 * zw : zw, z.getHeight());
 
     auto th = look.withTrimmedTop (86).withHeight (24);
-    const int tw = th.getWidth() / 3;
-    for (int i = 0; i < 3; ++i)
-        themeButtons[i]->setBounds (th.getX() + i * tw, th.getY(), i == 2 ? th.getWidth() - 2 * tw : tw, th.getHeight());
+    const int tw = (th.getWidth() - 62) / 3;   // "Original" gets a little more room
+    for (int i = 0; i < 4; ++i)
+        themeButtons[i]->setBounds (th.getX() + i * tw, th.getY(), i == 3 ? th.getWidth() - 3 * tw : tw, th.getHeight());
     openThemeFolder.setBounds (look.withTrimmedTop (116).withHeight (22));
 
-    inTrim.setBounds (trims.withTrimmedTop (38).withHeight (20));
-    outTrim.setBounds (trims.withTrimmedTop (86).withHeight (20));
+    if (ctx.theme.listView)
+    {
+        // faders, one under the other
+        inTrim.setBounds (trims.withTrimmedTop (22).withHeight (40));
+        outTrim.setBounds (trims.withTrimmedTop (66).withHeight (40));
+    }
+    else
+    {
+        auto knobs = trims.withTrimmedTop (22).withHeight (84);
+        inTrim.setBounds (knobs.removeFromLeft (knobs.getWidth() / 2));
+        outTrim.setBounds (knobs);
+    }
 
     auto tt = trims.withTrimmedTop (130).withHeight (22).withWidth (juce::jmin (trims.getWidth(), 110));
     tooltipButtons[0]->setBounds (tt.removeFromLeft (tt.getWidth() / 2));
@@ -765,10 +786,9 @@ void SettingsPanel::paint (juce::Graphics& g)
 {
     PanelBase::paint (g);
     const auto& t = ctx.theme;
-    auto r = getLocalBounds().reduced (14, 12);
-    const int colW = (r.getWidth() - 3 * 14) / 4;
-    auto look = r.withTrimmedLeft (colW + 14).withWidth (colW);
-    auto trims = r.withTrimmedLeft (2 * (colW + 14)).withWidth (colW);
+    const auto cols = columns();
+    auto look = cols.look;
+    auto trims = cols.trims;
 
     // Presets column
     auto* fx = ctx.processor.getEffectHost();
@@ -803,14 +823,9 @@ void SettingsPanel::paint (juce::Graphics& g)
         g.drawFittedText (ctx.theme.warnings[0], look.withTrimmedTop (140).withHeight (30), juce::Justification::topLeft, 2);
     }
 
-    auto fmt = [] (double db) { return (db > 0 ? "+" : db < 0 ? "-" : "") + juce::String (std::abs (db), 1) + " dB"; };
     drawHeading (g, "TRIMS", trims.withHeight (16));
     g.setColour (t.panelText);
     g.setFont (fonts::semiBold (12.5f));
-    g.drawText ("Input trim", trims.withTrimmedTop (20).withHeight (16), juce::Justification::centredLeft);
-    g.drawText (fmt (inTrim.getValue()), trims.withTrimmedTop (20).withHeight (16), juce::Justification::centredRight);
-    g.drawText ("Output trim", trims.withTrimmedTop (68).withHeight (16), juce::Justification::centredLeft);
-    g.drawText (fmt (outTrim.getValue()), trims.withTrimmedTop (68).withHeight (16), juce::Justification::centredRight);
     g.drawText ("Tooltips", trims.withTrimmedTop (112).withHeight (16), juce::Justification::centredLeft);
 
     drawHeading (g, "EFFECT" + (fx != nullptr ? kDot + juce::String (fx->getInfo().name).toUpperCase() : juce::String()),

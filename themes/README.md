@@ -37,6 +37,13 @@ Anything missing or invalid falls back to the Light theme's value, so a theme ca
 | `panel.fill`, `panel.border`, `panel.text`, `panel.glow` | dropdowns, About window, Effect info, dialogs, tooltips |
 | `button.outline`, `button.activeFill`, `button.activeText` | A/B, segmented buttons, BYPASS, tabs |
 | `logo.color`, `logo.glow` | the "Daylight_aw" logo |
+| `value.text` | value text next to faders (list view) |
+| `select.fill`, `select.text` | selected / hovered rows in lists (effects, categories, presets) |
+| `slider.track`, `slider.handle`, `slider.handleBorder`, `slider.centre` | faders (list view, and the trims in list view) |
+| `style.view` | `"designed"` (groups, knobs, the cat) or `"list"` (one fader per parameter, in the effect's own order and names, like a DAW's own plugin view) |
+| `style.font` | `"shantell"` (embedded hand-drawn font) or `"system"` (the computer's own UI font: Segoe UI on Windows) |
+| `style.corner` | corner radius of bars, panels and buttons, 0-12 px |
+| `style.topBar` | colour of a band behind the top row (`#00000000` = none) |
 
 Keep text readable: aim for at least 4.5:1 contrast between text and background. The plugin shows a
 warning in its settings if your theme is below that.

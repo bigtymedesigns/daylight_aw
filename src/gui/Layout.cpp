@@ -229,4 +229,27 @@ EffectLayout buildLayout (const std::vector<ParamFacts>& params, const juce::Str
     layout.small = layout.pages.size() <= 1 && totalRows <= 1;
     return layout;
 }
+EffectLayout buildListLayout (const std::vector<ParamFacts>& params)
+{
+    EffectLayout layout;
+    const int n = (int) params.size();
+    layout.small = n <= kControlsPerRow;
+
+    for (int start = 0; start < n; start += kListRowsPerPage)
+    {
+        PageSpec page;
+        const int end = juce::jmin (n, start + kListRowsPerPage);
+        page.name = "Parameters " + juce::String (start + 1) + "-" + juce::String (end);
+        for (int i = start; i < end; ++i)
+        {
+            ControlSpec c;
+            c.param = i;
+            c.type = ControlType::knob;   // continuous, like the original host view
+            c.label = params[(size_t) i].name;
+            page.rows.push_back ({ { GroupSpec { {}, { c } } } });
+        }
+        layout.pages.push_back (std::move (page));
+    }
+    return layout;
+}
 } // namespace dlaw

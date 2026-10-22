@@ -67,6 +67,36 @@ private:
     juce::ParameterAttachment attachment;
 };
 
+/** Small knob for the input/output trims (dB): drag (Shift = fine), wheel, double-click = 0 dB. */
+class TrimKnob : public juce::Component,
+                 public juce::SettableTooltipClient
+{
+public:
+    TrimKnob (UiContext& c, juce::AudioParameterFloat& param, const juce::String& label);
+
+    void paint (juce::Graphics&) override;
+    void mouseEnter (const juce::MouseEvent&) override { hover = true; repaint(); }
+    void mouseExit (const juce::MouseEvent&) override  { hover = false; repaint(); }
+    void mouseDown (const juce::MouseEvent&) override;
+    void mouseDrag (const juce::MouseEvent&) override;
+    void mouseUp (const juce::MouseEvent&) override;
+    void mouseDoubleClick (const juce::MouseEvent&) override;
+    void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
+
+private:
+    juce::Rectangle<float> knobArea() const;
+    juce::Rectangle<float> trackArea() const;
+    void set (float db, bool asGesture);
+
+    UiContext& ctx;
+    juce::AudioParameterFloat& param;
+    juce::String label;
+    juce::ParameterAttachment attachment;
+    float db = 0.0f;
+    bool hover = false, dragging = false, dragFine = false;
+    float dragStartDb = 0.0f, dragAnchorY = 0.0f;
+};
+
 /** One parameter: knob, stepped knob or switch, with its name above and value below. */
 class ParamControl : public juce::Component,
                      public juce::SettableTooltipClient,

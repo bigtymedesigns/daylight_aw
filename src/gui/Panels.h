@@ -97,11 +97,13 @@ private:
     void confirmName();
     void stopNaming();
 
+    struct Columns { juce::Rectangle<int> presets, look, trims, effect; };
+    Columns columns() const;
+
     std::function<void()> onChanged, onShowInfo;
     juce::OwnedArray<PillButton> zoomButtons, themeButtons, tooltipButtons;
     PillButton openThemeFolder, resetButton, infoButton, savePreset, nameOk, nameCancel;
-    juce::Slider inTrim, outTrim;
-    std::unique_ptr<juce::SliderParameterAttachment> inAttach, outAttach;
+    TrimKnob inTrim, outTrim;
     juce::Rectangle<int> left, right;
 
     PresetStore store { PresetStore::defaultRoot() };

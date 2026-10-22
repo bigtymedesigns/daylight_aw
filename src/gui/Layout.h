@@ -50,4 +50,12 @@ struct ParamFacts
                              the file forgets is appended so nothing is ever missing.
 */
 EffectLayout buildLayout (const std::vector<ParamFacts>& params, const juce::String& layoutJson);
+
+/**
+    List view ("Original" style): one fader per parameter, in the effect's own order and with its
+    own names (layout files are ignored). Up to 15 per page; Small window for up to 5.
+*/
+EffectLayout buildListLayout (const std::vector<ParamFacts>& params);
+
+constexpr int kListRowsPerPage = 15;
 } // namespace dlaw

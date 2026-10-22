@@ -37,9 +37,26 @@ struct Theme
     juce::Colour knobPointer { 0xffece8df };
     juce::Colour knobShadow { 0x331e1c18 };
     juce::Colour knobTicks { 0xff2b2a28 };
-    juce::String knobStyle { "rough" };
+    juce::String knobStyle { "rough" };   // edge drawing: "rough" (cut), "soft" (pencil), "grain" (charcoal)
     /** Tests/previews only: forces a knob style on every loaded theme (empty = off). */
-    static juce::String& knobStyleOverrideForTesting() { static juce::String s; return s; }   // edge drawing: "rough" (cut), "soft" (pencil), "grain" (charcoal)
+    static juce::String& knobStyleOverrideForTesting() { static juce::String s; return s; }
+
+    // Style of the whole window
+    bool listView = false;      // style.view "list": one fader per parameter, Airwindows order and names
+    bool systemFont = false;    // style.font "system": the computer's own UI font instead of Shantell Sans
+    float corner = 6.0f;        // style.corner: corner radius of bars, panels and buttons (px)
+    juce::Colour topBarFill { 0x00000000 };   // style.topBar: band behind the top row (transparent = none)
+
+    // Faders (list view and trims in list view)
+    juce::Colour sliderTrack { 0xff5d5e5f };
+    juce::Colour sliderHandle { 0xffdcdcdc };
+    juce::Colour sliderHandleBorder { 0xff9a9a9a };
+    juce::Colour sliderCentre { 0xff1b1b1b };
+    juce::Colour valueText { 0xff2b2a28 };    // value text next to faders
+
+    // Selected rows in lists (effects, categories, presets)
+    juce::Colour selectFill { 0x1a2b2a28 };
+    juce::Colour selectText { 0xff2b2a28 };
 
     // Menu bar
     juce::Colour barFill { 0xd9eeebe4 };
@@ -69,6 +86,7 @@ struct Theme
 
     static Theme builtInLight();
     static Theme builtInDark();
+    static Theme builtInOriginal();
 
     /** Parses theme.json text on top of 'base' (every missing/invalid token keeps base's value). */
     static Theme fromJson (const juce::String& jsonText, const Theme& base);
@@ -81,7 +99,7 @@ struct Theme
 };
 
 /** Theme ids stored in the settings. */
-enum class ThemeId { light, dark, user };
+enum class ThemeId { light, dark, user, original };
 juce::String toString (ThemeId);
 ThemeId themeIdFromString (const juce::String&);
 

@@ -383,6 +383,55 @@ void testPresets()
     root.deleteRecursively();
 }
 
+void testOriginalTheme()
+{
+    std::cout << "Original theme + list view ..." << std::endl;
+    const auto t = Theme::builtInOriginal();
+    check (t.listView && t.systemFont && ! t.paper.isValid() && ! t.figure.isValid() && t.warnings.isEmpty(),
+           "Original theme: list view, system font, no images, no warnings");
+    check (! Theme::builtInLight().listView && ! Theme::builtInDark().listView, "Light/Dark keep the designed view");
+    check (themeIdFromString (toString (ThemeId::original)) == ThemeId::original, "theme id round trip");
+
+    for (auto& e : getAllEffects())
+    {
+        std::vector<ParamFacts> facts;
+        auto p = makeProcessor();
+        p->selectEffect (e.id);
+        auto* fx = p->getEffectHost();
+        for (int i = 0; i < fx->getNumParams(); ++i)
+            facts.push_back ({ fx->getParamNames()[i], 0 });
+        const auto l = buildListLayout (facts);
+        bool ordered = true;
+        int k = 0;
+        for (auto& page : l.pages)
+        {
+            ordered = ordered && (int) page.rows.size() <= kListRowsPerPage;
+            for (auto& row : page.rows)
+                ordered = ordered && row.groups[0].controls[0].param == k++
+                          && row.groups[0].controls[0].label == facts[(size_t) (k - 1)].name;
+        }
+        check (ordered && k == fx->getNumParams(), juce::String ("list view: every parameter in original order: ") + e.id);
+        check (l.small == (fx->getNumParams() <= 5), juce::String ("list view window size: ") + e.id);
+    }
+}
+
+void testNewCategory()
+{
+    std::cout << "New category ..." << std::endl;
+    check (compareVersions ("0.1.0", "0.1.0") == 0 && compareVersions ("0.2.0", "0.10.0") < 0
+           && compareVersions ("1.0.0", "0.9.9") > 0, "version compare");
+    std::string newest = "0.0.0";
+    for (auto& e : getAllEffects())
+        if (compareVersions (e.since, newest) > 0) newest = e.since;
+    int n = 0;
+    for (auto& e : getAllEffects())
+    {
+        check (compareVersions (e.since, kVersion) <= 0, juce::String ("'since' not newer than this build: ") + e.id);
+        if (isNewEffect (e)) { ++n; check (newest == e.since, juce::String ("new effect is from newest batch: ") + e.id); }
+    }
+    check (n > 0, "New category is never empty");
+}
+
 void testEffectDocs()
 {
     std::cout << "Effect info texts ..." << std::endl;
@@ -541,7 +590,7 @@ void renderSnapshots (const juce::File& dir)
     juce::SharedResourcePointer<GlobalSettings> settings;
     const auto originalTheme = settings->getTheme();
 
-    for (auto theme : { ThemeId::light, ThemeId::dark })
+    for (auto theme : { ThemeId::light, ThemeId::dark, ThemeId::original })
     {
         settings->setTheme (theme);
 
@@ -615,6 +664,8 @@ int main (int argc, char* argv[])
     testLayouts();
     testPresets();
     testEffectDocs();
+    testNewCategory();
+    testOriginalTheme();
     testThreadedStress();
     testOldSessions (juce::File (DAYLIGHT_FIXTURES_DIR));
     testAllEffects();

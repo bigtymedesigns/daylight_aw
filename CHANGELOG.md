@@ -3,6 +3,15 @@
 All notable changes to Daylight_aw. Versions follow semantic versioning.
 Sessions and presets from every earlier version keep loading (tested with fixtures in `tests/fixtures`).
 
+## 0.5.0 (test build)
+- New theme **Original**: a plain fader view like a DAW shows for a plugin without a GUI. One fader
+  per parameter with Airwindows' own names, order and value texts; the computer's own UI font;
+  flat menus. Same window sizes and tabs (15 per page) as the other themes; only the look changes.
+- **New** category in the effect selector: the effects added in the latest Daylight_aw update
+  (manifest field `since`).
+- Input/Output trims are knobs (faders in Original): drag, Shift = fine, wheel, double-click = 0 dB.
+- The repository ignores built plugins and downloaded build zips.
+
 ## 0.4.0 (test build)
 - Knobs are now round with a fine charcoal grain on the edge (Light and Dark). The style is a theme
   token (`knob.style`: "grain", "soft" or "rough"), so a User theme can choose another.

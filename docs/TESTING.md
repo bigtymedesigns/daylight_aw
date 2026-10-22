@@ -73,6 +73,16 @@ Tick each line. Write down anything odd, with the effect name and what you did.
 - [ ] Tooltips look right in Light and Dark, and at 150 % / 200 % zoom
 - [ ] REAPER's preset field (top of the FX window) shows "ToTape9 - Warm Tape" after loading a preset
 
+### Original theme, New category, trim knobs (0.5.0)
+- [ ] Settings → Theme → **Original**: every open instance switches to the fader view at once, no window size change
+- [ ] Faders show Airwindows' own names and values; drag left/right, Shift = fine, wheel, double-click = default,
+      double-click the value to type one; clicking the track does not jump the value
+- [ ] ConsoleXChannel in Original: 3 pages of 15 with tabs at the bottom
+- [ ] Menus (effect list, presets/settings, Effect info, About) look flat and use the Windows font
+- [ ] Switching back to Light/Dark restores the designed view; presets, A/B and automation unaffected
+- [ ] Effect selector: **New** lists the newest effects (all 21 in this test build)
+- [ ] Trims: knobs in Light/Dark, faders in Original; Shift-drag is fine; double-click = 0 dB
+
 ### Knobs + tooltip switch (0.4.0)
 - [ ] Knobs look round with a fine grainy edge in Light and Dark, at 100 % and 200 %
 - [ ] Settings → Tooltips Off: no tooltips appear; On: they're back; the choice survives a REAPER restart

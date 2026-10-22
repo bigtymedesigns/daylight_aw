@@ -8,6 +8,7 @@ namespace dlaw
 namespace
 {
 constexpr int kTopRowY = 10, kTopRowH = 40;
+constexpr int kListTop = 82, kListRowH = 26;   // list view (Original): first fader row, row height
 constexpr int kRowsTop = 62, kRowH = 146, kGap = 10, kMargin = 12;
 constexpr float kSlotW = (float) (kWindowWidth - 2 * kMargin - (kControlsPerRow - 1) * kGap) / (float) kControlsPerRow;
 
@@ -109,6 +110,7 @@ public:
     {
         builtHost = ctx.processor.getEffectHost();
         builtUnknown = ctx.processor.hasUnknownEffect();
+        builtListView = ctx.theme.listView;
         controls.clear();
         tabs.clear();
         frames.clear();
@@ -117,9 +119,9 @@ public:
         {
             std::vector<ParamFacts> facts;
             for (int i = 0; i < fx->getNumParams(); ++i)
-                facts.push_back ({ fx->getParamNames()[i], fx->detectSteps (i) });
+                facts.push_back ({ fx->getParamNames()[i], builtListView ? 0 : fx->detectSteps (i) });
 
-            layout = buildLayout (facts, layoutJsonFor (fx->getInfo().id));
+            layout = builtListView ? buildListLayout (facts) : buildLayout (facts, layoutJsonFor (fx->getInfo().id));
             for ([[maybe_unused]] auto& w : layout.warnings)
                 DBG ("Layout warning (" << fx->getInfo().id << "): " << w);
 
@@ -161,6 +163,11 @@ public:
 
     void themeChanged()
     {
+        if (ctx.theme.listView != builtListView)
+        {
+            // a different kind of view (designed <-> list): build the controls again
+            rebuild();
+        }
         // Same geometry, new colours: just repaint everything (cached layers are re-rendered).
         backdrop.repaint();
         if (selector != nullptr) selector->refresh();
@@ -308,6 +315,13 @@ public:
         {
             if (ctx == nullptr) return;
             const auto& t = ctx->theme;
+            if (t.systemFont)
+            {
+                g.setColour (t.logoColor);
+                g.setFont (fonts::extraBold (15.0f));
+                g.drawText (kPluginName, getLocalBounds(), juce::Justification::centredLeft, false);
+                return;
+            }
             drawGlowingText (g, kPluginName, fonts::extraBold (21.0f), 0.0f, (float) getHeight() * 0.5f + 7.0f,
                              t.logoColor, t.frameGlowColor, t.logoGlow);
         }
@@ -350,7 +364,7 @@ public:
             const auto& t = owner.ctx.theme;
             auto b = getLocalBounds().toFloat().reduced (0.5f);
             juce::Path p;
-            p.addRoundedRectangle (b, 6.0f);
+            p.addRoundedRectangle (b, t.corner);
             if (t.barGlow > 0.0f)
                 juce::DropShadow (t.frameGlowColor.withAlpha (t.barGlow), 12, {}).drawForPath (g, p);
             g.setColour (t.barFill);
@@ -366,9 +380,9 @@ public:
             if (open)
             {
                 g.setColour (t.text.withAlpha (0.08f));
-                g.fillRoundedRectangle (trig.toFloat(), 4.0f);
+                g.fillRoundedRectangle (trig.toFloat(), t.corner * 0.67f);
                 g.setColour (t.text.withAlpha (0.5f));
-                g.drawRoundedRectangle (trig.toFloat().reduced (0.5f), 4.0f, 1.0f);
+                g.drawRoundedRectangle (trig.toFloat().reduced (0.5f), t.corner * 0.67f, 1.0f);
             }
 
             const auto font = fonts::semiBold (13.0f);
@@ -426,9 +440,18 @@ public:
             const bool on = owner.page == index;
             auto r = getLocalBounds().toFloat().reduced (1.0f);
             g.setColour (on ? t.buttonActiveFill : t.barFill);
-            g.fillEllipse (r);
-            g.setColour (t.buttonOutline);
-            g.drawEllipse (r, 1.6f);
+            if (t.listView)
+            {
+                g.fillRoundedRectangle (r, t.corner);
+                g.setColour (t.buttonOutline);
+                g.drawRoundedRectangle (r, t.corner, 1.0f);
+            }
+            else
+            {
+                g.fillEllipse (r);
+                g.setColour (t.buttonOutline);
+                g.drawEllipse (r, 1.6f);
+            }
             g.setColour (on ? t.buttonActiveText : t.text);
             g.setFont (fonts::extraBold (12.0f));
             g.drawText (juce::String (index + 1), getLocalBounds(), juce::Justification::centred);
@@ -460,6 +483,22 @@ public:
             const bool small = getHeight() < kLargeHeight;
 
             g.fillAll (t.paperColor);
+            if (! t.topBarFill.isTransparent())
+            {
+                g.setColour (t.topBarFill);
+                g.fillRect (0.0f, 0.0f, w, 56.0f);
+                g.setColour (t.barBorder);
+                g.fillRect (0.0f, 56.0f, w, 1.0f);
+            }
+            if (t.listView)
+                if (auto* fx = owner.ctx.processor.getEffectHost(); fx != nullptr && fx->getNumParams() > 0)
+                {
+                    g.setColour (t.groupTitle);
+                    g.setFont (fonts::medium (12.5f));
+                    juce::String sub = "Airwindows: " + juce::String (fx->getInfo().name)
+                                       + juce::String::fromUTF8 ("  \xc2\xb7  ") + fx->getInfo().description;
+                    g.drawText (sub, juce::Rectangle<float> (14.0f, 60.0f, w - 28.0f, 18.0f), juce::Justification::centredLeft, true);
+                }
             if (t.paper.isValid() && t.textureStrength > 0.0f)
             {
                 juce::FillType ft (t.paper, juce::AffineTransform::scale (0.5f)); // 2x texture
@@ -606,6 +645,13 @@ private:
         if (! juce::isPositiveAndBelow (page, (int) layout.pages.size()))
             return;
 
+        if (builtListView)
+        {
+            for (int i = 0; i < controls.size(); ++i)
+                controls[i]->setBounds (0, kListTop + i * kListRowH, getWidth(), kListRowH);
+            return;
+        }
+
         int ci = 0;
         float y = (float) kRowsTop;
         for (auto& row : layout.pages[(size_t) page].rows)
@@ -638,6 +684,7 @@ private:
     }
 
     EffectHost* builtHost = nullptr;
+    bool builtListView = false;
     bool builtUnknown = false;
     juce::String shownMenuLabel;
 
@@ -681,7 +728,7 @@ DaylightEditor::DaylightEditor (DaylightProcessor& p)
     setLookAndFeel (&lookAndFeel);
 
     content = std::make_unique<Content> (ctx);
-    content->onSettingsChanged = [this] { loadTheme(); applyZoom(); content->themeChanged(); };
+    content->onSettingsChanged = [this] { loadTheme(); content->themeChanged(); applyZoom(); };
     addAndMakeVisible (*content);
 
     p.addChangeListener (this);
@@ -712,9 +759,11 @@ void DaylightEditor::loadTheme()
             userThemeStamp = getUserThemeFolder().getChildFile ("theme.json").getLastModificationTime();
             break;
         case ThemeId::light: ctx.theme = Theme::builtInLight(); break;
+        case ThemeId::original: ctx.theme = Theme::builtInOriginal(); break;
     }
     if (Theme::knobStyleOverrideForTesting().isNotEmpty())
         ctx.theme.knobStyle = Theme::knobStyleOverrideForTesting();
+    fonts::setUseSystemFont (ctx.theme.systemFont);
     lookAndFeel.applyTheme();
 }
 
@@ -757,8 +806,8 @@ void DaylightEditor::changeListenerCallback (juce::ChangeBroadcaster* source)
 
     // global settings changed (this or another instance)
     loadTheme();
-    applyZoom();
     content->themeChanged();
+    applyZoom();
 }
 
 void DaylightEditor::timerCallback()

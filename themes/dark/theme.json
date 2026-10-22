@@ -25,6 +25,10 @@
     "knob.ticks": "#E6E2D8",
     "knob.style": "grain",
 
+    "value.text": "#E6E2D8",
+    "select.fill": "#E6E2D81F",
+    "select.text": "#E6E2D8",
+
     "bar.fill": "#FFFFFF0D",
     "bar.border": "#E6E2D880",
     "bar.glow": 0.16,

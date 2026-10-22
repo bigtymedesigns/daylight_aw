@@ -156,6 +156,28 @@ Theme Theme::fromJson (const juce::String& jsonText, const Theme& base)
     colour ("logo.color", t.logoColor);
     number ("logo.glow", t.logoGlow, 0.0f, 1.0f);
 
+    auto choice = [&] (const char* key, bool& target, const char* whenTrue, const char* whenFalse)
+    {
+        auto v = tokens.getProperty (key, {});
+        if (v.isVoid()) return;
+        const auto s = v.toString().trim().toLowerCase();
+        if (s == whenTrue) target = true;
+        else if (s == whenFalse) target = false;
+        else t.warnings.add (juce::String (key) + ": use \"" + whenFalse + "\" or \"" + whenTrue + "\"");
+    };
+    choice ("style.view", t.listView, "list", "designed");
+    choice ("style.font", t.systemFont, "system", "shantell");
+    number ("style.corner", t.corner, 0.0f, 12.0f);
+    colour ("style.topBar", t.topBarFill);
+
+    colour ("slider.track", t.sliderTrack);
+    colour ("slider.handle", t.sliderHandle);
+    colour ("slider.handleBorder", t.sliderHandleBorder);
+    colour ("slider.centre", t.sliderCentre);
+    colour ("value.text", t.valueText);
+    colour ("select.fill", t.selectFill);
+    colour ("select.text", t.selectText);
+
     return t;
 }
 
@@ -178,6 +200,18 @@ Theme Theme::builtInDark()
         Theme t = fromJson (resourceText ("dark_theme_json"), builtInLight());
         t.paper = resourceImage ("dark_paper_png");
         t.figure = resourceImage ("dark_figure_png");
+        return t;
+    }();
+    return cached;
+}
+
+Theme Theme::builtInOriginal()
+{
+    static const Theme cached = []
+    {
+        Theme t = fromJson (resourceText ("original_theme_json"), builtInLight());
+        t.paper = {};    // no images: flat, like a DAW's own plugin view
+        t.figure = {};
         return t;
     }();
     return cached;
@@ -229,6 +263,7 @@ juce::String toString (ThemeId id)
     {
         case ThemeId::dark: return "dark";
         case ThemeId::user: return "user";
+        case ThemeId::original: return "original";
         case ThemeId::light: break;
     }
     return "light";
@@ -238,6 +273,7 @@ ThemeId themeIdFromString (const juce::String& s)
 {
     if (s == "dark") return ThemeId::dark;
     if (s == "user") return ThemeId::user;
+    if (s == "original") return ThemeId::original;
     return ThemeId::light;
 }
 
@@ -263,6 +299,7 @@ bool ensureUserThemeExists (ThemeId from)
         return false;
 
     const bool dark = from == ThemeId::dark;
+    const bool original = from == ThemeId::original;
     auto write = [&] (const char* resource, const char* fileName)
     {
         int size = 0;
@@ -271,9 +308,12 @@ bool ensureUserThemeExists (ThemeId from)
         return false;
     };
 
-    bool ok = write (dark ? "dark_theme_json" : "light_theme_json", "theme.json");
-    write (dark ? "dark_paper_png" : "light_paper_png", "paper.png");
-    write (dark ? "dark_figure_png" : "light_figure_png", "figure.png");
+    bool ok = write (original ? "original_theme_json" : dark ? "dark_theme_json" : "light_theme_json", "theme.json");
+    if (! original)
+    {
+        write (dark ? "dark_paper_png" : "light_paper_png", "paper.png");
+        write (dark ? "dark_figure_png" : "light_figure_png", "figure.png");
+    }
     write ("theme_readme_md", "README.md");
 
     // Give the copy its own name so it is recognisable.

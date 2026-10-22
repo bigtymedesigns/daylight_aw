@@ -1,6 +1,8 @@
 #include "Fonts.h"
 #include "BinaryData.h"
 
+#include <atomic>
+
 namespace dlaw::fonts
 {
 namespace
@@ -37,11 +39,30 @@ Faces& faces()
         p = new Faces();
     return *p;
 }
+
+std::atomic<bool>& systemMode()
+{
+    static std::atomic<bool> on { false };
+    return on;
+}
+
+juce::Font systemFont (float h, bool bold)
+{
+   #if JUCE_WINDOWS
+    const juce::String family ("Segoe UI");
+   #else
+    const juce::String family (juce::Font::getDefaultSansSerifFontName());
+   #endif
+    return juce::Font (juce::FontOptions (family, h, bold ? juce::Font::bold : juce::Font::plain));
+}
 } // namespace
 
-juce::Font medium (float h)    { return make (faces().medium, h); }
-juce::Font semiBold (float h)  { return make (faces().semiBold, h); }
-juce::Font extraBold (float h) { return make (faces().extraBold, h); }
+void setUseSystemFont (bool on) { systemMode() = on; }
+bool usesSystemFont() { return systemMode(); }
+
+juce::Font medium (float h)    { return systemMode() ? systemFont (h, false) : make (faces().medium, h); }
+juce::Font semiBold (float h)  { return systemMode() ? systemFont (h, false) : make (faces().semiBold, h); }
+juce::Font extraBold (float h) { return systemMode() ? systemFont (h, true)  : make (faces().extraBold, h); }
 
 float width (const juce::Font& f, const juce::String& text)
 {

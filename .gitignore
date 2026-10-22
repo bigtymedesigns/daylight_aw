@@ -18,3 +18,11 @@ __pycache__/
 
 # test output
 snapshots/
+
+# built plugins and downloaded build zips never belong in the repository
+*.vst3/
+*.component/
+*.vst3
+*.component
+Daylight_aw-*.zip
+INSTALL.txt
