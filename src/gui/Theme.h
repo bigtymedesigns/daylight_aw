@@ -37,6 +37,9 @@ struct Theme
     juce::Colour knobPointer { 0xffece8df };
     juce::Colour knobShadow { 0x331e1c18 };
     juce::Colour knobTicks { 0xff2b2a28 };
+    juce::String knobStyle { "rough" };
+    /** Tests/previews only: forces a knob style on every loaded theme (empty = off). */
+    static juce::String& knobStyleOverrideForTesting() { static juce::String s; return s; }   // edge drawing: "rough" (cut), "soft" (pencil), "grain" (charcoal)
 
     // Menu bar
     juce::Colour barFill { 0xd9eeebe4 };

@@ -128,6 +128,17 @@ Theme Theme::fromJson (const juce::String& jsonText, const Theme& base)
     colour ("knob.pointer", t.knobPointer);
     colour ("knob.shadow", t.knobShadow);
     colour ("knob.ticks", t.knobTicks);
+    {
+        const auto v = tokens.getProperty ("knob.style", {});
+        if (! v.isVoid())
+        {
+            const auto style = v.toString().trim().toLowerCase();
+            if (style == "rough" || style == "soft" || style == "grain")
+                t.knobStyle = style;
+            else
+                t.warnings.add ("knob.style: use \"rough\", \"soft\" or \"grain\"");
+        }
+    }
 
     colour ("bar.fill", t.barFill);
     colour ("bar.border", t.barBorder);

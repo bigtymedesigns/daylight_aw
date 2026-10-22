@@ -32,8 +32,9 @@ Anything missing or invalid falls back to the Light theme's value, so a theme ca
 | `frame.color`, `frame.opacity` | group frame outline |
 | `frame.glowColor`, `frame.glowRadius` (px), `frame.glowStrength` (0-1) | soft glow around frames (0 = off) |
 | `knob.fill`, `knob.edge`, `knob.pointer`, `knob.shadow`, `knob.ticks` | knobs, stepped knobs, switches |
+| `knob.style` | knob outline: `"rough"` (hand-cut edge), `"soft"` (round pencil circle with a light second stroke) or `"grain"` (round with a fine charcoal edge) |
 | `bar.fill`, `bar.border`, `bar.glow` | the menu bar, BYPASS and tab buttons background |
-| `panel.fill`, `panel.border`, `panel.text`, `panel.glow` | dropdowns, About window, dialogs |
+| `panel.fill`, `panel.border`, `panel.text`, `panel.glow` | dropdowns, About window, Effect info, dialogs, tooltips |
 | `button.outline`, `button.activeFill`, `button.activeText` | A/B, segmented buttons, BYPASS, tabs |
 | `logo.color`, `logo.glow` | the "Daylight_aw" logo |
 

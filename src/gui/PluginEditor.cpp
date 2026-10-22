@@ -79,6 +79,7 @@ public:
             openSelector();
 
         startTimerHz (5);   // keeps the "*" (preset edited) marker current
+        updateTooltips();
     }
 
     /** Processor sent a change: rebuild only when the effect itself changed, else just refresh. */
@@ -165,6 +166,7 @@ public:
         if (selector != nullptr) selector->refresh();
         if (settingsPanel != nullptr) settingsPanel->refresh();
         if (info != nullptr) info->refresh();
+        updateTooltips();
         repaintAll (*this);
     }
 
@@ -658,7 +660,15 @@ private:
     std::unique_ptr<InfoPanel> info;
     std::unique_ptr<ConfirmDialog> confirm;
 
-    juce::TooltipWindow tooltipWindow { this, 900 };   // inside the content so it follows the zoom
+    std::unique_ptr<juce::TooltipWindow> tooltipWindow;   // inside the content so it follows the zoom
+
+    void updateTooltips()
+    {
+        if (ctx.settings.getTooltips() && tooltipWindow == nullptr)
+            tooltipWindow = std::make_unique<juce::TooltipWindow> (this, 900);
+        else if (! ctx.settings.getTooltips())
+            tooltipWindow.reset();
+    }
 };
 
 // =============================================================================================
@@ -703,6 +713,8 @@ void DaylightEditor::loadTheme()
             break;
         case ThemeId::light: ctx.theme = Theme::builtInLight(); break;
     }
+    if (Theme::knobStyleOverrideForTesting().isNotEmpty())
+        ctx.theme.knobStyle = Theme::knobStyleOverrideForTesting();
     lookAndFeel.applyTheme();
 }
 

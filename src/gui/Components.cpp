@@ -11,21 +11,71 @@ juce::Point<float> polar (juce::Point<float> c, float radius, float degrees)
     return { c.x + radius * std::sin (a), c.y - radius * std::cos (a) };
 }
 
-juce::Path roughCircle (float radius, int seed)
+/** Knob outline for the theme's knob.style (deterministic per control).
+    rough: the original cut, hand-cut edge.
+    soft:  round, slightly uneven pencil circle (low, smooth wobble).
+    grain: practically round with a fine charcoal grain on the edge. */
+juce::Path knobOutline (const juce::String& style, float radius, int seed)
 {
     juce::Random rnd ((juce::int64) seed * 7919 + 17);
     const float p1 = rnd.nextFloat() * 6.28f, p2 = rnd.nextFloat() * 6.28f, p3 = rnd.nextFloat() * 6.28f;
+
+    const bool soft = style == "soft", grain = style == "grain";
+    const int n = soft || grain ? 240 : 72;
+
     juce::Path p;
-    constexpr int n = 72;
     for (int i = 0; i <= n; ++i)
     {
         const float t = juce::MathConstants<float>::twoPi * (float) i / (float) n;
-        const float r = radius + 0.45f * std::sin (3.0f * t + p1) + 0.3f * std::sin (7.0f * t + p2) + 0.2f * std::sin (13.0f * t + p3);
+        float r = radius;
+        if (soft)
+            r += 0.42f * std::sin (2.0f * t + p1) + 0.22f * std::sin (3.0f * t + p2) + 0.06f * std::sin (9.0f * t + p3);
+        else if (grain)
+            r += 0.12f * std::sin (2.0f * t + p1) + 0.09f * std::sin (19.0f * t + p2) + 0.07f * std::sin (37.0f * t + p3);
+        else
+            r += 0.45f * std::sin (3.0f * t + p1) + 0.3f * std::sin (7.0f * t + p2) + 0.2f * std::sin (13.0f * t + p3);
         const juce::Point<float> pt { r * std::sin (t), -r * std::cos (t) };
         if (i == 0) p.startNewSubPath (pt); else p.lineTo (pt);
     }
     p.closeSubPath();
     return p;
+}
+
+/** Extra edge detail drawn over the knob for the soft and grain styles. */
+void drawKnobEdgeDetail (juce::Graphics& g, const juce::String& style, juce::Point<float> centre, float radius,
+                         float scale, int seed, juce::Colour edgeColour, juce::Colour fillColour)
+{
+    juce::Random rnd ((juce::int64) seed * 104729 + 3);
+    if (style == "soft")
+    {
+        // a second, lighter pencil pass, slightly off the first one and not quite closed
+        const float start = rnd.nextFloat() * 6.28f;
+        const float p1 = rnd.nextFloat() * 6.28f;
+        juce::Path retrace;
+        constexpr int n = 160;
+        for (int i = 0; i <= n; ++i)
+        {
+            const float t = start + juce::MathConstants<float>::twoPi * 0.82f * (float) i / (float) n;
+            const float r = (radius + 0.55f + 0.35f * std::sin (2.0f * t + p1)) * scale;
+            const juce::Point<float> pt { centre.x + r * std::sin (t), centre.y - r * std::cos (t) };
+            if (i == 0) retrace.startNewSubPath (pt); else retrace.lineTo (pt);
+        }
+        g.setColour (edgeColour.withMultipliedAlpha (0.45f));
+        g.strokePath (retrace, juce::PathStrokeType (0.9f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+    }
+    else if (style == "grain")
+    {
+        // tiny charcoal specks just inside and outside the edge
+        for (int i = 0; i < 70; ++i)
+        {
+            const float t = rnd.nextFloat() * juce::MathConstants<float>::twoPi;
+            const float d = (radius + (rnd.nextFloat() - 0.5f) * 1.6f) * scale;
+            const float sz = (0.35f + rnd.nextFloat() * 0.55f) * scale;
+            const bool outside = d > radius * scale;
+            g.setColour ((outside ? edgeColour : fillColour.contrasting (0.25f)).withMultipliedAlpha (outside ? 0.35f : 0.18f));
+            g.fillEllipse (centre.x + d * std::sin (t) - sz * 0.5f, centre.y - d * std::cos (t) - sz * 0.5f, sz, sz);
+        }
+    }
 }
 
 /** "0.5000" -> "0.500" (or "0.5000" while active); keeps text values and units as they are. */
@@ -224,7 +274,8 @@ ParamControl::ParamControl (UiContext& c, const ControlSpec& s)
     : ctx (c), spec (s),
       attachment (c.processor.getSlot (s.param), [this] (float v) { value = v; repaint(); }, nullptr)
 {
-    edge = roughCircle (22.0f, spec.param + 1);
+    edge = knobOutline (ctx.theme.knobStyle, 22.0f, spec.param + 1);
+    edgeStyle = ctx.theme.knobStyle;
     attachment.sendInitialUpdate();
     setTitle (spec.label);
     setRepaintsOnMouseActivity (false);
@@ -348,12 +399,18 @@ void ParamControl::paint (juce::Graphics& g)
         g.setColour (t.knobShadow);
         g.fillEllipse (juce::Rectangle<float> (44.0f * s, 44.0f * s).withCentre (c.translated (0.0f, 2.5f * s)));
 
+        if (edgeStyle != t.knobStyle)   // theme changed while open
+        {
+            edge = knobOutline (t.knobStyle, 22.0f, spec.param + 1);
+            edgeStyle = t.knobStyle;
+        }
         auto disc = edge;
         disc.applyTransform (juce::AffineTransform::scale (s).translated (c));
         g.setColour (t.knobFill);
         g.fillPath (disc);
         g.setColour (t.knobEdge);
-        g.strokePath (disc, juce::PathStrokeType (1.5f));
+        g.strokePath (disc, juce::PathStrokeType (t.knobStyle == "soft" ? 1.3f : 1.5f));
+        drawKnobEdgeDetail (g, t.knobStyle, c, 22.0f, s, spec.param + 1, t.knobEdge, t.knobFill);
 
         g.setColour (t.knobPointer);
         if (spec.type == ControlType::stepped)

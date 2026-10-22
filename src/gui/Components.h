@@ -111,6 +111,7 @@ private:
     float dragStartValue = 0.0f, dragAnchorY = 0.0f;
     bool dragFine = false;
     juce::Path edge;  // hand-drawn knob outline (deterministic)
+    juce::String edgeStyle;
     std::unique_ptr<juce::TextEditor> editor;
 };
 } // namespace dlaw

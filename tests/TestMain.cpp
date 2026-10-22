@@ -620,6 +620,35 @@ int main (int argc, char* argv[])
     testAllEffects();
 
     for (int i = 1; i + 1 < argc; ++i)
+        if (juce::String (argv[i]) == "--knob-styles")
+        {
+            // design preview: the same effects with every knob style, both themes, 2x resolution
+            const auto dir = juce::File::getCurrentWorkingDirectory().getChildFile (argv[i + 1]);
+            dir.createDirectory();
+            juce::SharedResourcePointer<GlobalSettings> settings;
+            const auto original = settings->getTheme();
+            for (auto style : { "rough", "soft", "grain" })
+                for (auto theme : { ThemeId::light, ThemeId::dark })
+                {
+                    Theme::knobStyleOverrideForTesting() = style;
+                    settings->setTheme (theme);
+                    for (auto id : { "totape9", "pocketverbs" })
+                    {
+                        auto p = makeProcessor();
+                        p->selectEffect (id);
+                        std::unique_ptr<juce::AudioProcessorEditor> ed (p->createEditor());
+                        auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 2.0f);
+                        auto f = dir.getChildFile (juce::String (style) + "_" + id + "_" + toString (theme) + ".png");
+                        f.deleteFile();
+                        juce::FileOutputStream os (f);
+                        juce::PNGImageFormat().writeImageToStream (img, os);
+                    }
+                }
+            Theme::knobStyleOverrideForTesting() = {};
+            settings->setTheme (original);
+        }
+
+    for (int i = 1; i + 1 < argc; ++i)
         if (juce::String (argv[i]) == "--snapshots")
             renderSnapshots (juce::File::getCurrentWorkingDirectory().getChildFile (argv[i + 1]));
 

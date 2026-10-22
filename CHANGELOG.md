@@ -3,6 +3,11 @@
 All notable changes to Daylight_aw. Versions follow semantic versioning.
 Sessions and presets from every earlier version keep loading (tested with fixtures in `tests/fixtures`).
 
+## 0.4.0 (test build)
+- Knobs are now round with a fine charcoal grain on the edge (Light and Dark). The style is a theme
+  token (`knob.style`: "grain", "soft" or "rough"), so a User theme can choose another.
+- Tooltips can be switched on/off in Settings (remembered, shared by all instances).
+
 ## 0.3.0 (test build)
 - **Effect info**: the full Airwindopedia text by Chris Johnson for each effect, in a scrollable panel
   (Settings → Effect info). The one-line description stays in the settings panel.

@@ -23,6 +23,7 @@
     "knob.pointer": "#ECE8DF",
     "knob.shadow": "#1E1C1833",
     "knob.ticks": "#2B2A28",
+    "knob.style": "grain",
 
     "bar.fill": "#EEEBE4D9",
     "bar.border": "#2B2A2866",

@@ -73,6 +73,11 @@ Tick each line. Write down anything odd, with the effect name and what you did.
 - [ ] Tooltips look right in Light and Dark, and at 150 % / 200 % zoom
 - [ ] REAPER's preset field (top of the FX window) shows "ToTape9 - Warm Tape" after loading a preset
 
+### Knobs + tooltip switch (0.4.0)
+- [ ] Knobs look round with a fine grainy edge in Light and Dark, at 100 % and 200 %
+- [ ] Settings → Tooltips Off: no tooltips appear; On: they're back; the choice survives a REAPER restart
+- [ ] User theme: set `"knob.style": "soft"` (or `"rough"`) in theme.json, save: knobs change live
+
 ### Host integration
 - [ ] The REAPER parameter list (the "Param" button) shows the effect's real parameter names
 - [ ] Automation: write automation for 2 controls, play back; the knobs move

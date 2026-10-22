@@ -24,6 +24,9 @@ public:
     int getZoom() const { return zoom; }
     void setZoom (int percent);
 
+    bool getTooltips() const { return tooltips; }
+    void setTooltips (bool on);
+
     bool isFavourite (const juce::String& id) const { return favourites.contains (id); }
     void toggleFavourite (const juce::String& id);
     const juce::StringArray& getFavourites() const { return favourites; }
@@ -44,6 +47,7 @@ private:
     juce::Time lastModification;
     ThemeId theme = ThemeId::light;
     int zoom = 100;
+    bool tooltips = true;
     juce::StringArray favourites, recent;
 };
 } // namespace dlaw

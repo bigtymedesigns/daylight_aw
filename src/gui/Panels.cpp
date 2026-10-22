@@ -414,6 +414,15 @@ SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed, std::
         addAndMakeVisible (b);
     }
 
+    for (int k = 0; k < 2; ++k)
+    {
+        auto* b = tooltipButtons.add (new PillButton (c, k == 0 ? "On" : "Off"));
+        b->joinedLeft = k == 1;
+        b->joinedRight = k == 0;
+        b->onClick = [this, k] { ctx.settings.setTooltips (k == 0); if (onChanged) onChanged(); };
+        addAndMakeVisible (b);
+    }
+
     openThemeFolder.onClick = [] { getUserThemeFolder().startAsProcess(); };
     addChildComponent (openThemeFolder);
 
@@ -490,6 +499,8 @@ void SettingsPanel::refresh()
     themeButtons[1]->setToggleState (th == ThemeId::dark, juce::dontSendNotification);
     themeButtons[2]->setToggleState (th == ThemeId::user, juce::dontSendNotification);
     openThemeFolder.setVisible (th == ThemeId::user);
+    tooltipButtons[0]->setToggleState (ctx.settings.getTooltips(), juce::dontSendNotification);
+    tooltipButtons[1]->setToggleState (! ctx.settings.getTooltips(), juce::dontSendNotification);
     nameEditor.applyColourToAllText (ctx.theme.panelText);
     presetList.repaint();
     repaint();
@@ -742,6 +753,10 @@ void SettingsPanel::resized()
     inTrim.setBounds (trims.withTrimmedTop (38).withHeight (20));
     outTrim.setBounds (trims.withTrimmedTop (86).withHeight (20));
 
+    auto tt = trims.withTrimmedTop (130).withHeight (22).withWidth (juce::jmin (trims.getWidth(), 110));
+    tooltipButtons[0]->setBounds (tt.removeFromLeft (tt.getWidth() / 2));
+    tooltipButtons[1]->setBounds (tt);
+
     resetButton.setBounds (right.withTrimmedTop (22).withHeight (24));
     infoButton.setBounds (right.withTrimmedTop (52).withHeight (24));
 }
@@ -796,6 +811,7 @@ void SettingsPanel::paint (juce::Graphics& g)
     g.drawText (fmt (inTrim.getValue()), trims.withTrimmedTop (20).withHeight (16), juce::Justification::centredRight);
     g.drawText ("Output trim", trims.withTrimmedTop (68).withHeight (16), juce::Justification::centredLeft);
     g.drawText (fmt (outTrim.getValue()), trims.withTrimmedTop (68).withHeight (16), juce::Justification::centredRight);
+    g.drawText ("Tooltips", trims.withTrimmedTop (112).withHeight (16), juce::Justification::centredLeft);
 
     drawHeading (g, "EFFECT" + (fx != nullptr ? kDot + juce::String (fx->getInfo().name).toUpperCase() : juce::String()),
                  right.withHeight (16));

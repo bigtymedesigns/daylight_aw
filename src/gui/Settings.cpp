@@ -35,6 +35,7 @@ void GlobalSettings::load()
                     list.addIfNotAlreadyThere (item.toString());
         return list;
     };
+    tooltips = (bool) root.getProperty ("tooltips", true);
     favourites = readList (root.getProperty ("favourites", {}));
     recent = readList (root.getProperty ("recent", {}));
     while (recent.size() > 10)
@@ -47,6 +48,7 @@ void GlobalSettings::save()
     obj->setProperty ("formatVersion", 1);
     obj->setProperty ("theme", toString (theme));
     obj->setProperty ("zoom", zoom);
+    obj->setProperty ("tooltips", tooltips);
 
     juce::Array<juce::var> fav, rec;
     for (auto& s : favourites) fav.add (s);
@@ -83,6 +85,11 @@ void GlobalSettings::setZoom (int percent)
             zoom = percent;
             save();
         }
+}
+
+void GlobalSettings::setTooltips (bool on)
+{
+    if (on != tooltips) { tooltips = on; save(); }
 }
 
 void GlobalSettings::toggleFavourite (const juce::String& id)

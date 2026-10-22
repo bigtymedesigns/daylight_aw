@@ -98,7 +98,7 @@ private:
     void stopNaming();
 
     std::function<void()> onChanged, onShowInfo;
-    juce::OwnedArray<PillButton> zoomButtons, themeButtons;
+    juce::OwnedArray<PillButton> zoomButtons, themeButtons, tooltipButtons;
     PillButton openThemeFolder, resetButton, infoButton, savePreset, nameOk, nameCancel;
     juce::Slider inTrim, outTrim;
     std::unique_ptr<juce::SliderParameterAttachment> inAttach, outAttach;
