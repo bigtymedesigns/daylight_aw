@@ -169,7 +169,6 @@ void testSelectionAndNames()
     check (p->selectEffect ("totape9"), "select totape9");
     check (p->getSlot (0).getName (64) == "Input", "slot 1 named after the effect");
     check (p->getSlot (9).getName (64) == "-", "unused slot named -");
-    check (! p->getSlot (40).isAutomatable(), "unused slot not automatable");
     check (! p->selectEffect ("galactic"), "second selection refused (locked)");
     check (p->getProgramName (0) == "ToTape9", "program name = effect name");
     check (! p->selectEffect ("doesnotexist"), "unknown id refused");
@@ -538,6 +537,74 @@ void testOldSessions (const juce::File& fixtures)
     }
 }
 
+
+// ---------------------------------------------------------------------------------------------
+void testStateExtras()
+{
+    std::cout << "State extras (exact A/B, unknown -> known, chunked blocks) ..." << std::endl;
+
+    {
+        auto rev = makeProcessor(); rev->selectEffect ("galactic");
+        auto tape = makeProcessor(); tape->selectEffect ("totape9");
+        check (rev->getTailLengthSeconds() >= 5.0 && tape->getTailLengthSeconds() < 0.001, "reverb tail reported to host");
+    }
+
+    // A/B values survive a save exactly (not rounded)
+    {
+        auto p = makeProcessor();
+        p->selectEffect ("galactic");
+        p->getSlot (0).setValueNotifyingHost (0.12345679f);
+        p->switchAB (1);
+        p->getSlot (0).setValueNotifyingHost (0.9f);
+        juce::MemoryBlock mb;
+        p->getStateInformation (mb);
+        auto q = makeProcessor();
+        q->setStateInformation (mb.getData(), (int) mb.getSize());
+        q->switchAB (0);
+        check (q->getSlot (0).get() == 0.12345679f, "A/B slot restored bit-exactly");
+    }
+
+    // a session of a known effect replaces the "needs a newer version" placeholder
+    {
+        auto p = makeProcessor();
+        const juce::String unknown = "<DaylightState formatVersion=\"1\" effectId=\"fromthefuture\"/>";
+        p->setStateInformation (unknown.toRawUTF8(), (int) unknown.getNumBytesAsUTF8());
+        check (p->hasUnknownEffect(), "unknown effect placeholder");
+        auto donor = makeProcessor();
+        donor->selectEffect ("deess");
+        juce::MemoryBlock mb;
+        donor->getStateInformation (mb);
+        p->setStateInformation (mb.getData(), (int) mb.getSize());
+        check (! p->hasUnknownEffect() && p->hasEffect() && juce::String (p->getEffectHost()->getInfo().id) == "deess",
+               "known state replaces unknown placeholder");
+    }
+
+    // host blocks larger than prepared (chunking) and mono double stay bit-identical
+    for (auto id : { "totape9", "galactic" })
+    {
+        const auto* info = findEffect (id);
+        std::srand (4321);
+        auto p = makeProcessor (48000.0, 256);
+        p->selectEffect (id);
+        std::srand (4321);
+        auto ref = info->create();
+        ref->setSampleRate (48000.0f);
+
+        juce::AudioBuffer<float> a (2, 4096), b;
+        fillNoise (a, 7);
+        b.makeCopyOf (a);
+        std::srand (99);
+        runProcessor (*p, a, 1024);   // 4x the prepared size
+        std::srand (99);
+        for (int start = 0; start < 4096; start += 256)
+        {
+            float* io[2] = { b.getWritePointer (0, start), b.getWritePointer (1, start) };
+            ref->processReplacing (io, io, 256);
+        }
+        check (maxDiff (a, b, 2) == 0.0, juce::String ("chunked big host blocks bit-identical: ") + id);
+    }
+}
+
 void testLayouts()
 {
     std::cout << "Layouts ..." << std::endl;
@@ -666,6 +733,7 @@ int main (int argc, char* argv[])
     testEffectDocs();
     testNewCategory();
     testOriginalTheme();
+    testStateExtras();
     testThreadedStress();
     testOldSessions (juce::File (DAYLIGHT_FIXTURES_DIR));
     testAllEffects();

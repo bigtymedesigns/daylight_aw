@@ -206,21 +206,7 @@ EffectLayout buildLayout (const std::vector<ParamFacts>& params, const juce::Str
         layout.warnings.add (juce::String ((int) rest.size()) + " parameter(s) missing from the layout file were added at the end.");
 
     if (! rest.empty())
-    {
-        // Fill up free space on the last page before starting a new one.
-        auto groups = autoGroups (params, rest);
-        if (! layout.pages.empty())
-        {
-            std::vector<PageSpec> extra;
-            packGroups (groups, {}, extra, layout.warnings);
-            for (auto& p : extra)
-                layout.pages.push_back (p);
-        }
-        else
-        {
-            packGroups (groups, {}, layout.pages, layout.warnings);
-        }
-    }
+        packGroups (autoGroups (params, rest), {}, layout.pages, layout.warnings);   // on page(s) of their own
 
     int totalRows = 0;
     for (auto& p : layout.pages)

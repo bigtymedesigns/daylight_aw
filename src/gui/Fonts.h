@@ -8,7 +8,6 @@ namespace dlaw::fonts
     ("style.font": "system"), the computer's own UI font (Segoe UI on Windows, the system font on
     macOS). System fonts are only requested from the OS, never embedded. */
 void setUseSystemFont (bool);
-bool usesSystemFont();
 
 juce::Font medium (float height);
 juce::Font semiBold (float height);

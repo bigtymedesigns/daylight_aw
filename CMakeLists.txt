@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum macOS version")
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Universal binary on macOS")
 
-project(Daylight_aw VERSION 0.5.0 LANGUAGES C CXX)
+project(Daylight_aw VERSION 0.6.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,6 +13,7 @@ option(DAYLIGHT_BUILD_TESTS "Build the test program" ON)
 option(DAYLIGHT_MINIMAL_X11 "Linux only: build without optional X11 extensions (Xrandr/Xinerama/Xcursor headers)" OFF)
 option(DAYLIGHT_SANITIZERS "Build with AddressSanitizer + UndefinedBehaviorSanitizer" OFF)
 option(DAYLIGHT_TSAN "Build with ThreadSanitizer" OFF)
+option(DAYLIGHT_WERROR "Treat warnings in Daylight_aw's own code as errors (CI)" OFF)
 
 # ---- JUCE (pinned version; upgrades are deliberate, tested steps) ---------------------------
 set(DAYLIGHT_JUCE_VERSION "8.0.15")
@@ -37,6 +38,18 @@ if(DAYLIGHT_TSAN)
 endif()
 
 # ---- Airwindows effects (generated list from manifest/effects.json) -------------------------
+# The generator runs automatically when Python 3 is available (it only rewrites files that changed),
+# so editing the manifest or adding a layout file is enough. Without Python the committed files are used.
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_Interpreter_FOUND)
+    execute_process(COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_effects.py
+                    RESULT_VARIABLE gen_result)
+    if(NOT gen_result EQUAL 0)
+        message(FATAL_ERROR "tools/gen_effects.py failed - see the message above (manifest or layout problem).")
+    endif()
+endif()
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+             ${CMAKE_CURRENT_SOURCE_DIR}/manifest/effects.json ${CMAKE_CURRENT_SOURCE_DIR}/layouts)
 include(cmake/Effects.cmake)
 
 add_library(daylight_airwindows STATIC
@@ -155,6 +168,9 @@ juce_add_plugin(Daylight_aw
     COPY_PLUGIN_AFTER_BUILD FALSE)
 
 target_sources(Daylight_aw PRIVATE ${DAYLIGHT_SOURCES})
+if(DAYLIGHT_WERROR AND NOT MSVC)
+    set_source_files_properties(${DAYLIGHT_SOURCES} PROPERTIES COMPILE_OPTIONS "-Werror")
+endif()
 target_include_directories(Daylight_aw PRIVATE src)
 target_compile_definitions(Daylight_aw PUBLIC ${DAYLIGHT_DEFINITIONS})
 target_link_libraries(Daylight_aw
@@ -168,6 +184,14 @@ if(DAYLIGHT_BUILD_TESTS)
     target_include_directories(DaylightTests PRIVATE src)
     target_compile_definitions(DaylightTests PRIVATE ${DAYLIGHT_DEFINITIONS} JUCE_STANDALONE_APPLICATION=1
         DAYLIGHT_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures")
+    if(NOT MSVC)
+        # the tests compare floats bit-exactly on purpose (null tests)
+        set(test_opts -Wno-float-equal)
+        if(DAYLIGHT_WERROR)
+            list(APPEND test_opts -Werror)
+        endif()
+        set_source_files_properties(tests/TestMain.cpp PROPERTIES COMPILE_OPTIONS "${test_opts}")
+    endif()
     target_link_libraries(DaylightTests
         PRIVATE ${DAYLIGHT_LIBS}
         PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)

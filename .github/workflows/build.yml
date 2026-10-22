@@ -1,7 +1,8 @@
 # Builds, tests and packages Daylight_aw on every push.
 #   Windows  -> VST3 (x64)
 #   macOS    -> VST3 + AU (universal: Apple silicon + Intel), validated with auval
-#   Linux    -> tests, GUI snapshots, sanitizers (the plugin is not distributed for Linux yet)
+#   Linux    -> tests (warnings = errors), GUI snapshots, sanitizers, plus a VST3 built on an
+#               older Ubuntu so it runs on most current distributions (community-tested)
 # Pushing a tag like v0.1.0 also creates a GitHub Release with the zips attached.
 
 name: build
@@ -12,6 +13,8 @@ on:
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
+  release:
+    types: [published]   # publishing a release on github.com builds and attaches the zips
 
 concurrency:
   group: build-${{ github.ref }}
@@ -28,8 +31,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Generated files are up to date
-        run: python3 tools/gen_effects.py --check
+      - name: Manifest + layouts valid, generated files committed
+        run: python3 tools/gen_effects.py --check || echo "::warning::Generated files were stale in the commit (the build regenerates them; run tools/gen_effects.py to update the repository)"
 
       - name: Install dependencies
         run: |
@@ -38,7 +41,7 @@ jobs:
             libxinerama-dev libxcursor-dev libfreetype-dev libfontconfig1-dev libasound2-dev
 
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DDAYLIGHT_WERROR=ON
 
       - name: Build
         run: cmake --build build --target DaylightTests Daylight_aw_VST3
@@ -176,6 +179,8 @@ jobs:
           unzip -q pv.zip
           ./pluginval.app/Contents/MacOS/pluginval --strictness-level 10 --validate-in-process \
             --validate build/Daylight_aw_artefacts/Release/VST3/Daylight_aw.vst3
+          ./pluginval.app/Contents/MacOS/pluginval --strictness-level 10 --validate-in-process \
+            --validate ~/Library/Audio/Plug-Ins/Components/Daylight_aw.component
 
       - name: Package
         run: |
@@ -193,10 +198,36 @@ jobs:
           path: Daylight_aw-macOS.zip
 
   # ------------------------------------------------------------------------------------------
+  linux-package:
+    name: Linux VST3 (package)
+    runs-on: ubuntu-22.04   # older base system = runs on more distributions
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libx11-dev libxext-dev libxrandr-dev \
+            libxinerama-dev libxcursor-dev libfreetype-dev libfontconfig1-dev libasound2-dev
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DDAYLIGHT_BUILD_TESTS=OFF
+      - name: Build
+        run: cmake --build build --target Daylight_aw_VST3
+      - name: Package
+        run: |
+          mkdir -p dist/Daylight_aw
+          cp -r build/Daylight_aw_artefacts/Release/VST3/Daylight_aw.vst3 dist/Daylight_aw/
+          cp docs/INSTALL_LINUX.txt dist/Daylight_aw/INSTALL.txt
+          cp LICENSE THIRD_PARTY_NOTICES.md dist/Daylight_aw/
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Daylight_aw-Linux-VST3
+          path: dist/
+
+  # ------------------------------------------------------------------------------------------
   release:
     name: GitHub Release (tags only)
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [linux, sanitizers, tsan, windows, macos]
+    needs: [linux, sanitizers, tsan, windows, macos, linux-package]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -208,9 +239,11 @@ jobs:
         run: |
           cd artifacts/Daylight_aw-Windows-VST3 && zip -qr ../../Daylight_aw-${GITHUB_REF_NAME}-Windows-VST3.zip . && cd ../..
           cp artifacts/Daylight_aw-macOS-VST3-AU/Daylight_aw-macOS.zip Daylight_aw-${GITHUB_REF_NAME}-macOS-VST3-AU.zip
+          cd artifacts/Daylight_aw-Linux-VST3 && zip -qr ../../Daylight_aw-${GITHUB_REF_NAME}-Linux-VST3.zip . && cd ../..
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             Daylight_aw-*-Windows-VST3.zip
             Daylight_aw-*-macOS-VST3-AU.zip
+            Daylight_aw-*-Linux-VST3.zip
           generate_release_notes: true

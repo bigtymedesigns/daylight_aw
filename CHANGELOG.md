@@ -3,6 +3,23 @@
 All notable changes to Daylight_aw. Versions follow semantic versioning.
 Sessions and presets from every earlier version keep loading (tested with fixtures in `tests/fixtures`).
 
+## 0.6.0 (release candidate)
+- Reverbs report their tail to the DAW (Galactic, PocketVerbs: 10 s), so hosts that pause silent
+  plugins or render offline never cut the reverb off (manifest field `tail`).
+- Tooltips are off for new installs (Settings → Tooltips On). Theme order: Light, Dark, Original, User.
+- Session safety: settings that hosts may save from another thread (A/B, preset name) are now
+  protected; A/B and preset snapshots are stored bit-exactly (they were rounded to 7 decimals);
+  a DAW preset of a known effect now replaces the "needs a newer Daylight_aw" placeholder.
+- Presets: renaming can no longer overwrite another preset on case-sensitive systems, and a failed
+  rename puts the file back.
+- Faster editor opening (choice detection is done once per effect), only one theme reload per
+  settings change, tab hover repaints only the page name.
+- The Favourites star is drawn (looks the same on every system). Code cleanup, zero compiler warnings.
+- Builds: Linux VST3 package (built on an older Ubuntu for wide compatibility), pluginval also checks
+  the AU, warnings count as errors in CI, the effect list is generated automatically during the build.
+- New docs: CONTRIBUTING.md (how others add effects/layouts via GitHub), docs/RELEASING.md.
+- New tests: big host blocks (chunking) stay bit-identical, exact A/B round trip, unknown → known state.
+
 ## 0.5.0 (test build)
 - New theme **Original**: a plain fader view like a DAW shows for a plugin without a GUI. One fader
   per parameter with Airwindows' own names, order and value texts; the computer's own UI font;

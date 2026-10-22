@@ -18,6 +18,7 @@ struct EffectInfo
     const char* description;
     int version;             // bumped when the pinned upstream code changes the sound
     const char* since;       // Daylight_aw version that first included this effect ("0.1.0")
+    double tailSeconds;      // reverb/delay tail reported to the host, so it is never cut off
     bool isDither;           // output trim should stay at 0 dB
     bool hasSharedState;     // original code keeps tiny state shared by all instances (detected by the generator)
     int numParams;

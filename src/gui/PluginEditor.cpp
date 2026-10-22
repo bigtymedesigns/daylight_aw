@@ -125,7 +125,7 @@ public:
             for ([[maybe_unused]] auto& w : layout.warnings)
                 DBG ("Layout warning (" << fx->getInfo().id << "): " << w);
 
-            page = juce::jlimit (0, juce::jmax (0, (int) layout.pages.size() - 1), ctx.processor.lastTab);
+            page = juce::jlimit (0, juce::jmax (0, (int) layout.pages.size() - 1), ctx.processor.lastTab.load());
             buildPage();
 
             if (layout.pages.size() > 1)
@@ -345,8 +345,8 @@ public:
             auto& p = owner.ctx.processor;
             juce::StringArray parts;
             auto fmt = [] (float db) { return (db > 0 ? "+" : "-") + juce::String (std::abs (db), 1); };
-            if (p.getInputTrim().get() != 0.0f)  parts.add ("IN " + fmt (p.getInputTrim().get()));
-            if (p.getOutputTrim().get() != 0.0f) parts.add ("OUT " + fmt (p.getOutputTrim().get()));
+            if (! juce::exactlyEqual (p.getInputTrim().get(), 0.0f))  parts.add ("IN " + fmt (p.getInputTrim().get()));
+            if (! juce::exactlyEqual (p.getOutputTrim().get(), 0.0f)) parts.add ("OUT " + fmt (p.getOutputTrim().get()));
             return parts.joinIntoString (" ");
         }
 
@@ -456,8 +456,8 @@ public:
             g.setFont (fonts::extraBold (12.0f));
             g.drawText (juce::String (index + 1), getLocalBounds(), juce::Justification::centred);
         }
-        void mouseEnter (const juce::MouseEvent&) override { owner.hoverTab = index; owner.backdrop.repaint(); }
-        void mouseExit (const juce::MouseEvent&) override  { owner.hoverTab = -1; owner.backdrop.repaint(); }
+        void mouseEnter (const juce::MouseEvent&) override { owner.hoverTab = index; owner.repaintTabName(); }
+        void mouseExit (const juce::MouseEvent&) override  { owner.hoverTab = -1; owner.repaintTabName(); }
         void mouseUp (const juce::MouseEvent& e) override
         {
             if (getLocalBounds().contains (e.getPosition()))
@@ -606,6 +606,8 @@ public:
         Content& owner;
     };
 
+    void repaintTabName() { backdrop.repaint (0, getHeight() - 24, getWidth(), 20); }
+
     void setPage (int p)
     {
         if (p == page) return;
@@ -728,7 +730,7 @@ DaylightEditor::DaylightEditor (DaylightProcessor& p)
     setLookAndFeel (&lookAndFeel);
 
     content = std::make_unique<Content> (ctx);
-    content->onSettingsChanged = [this] { loadTheme(); content->themeChanged(); applyZoom(); };
+    // Settings changes arrive once, through GlobalSettings' change message (for every instance).
     addAndMakeVisible (*content);
 
     p.addChangeListener (this);
@@ -756,7 +758,7 @@ void DaylightEditor::loadTheme()
         case ThemeId::user:
             ensureUserThemeExists (ThemeId::light);
             ctx.theme = Theme::fromFolder (getUserThemeFolder(), Theme::builtInLight());
-            userThemeStamp = getUserThemeFolder().getChildFile ("theme.json").getLastModificationTime();
+            userThemeStamp = userThemeTime();
             break;
         case ThemeId::light: ctx.theme = Theme::builtInLight(); break;
         case ThemeId::original: ctx.theme = Theme::builtInOriginal(); break;
@@ -810,6 +812,15 @@ void DaylightEditor::changeListenerCallback (juce::ChangeBroadcaster* source)
     applyZoom();
 }
 
+juce::Time DaylightEditor::userThemeTime()
+{
+    auto folder = getUserThemeFolder();
+    juce::Time newest;
+    for (auto name : { "theme.json", "paper.png", "figure.png" })
+        newest = juce::jmax (newest, folder.getChildFile (name).getLastModificationTime());
+    return newest;
+}
+
 void DaylightEditor::timerCallback()
 {
     settings->reloadIfChanged();
@@ -817,16 +828,9 @@ void DaylightEditor::timerCallback()
     if (settings->getTheme() == ThemeId::user)
     {
         // live reload while someone edits the user theme
-        auto folder = getUserThemeFolder();
-        juce::Time newest;
-        for (auto name : { "theme.json", "paper.png", "figure.png" })
-            newest = juce::jmax (newest, folder.getChildFile (name).getLastModificationTime());
-
-        if (newest != userThemeStamp)
+        if (userThemeTime() != userThemeStamp)
         {
-            userThemeStamp = newest;
             loadTheme();
-            userThemeStamp = newest;
             content->themeChanged();
         }
     }

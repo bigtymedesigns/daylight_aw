@@ -28,6 +28,7 @@ private:
     void timerCallback() override;
     void loadTheme();
     void applyZoom();
+    static juce::Time userThemeTime();
 
     juce::SharedResourcePointer<GlobalSettings> settings;
     UiContext ctx;

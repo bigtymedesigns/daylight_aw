@@ -35,7 +35,7 @@ void GlobalSettings::load()
                     list.addIfNotAlreadyThere (item.toString());
         return list;
     };
-    tooltips = (bool) root.getProperty ("tooltips", true);
+    tooltips = (bool) root.getProperty ("tooltips", false);
     favourites = readList (root.getProperty ("favourites", {}));
     recent = readList (root.getProperty ("recent", {}));
     while (recent.size() > 10)

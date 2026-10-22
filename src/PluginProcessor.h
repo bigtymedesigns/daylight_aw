@@ -18,7 +18,6 @@ class SlotParameter final : public juce::AudioParameterFloat
 public:
     SlotParameter (DaylightProcessor& owner, int slotIndex);
     juce::String getName (int maximumStringLength) const override;
-    bool isAutomatable() const override;
     juce::String getText (float normalisedValue, int maximumStringLength) const override;
 
 private:
@@ -49,7 +48,7 @@ public:
     bool acceptsMidi() const override { return false; }
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
-    double getTailLengthSeconds() const override { return 0.0; }
+    double getTailLengthSeconds() const override;
 
     int getNumPrograms() override { return 1; }
     int getCurrentProgram() override { return 0; }
@@ -70,8 +69,8 @@ public:
     EffectHost* getEffectHost() const noexcept { return effectHost.get(); }
 
     /** Session was saved with an effect this version doesn't know (needs a newer Daylight_aw). */
-    bool hasUnknownEffect() const noexcept { return unknownEffectId.isNotEmpty(); }
-    juce::String getUnknownEffectId() const { return unknownEffectId; }
+    bool hasUnknownEffect() const { const juce::ScopedLock sl (stateLock); return unknownEffectId.isNotEmpty(); }
+    juce::String getUnknownEffectId() const { const juce::ScopedLock sl (stateLock); return unknownEffectId; }
 
     SlotParameter& getSlot (int index) noexcept { return *slots[(size_t) index]; }
     juce::AudioParameterFloat& getInputTrim() noexcept  { return *inTrimParam; }
@@ -89,17 +88,17 @@ public:
     /** Records that the current values were just saved as this preset. */
     void markPresetSaved (const juce::String& name);
     /** Called when the current preset was renamed or deleted on disk. */
-    void setPresetName (const juce::String& name) { presetName = name; presetNameChanged(); }
-    juce::String getPresetName() const { return presetName; }
+    void setPresetName (const juce::String& name);
+    juce::String getPresetName() const;
     /** True when a preset is loaded and any value differs from it ("*" in the menu bar). */
     bool isPresetModified() const;
 
     // ---- A/B (message thread) --------------------------------------------------------------
-    int getActiveAB() const noexcept { return activeAB; }
+    int getActiveAB() const;
     void switchAB (int which);
 
     // ---- per-instance GUI state saved with the session ---------------------------------------
-    int lastTab = 0;
+    std::atomic<int> lastTab { 0 };
 
 private:
     template <typename T> void processAudio (juce::AudioBuffer<T>& buffer);
@@ -125,6 +124,11 @@ private:
 
     mutable juce::SpinLock nameLock;
     std::array<juce::String, (size_t) kNumSlots> slotNames;
+
+    // Session data that hosts may read from other threads (getStateInformation, getProgramName):
+    // guarded by stateLock. Never taken on the audio thread, never held while notifying the host.
+    juce::CriticalSection stateLock;
+    std::atomic<bool> selecting { false };
 
     juce::String presetName;
     std::vector<float> presetSnapshot;

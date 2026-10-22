@@ -47,6 +47,8 @@ def main():
         for key in ("id", "upstream", "version", "since", "category", "included", "description"):
             if key not in e:
                 fail(f"effect {e} is missing '{key}'")
+        if "tail" in e and not (isinstance(e["tail"], (int, float)) and 0 <= e["tail"] <= 60):
+            fail(f"'tail' of '{e['id']}' must be 0-60 seconds")
         if not SEMVER_RE.match(e["since"]):
             fail(f"'since' of '{e['id']}' must look like 1.2.3")
         if not ID_RE.match(e["id"]):
@@ -100,7 +102,7 @@ def main():
         shared = bool(SHARED_STATE_RE.search((ROOT / AW_DIR / f"{n}Proc.cpp").read_text(encoding="utf-8", errors="replace")))
         cpp.append(
             f"        {{ {c_str(e['id'])}, {c_str(n)}, {c_str(e['category'])}, {c_str(e['description'])}, "
-            f"{int(e['version'])}, {c_str(e['since'])}, {'true' if e.get('dither') else 'false'}, {'true' if shared else 'false'}, airwinconsolidated::{n}::kNumParameters, "
+            f"{int(e['version'])}, {c_str(e['since'])}, {float(e.get('tail', 0)):.1f}, {'true' if e.get('dither') else 'false'}, {'true' if shared else 'false'}, airwinconsolidated::{n}::kNumParameters, "
             f"[] {{ return std::unique_ptr<AirwinConsolidatedBase> (new airwinconsolidated::{n}::{n} (0)); }} }},")
     cpp += ["    };", "    return list;", "}", "} // namespace dlaw", ""]
     cpp_text = "\n".join(cpp)
@@ -113,11 +115,13 @@ def main():
         print(f"gen_effects: OK ({len(included)} effects included)")
         return
 
-    OUT_CMAKE.parent.mkdir(parents=True, exist_ok=True)
-    OUT_CPP.parent.mkdir(parents=True, exist_ok=True)
-    OUT_CMAKE.write_text(cmake_text, encoding="utf-8")
-    OUT_CPP.write_text(cpp_text, encoding="utf-8")
-    print(f"gen_effects: wrote {len(included)} effects, {len(layouts)} layouts")
+    changed = False
+    for path, text in ((OUT_CMAKE, cmake_text), (OUT_CPP, cpp_text)):
+        if not path.exists() or path.read_text(encoding="utf-8") != text:   # untouched files = no rebuild
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8")
+            changed = True
+    print(f"gen_effects: {'wrote' if changed else 'up to date:'} {len(included)} effects, {len(layouts)} layouts")
 
 
 if __name__ == "__main__":

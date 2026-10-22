@@ -163,16 +163,23 @@ bool PresetStore::rename (const juce::File& presetFile, const juce::String& newN
         return true;
     }
 
-    // Allow changing only the letter case of the same file (case-insensitive file systems).
-    const bool sameIgnoringCase = target.getFileName().equalsIgnoreCase (presetFile.getFileName());
-    if (target.exists() && ! sameIgnoringCase)
+    // Changing only the letter case of the same file needs a detour on case-insensitive file
+    // systems (Windows, usual macOS). On case-sensitive ones "BRIGHT" is simply another file.
+    const bool caseOnly = ! juce::File::areFileNamesCaseSensitive()
+                          && target.getFileName().equalsIgnoreCase (presetFile.getFileName());
+    if (target.exists() && ! caseOnly)
         return false;
 
-    if (sameIgnoringCase)
+    if (caseOnly)
     {
         auto temp = presetFile.getSiblingFile (clean + ".renaming.tmp");
-        if (! presetFile.moveFileTo (temp) || ! temp.moveFileTo (target))
+        if (! presetFile.moveFileTo (temp))
             return false;
+        if (! temp.moveFileTo (target))
+        {
+            temp.moveFileTo (presetFile);   // put it back: never lose a preset
+            return false;
+        }
     }
     else if (! presetFile.moveFileTo (target))
         return false;

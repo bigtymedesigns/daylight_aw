@@ -20,10 +20,12 @@ support him: https://www.patreon.com/airwindows
 
 ## Download
 
-Open the **Actions** tab, pick the latest green run, and download from *Artifacts* at the bottom:
+Finished versions: the **Releases** page of this repository. Test builds: open the **Actions** tab,
+pick the latest green run, and download from *Artifacts* at the bottom:
 
 - `Daylight_aw-Windows-VST3`
 - `Daylight_aw-macOS-VST3-AU`
+- `Daylight_aw-Linux-VST3` (community-tested)
 
 Tagged versions also appear under **Releases**. Install steps are in the zips (`INSTALL.txt`).
 
@@ -78,6 +80,11 @@ them. Sessions store the effect id plus parameter names, so loading stays robust
 
 **Release.** Bump `project(... VERSION x.y.z)` in `CMakeLists.txt`, push a tag `vX.Y.Z`. GitHub
 builds and publishes the Release.
+
+## Contributing and releases
+
+- Want to add effects, layouts or themes? See `CONTRIBUTING.md`. Everything works through GitHub.
+- Public downloads are on the **Releases** page; how to publish one is in `docs/RELEASING.md`.
 
 ## Licence
 

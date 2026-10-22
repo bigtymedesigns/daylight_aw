@@ -181,8 +181,8 @@ void DaylightLookAndFeel::drawScrollbar (juce::Graphics& g, juce::ScrollBar&, in
 }
 
 // =============================================================================================
-PillButton::PillButton (UiContext& c, const juce::String& text, bool filledWhenOn)
-    : juce::Button (text), ctx (c), fillOn (filledWhenOn)
+PillButton::PillButton (UiContext& c, const juce::String& buttonText, bool filledWhenOn)
+    : juce::Button (buttonText), ctx (c), fillOn (filledWhenOn)
 {
     setMouseCursor (juce::MouseCursor::PointingHandCursor);
 }
@@ -328,7 +328,7 @@ juce::Rectangle<float> TrimKnob::knobArea() const
 void TrimKnob::set (float newDb, bool asGesture)
 {
     newDb = juce::jlimit (param.range.start, param.range.end, std::round (newDb * 10.0f) / 10.0f);
-    if (newDb == db)
+    if (juce::exactlyEqual (newDb, db))
         return;
     if (asGesture)
         attachment.setValueAsPartOfGesture (newDb);
@@ -382,7 +382,7 @@ void TrimKnob::paint (juce::Graphics& g)
     // centre tick (0 dB) and end ticks
     g.setColour (t.knobTicks);
     for (float a : { -135.0f, 0.0f, 135.0f })
-        g.drawLine ({ polar (c, 15.5f * s, a), polar (c, 18.5f * s, a) }, a == 0.0f ? 1.4f : 1.6f);
+        g.drawLine ({ polar (c, 15.5f * s, a), polar (c, 18.5f * s, a) }, juce::exactlyEqual (a, 0.0f) ? 1.4f : 1.6f);
 
     g.setColour (t.knobShadow);
     g.fillEllipse (juce::Rectangle<float> (28.0f * s, 28.0f * s).withCentre (c.translated (0.0f, 1.8f * s)));
@@ -453,8 +453,8 @@ void TrimKnob::mouseDoubleClick (const juce::MouseEvent&) { set (0.0f, false); }
 void TrimKnob::mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& w)
 {
     const float step = e.mods.isShiftDown() ? 0.1f : 0.5f;
-    const float dir = (w.deltaY != 0.0f ? w.deltaY : w.deltaX) * (w.isReversed ? -1.0f : 1.0f);
-    if (dir != 0.0f)
+    const float dir = (! juce::exactlyEqual (w.deltaY, 0.0f) ? w.deltaY : w.deltaX) * (w.isReversed ? -1.0f : 1.0f);
+    if (! juce::exactlyEqual (dir, 0.0f))
         set (db + (dir > 0.0f ? step : -step), false);
 }
 
@@ -669,7 +669,7 @@ void ParamControl::mouseExit (const juce::MouseEvent&)  { hover = false; repaint
 void ParamControl::setFromGesture (float v)
 {
     v = snap (v);
-    if (v != value)
+    if (! juce::exactlyEqual (v, value))
         attachment.setValueAsPartOfGesture (v);
 }
 
@@ -764,8 +764,8 @@ void ParamControl::mouseDoubleClick (const juce::MouseEvent& e)
 
 void ParamControl::mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& w)
 {
-    const float dir = (w.deltaY != 0.0f ? w.deltaY : w.deltaX) > 0.0f ? 1.0f : -1.0f;
-    if (w.deltaY == 0.0f && w.deltaX == 0.0f)
+    const float dir = (! juce::exactlyEqual (w.deltaY, 0.0f) ? w.deltaY : w.deltaX) > 0.0f ? 1.0f : -1.0f;
+    if (juce::exactlyEqual (w.deltaY, 0.0f) && juce::exactlyEqual (w.deltaX, 0.0f))
         return;
 
     float v = value;

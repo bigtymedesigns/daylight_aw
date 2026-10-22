@@ -77,6 +77,16 @@ int EffectHost::detectSteps (int index)
     if (index < 0 || index >= numParams)
         return 0;
 
+    // The answer never changes for an effect: probe once, then reuse (fast editor opening).
+    if (stepCache.empty())
+        stepCache.assign ((size_t) numParams, -1);
+    if (stepCache[(size_t) index] >= 0)
+        return stepCache[(size_t) index];
+    return stepCache[(size_t) index] = probeSteps (index);
+}
+
+int EffectHost::probeSteps (int index)
+{
     const float original = displayFx->getParameter (index);
     std::set<juce::String> distinct;
     bool allText = true;

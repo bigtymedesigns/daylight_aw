@@ -53,8 +53,17 @@ struct SelectorPanel::CategoryRow : public juce::Component
             g.fillRoundedRectangle (getLocalBounds().toFloat(), t.corner * 0.67f);
         }
         g.setColour (on ? t.selectText : t.panelText);
+        auto textArea = getLocalBounds().reduced (8, 0);
+        if (key == "Favourites")
+        {
+            // drawn star: the same on every system (the font has no star glyph)
+            juce::Path star;
+            star.addStar ({ (float) textArea.getX() + 5.0f, (float) getHeight() * 0.5f }, 5, 2.4f, 5.6f);
+            g.fillPath (star);
+            textArea.removeFromLeft (15);
+        }
         g.setFont (on ? fonts::extraBold (13.0f) : fonts::medium (13.0f));
-        g.drawText (label, getLocalBounds().reduced (8, 0), juce::Justification::centredLeft, true);
+        g.drawText (label, textArea, juce::Justification::centredLeft, true);
         g.setColour (t.panelText.withAlpha (0.7f));
         g.setFont (fonts::medium (11.0f));
         g.drawText (juce::String (count), getLocalBounds().reduced (8, 0), juce::Justification::centredRight, false);
@@ -169,7 +178,7 @@ SelectorPanel::~SelectorPanel()
 void SelectorPanel::rebuildCategories()
 {
     categoryRows.clear();
-    categoryRows.add (new CategoryRow (*this, "Favourites", juce::String::fromUTF8 ("\xe2\x98\x85 Favourites")));
+    categoryRows.add (new CategoryRow (*this, "Favourites", "Favourites"));
     categoryRows.add (new CategoryRow (*this, "Recent", "Recently used"));
     categoryRows.add (new CategoryRow (*this, "New", "New"));
     categoryRows.add (new CategoryRow (*this, "All", "All effects"));
@@ -408,8 +417,8 @@ SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed, std::
         ++i;
     }
 
-    const juce::StringArray names { "Light", "Dark", "User", "Original" };
-    const ThemeId ids[] = { ThemeId::light, ThemeId::dark, ThemeId::user, ThemeId::original };
+    const juce::StringArray names { "Light", "Dark", "Original", "User" };
+    const ThemeId ids[] = { ThemeId::light, ThemeId::dark, ThemeId::original, ThemeId::user };
     for (int k = 0; k < 4; ++k)
     {
         auto* b = themeButtons.add (new PillButton (c, names[k]));
@@ -497,8 +506,8 @@ void SettingsPanel::refresh()
     const auto th = ctx.settings.getTheme();
     themeButtons[0]->setToggleState (th == ThemeId::light, juce::dontSendNotification);
     themeButtons[1]->setToggleState (th == ThemeId::dark, juce::dontSendNotification);
-    themeButtons[2]->setToggleState (th == ThemeId::user, juce::dontSendNotification);
-    themeButtons[3]->setToggleState (th == ThemeId::original, juce::dontSendNotification);
+    themeButtons[2]->setToggleState (th == ThemeId::original, juce::dontSendNotification);
+    themeButtons[3]->setToggleState (th == ThemeId::user, juce::dontSendNotification);
     resized();   // trims are knobs or faders depending on the theme
     openThemeFolder.setVisible (th == ThemeId::user);
     tooltipButtons[0]->setToggleState (ctx.settings.getTooltips(), juce::dontSendNotification);
@@ -756,9 +765,15 @@ void SettingsPanel::resized()
         zoomButtons[i]->setBounds (z.getX() + i * zw, z.getY(), i == 3 ? z.getWidth() - 3 * zw : zw, z.getHeight());
 
     auto th = look.withTrimmedTop (86).withHeight (24);
-    const int tw = (th.getWidth() - 62) / 3;   // "Original" gets a little more room
+    // "Original" (3rd) gets a little more room
+    const int tw = (th.getWidth() - 62) / 3;
+    int x = th.getX();
     for (int i = 0; i < 4; ++i)
-        themeButtons[i]->setBounds (th.getX() + i * tw, th.getY(), i == 3 ? th.getWidth() - 3 * tw : tw, th.getHeight());
+    {
+        const int w = i == 2 ? th.getWidth() - 3 * tw : tw;
+        themeButtons[i]->setBounds (x, th.getY(), w, th.getHeight());
+        x += w;
+    }
     openThemeFolder.setBounds (look.withTrimmedTop (116).withHeight (22));
 
     if (ctx.theme.listView)
@@ -937,7 +952,12 @@ void InfoPanel::paint (juce::Graphics& g)
 AboutPanel::AboutPanel (UiContext& c, std::function<void()> closeFn)
     : PanelBase (c), onClose (std::move (closeFn)), close (c, "Close")
 {
-    close.onClick = [this] { if (onClose) onClose(); };
+    close.onClick = [this]
+    {
+        // close after this click has finished (the panel deletes itself)
+        juce::Component::SafePointer<AboutPanel> safe (this);
+        juce::MessageManager::callAsync ([safe] { if (safe != nullptr && safe->onClose) safe->onClose(); });
+    };
     addAndMakeVisible (close);
 }
 

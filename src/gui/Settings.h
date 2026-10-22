@@ -47,7 +47,7 @@ private:
     juce::Time lastModification;
     ThemeId theme = ThemeId::light;
     int zoom = 100;
-    bool tooltips = true;
+    bool tooltips = false;   // off for new installs; switch on in Settings
     juce::StringArray favourites, recent;
 };
 } // namespace dlaw

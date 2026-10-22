@@ -58,7 +58,6 @@ juce::Font systemFont (float h, bool bold)
 } // namespace
 
 void setUseSystemFont (bool on) { systemMode() = on; }
-bool usesSystemFont() { return systemMode(); }
 
 juce::Font medium (float h)    { return systemMode() ? systemFont (h, false) : make (faces().medium, h); }
 juce::Font semiBold (float h)  { return systemMode() ? systemFont (h, false) : make (faces().semiBold, h); }

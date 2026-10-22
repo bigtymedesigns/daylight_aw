@@ -7,6 +7,30 @@ namespace
 {
 juce::String slotId (int i) { return "p" + juce::String (i + 1).paddedLeft ('0', 2); }
 
+/** Shortest text that reads back as exactly the same float (round-trip safe). */
+juce::String exactText (float v) { return juce::var ((double) v).toString(); }
+
+juce::String joinValues (const std::vector<float>& values)
+{
+    juce::StringArray parts;
+    for (auto v : values)
+        parts.add (exactText (v));
+    return parts.joinIntoString (",");
+}
+
+std::vector<float> parseValues (const juce::String& text)
+{
+    juce::StringArray parts;
+    parts.addTokens (text, ",", {});
+    std::vector<float> v;
+    for (auto& s : parts)
+    {
+        const double x = s.getDoubleValue();
+        v.push_back (std::isfinite (x) ? (float) juce::jlimit (0.0, 1.0, x) : 0.5f);
+    }
+    return v;
+}
+
 constexpr float kBypassFadeSeconds = 0.010f;
 constexpr float kTrimSmoothSeconds = 0.020f;
 } // namespace
@@ -23,13 +47,6 @@ SlotParameter::SlotParameter (DaylightProcessor& o, int slotIndex)
 juce::String SlotParameter::getName (int maximumStringLength) const
 {
     return owner.getSlotName (slot).substring (0, maximumStringLength);
-}
-
-bool SlotParameter::isAutomatable() const
-{
-    if (auto* fx = owner.getEffectHost())
-        return slot < fx->getNumParams();
-    return true;
 }
 
 juce::String SlotParameter::getText (float v, int maximumStringLength) const
@@ -119,8 +136,8 @@ void DaylightProcessor::processAudio (juce::AudioBuffer<T>& buffer)
 
     const float inDb = inTrimParam->get();
     const float outDb = outTrimParam->get();
-    inGain.setTargetValue (inDb == 0.0f ? 1.0f : juce::Decibels::decibelsToGain (inDb));
-    outGain.setTargetValue (outDb == 0.0f ? 1.0f : juce::Decibels::decibelsToGain (outDb));
+    inGain.setTargetValue (juce::exactlyEqual (inDb, 0.0f) ? 1.0f : juce::Decibels::decibelsToGain (inDb));
+    outGain.setTargetValue (juce::exactlyEqual (outDb, 0.0f) ? 1.0f : juce::Decibels::decibelsToGain (outDb));
     bypassMix.setTargetValue (bypassParam->get() ? 1.0f : 0.0f);
 
     if (fx != nullptr)
@@ -138,7 +155,7 @@ void DaylightProcessor::applyGain (juce::SmoothedValue<float, juce::ValueSmoothi
     if (! g.isSmoothing())
     {
         const float v = g.getCurrentValue();
-        if (v == 1.0f)
+        if (juce::exactlyEqual (v, 1.0f))
             return; // exactly 0 dB: audio stays bit-identical
 
         for (int i = 0; i < n; ++i)
@@ -241,11 +258,23 @@ void DaylightProcessor::setSlotNamesFromEffect()
     updateHostDisplay (ChangeDetails().withParameterInfoChanged (true).withProgramChanged (true));
 }
 
+double DaylightProcessor::getTailLengthSeconds() const
+{
+    if (auto* fx = activeHost.load (std::memory_order_acquire))
+        return fx->getInfo().tailSeconds;
+    return 0.0;
+}
+
 const juce::String DaylightProcessor::getProgramName (int)
 {
-    if (effectHost != nullptr)
-        return presetName.isEmpty() ? juce::String (effectHost->getInfo().name)
-                                    : juce::String (effectHost->getInfo().name) + " - " + presetName;
+    juce::String preset;
+    {
+        const juce::ScopedLock sl (stateLock);
+        preset = presetName;
+    }
+    if (auto* fx = getEffectHost())
+        return preset.isEmpty() ? juce::String (fx->getInfo().name)
+                                : juce::String (fx->getInfo().name) + " - " + preset;
     if (hasUnknownEffect())
         return unknownEffectId;
     return "Choose effect";
@@ -253,6 +282,12 @@ const juce::String DaylightProcessor::getProgramName (int)
 
 bool DaylightProcessor::selectEffect (const std::string& effectId)
 {
+    // The GUI and the host (restoring a session) could try this at the same time: only one wins.
+    bool expected = false;
+    if (! selecting.compare_exchange_strong (expected, true))
+        return false;
+    const struct Done { std::atomic<bool>& f; ~Done() { f = false; } } done { selecting };
+
     if (effectHost != nullptr || hasUnknownEffect())
         return false; // locked: one effect per instance
 
@@ -265,9 +300,16 @@ bool DaylightProcessor::selectEffect (const std::string& effectId)
     for (int i = 0; i < host->getNumParams(); ++i)
         slots[(size_t) i]->setValueNotifyingHost (host->getDefault (i));
 
-    effectHost = std::move (host);
-    abValues = { captureEffectValues(), captureEffectValues() };
-    activeAB = 0;
+    std::vector<float> defaults;
+    for (int i = 0; i < host->getNumParams(); ++i)
+        defaults.push_back (host->getDefault (i));
+
+    {
+        const juce::ScopedLock sl (stateLock);
+        effectHost = std::move (host);
+        abValues = { defaults, defaults };
+        activeAB = 0;
+    }
     activeHost.store (effectHost.get(), std::memory_order_release);
 
     setSlotNamesFromEffect();
@@ -307,8 +349,11 @@ void DaylightProcessor::resetToDefaults()
     for (int i = 0; i < effectHost->getNumParams(); ++i)
         d.push_back (effectHost->getDefault (i));
     applyEffectValues (d);
-    presetName = {};
-    presetSnapshot.clear();
+    {
+        const juce::ScopedLock sl (stateLock);
+        presetName = {};
+        presetSnapshot.clear();
+    }
     presetNameChanged();
 }
 
@@ -330,17 +375,38 @@ bool DaylightProcessor::applyPreset (const PresetData& preset)
     }
 
     applyEffectValues (v);
-    presetName = preset.name;
-    presetSnapshot = captureEffectValues();
+    {
+        const juce::ScopedLock sl (stateLock);
+        presetName = preset.name;
+        presetSnapshot = captureEffectValues();
+    }
     presetNameChanged();
     return true;
 }
 
 void DaylightProcessor::markPresetSaved (const juce::String& name)
 {
-    presetName = name;
-    presetSnapshot = captureEffectValues();
+    {
+        const juce::ScopedLock sl (stateLock);
+        presetName = name;
+        presetSnapshot = captureEffectValues();
+    }
     presetNameChanged();
+}
+
+void DaylightProcessor::setPresetName (const juce::String& name)
+{
+    {
+        const juce::ScopedLock sl (stateLock);
+        presetName = name;
+    }
+    presetNameChanged();
+}
+
+juce::String DaylightProcessor::getPresetName() const
+{
+    const juce::ScopedLock sl (stateLock);
+    return presetName;
 }
 
 void DaylightProcessor::presetNameChanged()
@@ -352,28 +418,46 @@ void DaylightProcessor::presetNameChanged()
 
 bool DaylightProcessor::isPresetModified() const
 {
-    if (presetName.isEmpty())
-        return false;
+    std::vector<float> snapshot;
+    {
+        const juce::ScopedLock sl (stateLock);
+        if (presetName.isEmpty())
+            return false;
+        snapshot = presetSnapshot;
+    }
 
     const auto now = captureEffectValues();
-    if (now.size() != presetSnapshot.size())
+    if (now.size() != snapshot.size())
         return true;
 
     for (size_t i = 0; i < now.size(); ++i)
-        if (std::abs (now[i] - presetSnapshot[i]) > 1.0e-6f)
+        if (std::abs (now[i] - snapshot[i]) > 1.0e-6f)
             return true;
 
     return false;
 }
 
+int DaylightProcessor::getActiveAB() const
+{
+    const juce::ScopedLock sl (stateLock);
+    return activeAB;
+}
+
 void DaylightProcessor::switchAB (int which)
 {
-    if (effectHost == nullptr || which == activeAB || which < 0 || which > 1)
+    if (effectHost == nullptr || which < 0 || which > 1)
         return;
 
-    abValues[(size_t) activeAB] = captureEffectValues();
-    activeAB = which;
-    applyEffectValues (abValues[(size_t) activeAB]);
+    std::vector<float> target;
+    {
+        const juce::ScopedLock sl (stateLock);
+        if (which == activeAB)
+            return;
+        abValues[(size_t) activeAB] = captureEffectValues();
+        activeAB = which;
+        target = abValues[(size_t) activeAB];
+    }
+    applyEffectValues (target);   // host notifications happen outside the lock
     sendChangeMessage();
 }
 
@@ -383,10 +467,26 @@ void DaylightProcessor::switchAB (int which)
 //          <Trims in=".." out=".."/> <UI tab=".."/> <AB active=".." a=".." b=".."/>
 void DaylightProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    if (hasUnknownEffect())
+    // Hosts may call this from any thread: copy the shared session data under the lock first.
+    juce::String unknownXml, preset;
+    std::array<std::vector<float>, 2> ab;
+    std::vector<float> snapshot;
+    int active = 0;
+    EffectHost* fx = nullptr;
+    {
+        const juce::ScopedLock sl (stateLock);
+        unknownXml = unknownStateXml;
+        fx = effectHost.get();
+        ab = abValues;
+        active = activeAB;
+        preset = presetName;
+        snapshot = presetSnapshot;
+    }
+
+    if (unknownXml.isNotEmpty())
     {
         // Return exactly what we were given so a newer version can read it again.
-        destData.replaceAll (unknownStateXml.toRawUTF8(), unknownStateXml.getNumBytesAsUTF8());
+        destData.replaceAll (unknownXml.toRawUTF8(), unknownXml.getNumBytesAsUTF8());
         return;
     }
 
@@ -394,29 +494,31 @@ void DaylightProcessor::getStateInformation (juce::MemoryBlock& destData)
     root.setAttribute ("formatVersion", kStateFormatVersion);
     root.setAttribute ("pluginVersion", kVersion);
 
-    if (effectHost != nullptr)
+    if (fx != nullptr)
     {
-        root.setAttribute ("effectId", effectHost->getInfo().id);
-        root.setAttribute ("effectVersion", effectHost->getInfo().version);
+        root.setAttribute ("effectId", fx->getInfo().id);
+        root.setAttribute ("effectVersion", fx->getInfo().version);
 
-        for (int i = 0; i < effectHost->getNumParams(); ++i)
+        const auto now = captureEffectValues();
+        for (int i = 0; i < fx->getNumParams(); ++i)
         {
             auto* p = root.createNewChildElement ("Param");
-            p->setAttribute ("name", effectHost->getParamNames()[i]);
+            p->setAttribute ("name", fx->getParamNames()[i]);
             p->setAttribute ("index", i);
-            p->setAttribute ("value", (double) slots[(size_t) i]->get());
+            p->setAttribute ("value", (double) now[(size_t) i]);
         }
 
-        auto abNow = abValues;
-        abNow[(size_t) activeAB] = captureEffectValues();
-        auto* ab = root.createNewChildElement ("AB");
-        ab->setAttribute ("active", activeAB);
-        for (int k = 0; k < 2; ++k)
+        ab[(size_t) active] = now;
+        auto* abXml = root.createNewChildElement ("AB");
+        abXml->setAttribute ("active", active);
+        abXml->setAttribute ("a", joinValues (ab[0]));
+        abXml->setAttribute ("b", joinValues (ab[1]));
+
+        if (preset.isNotEmpty())
         {
-            juce::StringArray vals;
-            for (auto v : abNow[(size_t) k])
-                vals.add (juce::String (v, 7));
-            ab->setAttribute (k == 0 ? "a" : "b", vals.joinIntoString (","));
+            auto* pr = root.createNewChildElement ("Preset");
+            pr->setAttribute ("name", preset);
+            pr->setAttribute ("snapshot", joinValues (snapshot));
         }
     }
 
@@ -425,17 +527,7 @@ void DaylightProcessor::getStateInformation (juce::MemoryBlock& destData)
     trims->setAttribute ("out", (double) outTrimParam->get());
 
     auto* ui = root.createNewChildElement ("UI");
-    ui->setAttribute ("tab", lastTab);
-
-    if (presetName.isNotEmpty())
-    {
-        auto* pr = root.createNewChildElement ("Preset");
-        pr->setAttribute ("name", presetName);
-        juce::StringArray vals;
-        for (auto v : presetSnapshot)
-            vals.add (juce::String (v, 7));
-        pr->setAttribute ("snapshot", vals.joinIntoString (","));
-    }
+    ui->setAttribute ("tab", lastTab.load());
 
     const auto text = root.toString (juce::XmlElement::TextFormat().singleLine());
     destData.replaceAll (text.toRawUTF8(), text.getNumBytesAsUTF8());
@@ -459,18 +551,30 @@ void DaylightProcessor::setStateInformation (const void* data, int sizeInBytes)
     {
         if (findEffect (effectId.toStdString()) == nullptr)
         {
-            unknownEffectId = effectId;
-            unknownStateXml = text;
+            {
+                const juce::ScopedLock sl (stateLock);
+                unknownEffectId = effectId;
+                unknownStateXml = text;
+            }
             sendChangeMessage();
             return;
         }
 
+        {
+            // A known effect replaces an "unknown effect" placeholder (e.g. a DAW preset applied to it).
+            const juce::ScopedLock sl (stateLock);
+            unknownEffectId = {};
+            unknownStateXml = {};
+        }
         selectEffect (effectId.toStdString());
     }
 
-    if (effectHost != nullptr && effectId == effectHost->getInfo().id)
+    auto* fx = effectHost.get();
+    const bool sameEffect = fx != nullptr && effectId == fx->getInfo().id;
+
+    if (sameEffect)
     {
-        const auto& names = effectHost->getParamNames();
+        const auto& names = fx->getParamNames();
         for (auto* p : xml->getChildWithTagNameIterator ("Param"))
         {
             // Match by parameter name first (safe across updates), index as fallback.
@@ -478,51 +582,57 @@ void DaylightProcessor::setStateInformation (const void* data, int sizeInBytes)
             if (index < 0)
             {
                 const int fallback = p->getIntAttribute ("index", -1);
-                if (fallback >= 0 && fallback < effectHost->getNumParams() && names[fallback] == p->getStringAttribute ("name"))
+                if (fallback >= 0 && fallback < fx->getNumParams() && names[fallback] == p->getStringAttribute ("name"))
                     index = fallback;
             }
             if (index >= 0)
-                slots[(size_t) index]->setValueNotifyingHost ((float) juce::jlimit (0.0, 1.0, p->getDoubleAttribute ("value", 0.5)));
-        }
-
-        if (auto* ab = xml->getChildByName ("AB"))
-        {
-            for (int k = 0; k < 2; ++k)
             {
-                juce::StringArray vals;
-                vals.addTokens (ab->getStringAttribute (k == 0 ? "a" : "b"), ",", {});
-                std::vector<float> v;
-                for (auto& s : vals)
-                    v.push_back (juce::jlimit (0.0f, 1.0f, s.getFloatValue()));
-                if ((int) v.size() == effectHost->getNumParams())
-                    abValues[(size_t) k] = v;
+                const double v = p->getDoubleAttribute ("value", 0.5);
+                slots[(size_t) index]->setValueNotifyingHost (std::isfinite (v) ? (float) juce::jlimit (0.0, 1.0, v) : 0.5f);
             }
-            activeAB = juce::jlimit (0, 1, ab->getIntAttribute ("active", 0));
         }
-    }
 
-    if (auto* trims = xml->getChildByName ("Trims"))
-    {
-        inTrimParam->setValueNotifyingHost (inTrimParam->convertTo0to1 ((float) trims->getDoubleAttribute ("in", 0.0)));
-        outTrimParam->setValueNotifyingHost (outTrimParam->convertTo0to1 ((float) trims->getDoubleAttribute ("out", 0.0)));
-    }
-
-    if (auto* ui = xml->getChildByName ("UI"))
-        lastTab = juce::jmax (0, ui->getIntAttribute ("tab", 0));
-
-    presetName = {};
-    presetSnapshot.clear();
-    if (auto* pr = xml->getChildByName ("Preset"); pr != nullptr && effectHost != nullptr)
-    {
-        juce::StringArray vals;
-        vals.addTokens (pr->getStringAttribute ("snapshot"), ",", {});
-        std::vector<float> v;
-        for (auto& x : vals)
-            v.push_back (juce::jlimit (0.0f, 1.0f, x.getFloatValue()));
-        if ((int) v.size() == effectHost->getNumParams())
+        if (auto* abXml = xml->getChildByName ("AB"))
         {
-            presetName = pr->getStringAttribute ("name").substring (0, 64);
-            presetSnapshot = std::move (v);
+            const auto a = parseValues (abXml->getStringAttribute ("a"));
+            const auto b = parseValues (abXml->getStringAttribute ("b"));
+            const juce::ScopedLock sl (stateLock);
+            if ((int) a.size() == fx->getNumParams()) abValues[0] = a;
+            if ((int) b.size() == fx->getNumParams()) abValues[1] = b;
+            activeAB = juce::jlimit (0, 1, abXml->getIntAttribute ("active", 0));
+        }
+
+        if (auto* trims = xml->getChildByName ("Trims"))
+        {
+            inTrimParam->setValueNotifyingHost (inTrimParam->convertTo0to1 ((float) trims->getDoubleAttribute ("in", 0.0)));
+            outTrimParam->setValueNotifyingHost (outTrimParam->convertTo0to1 ((float) trims->getDoubleAttribute ("out", 0.0)));
+        }
+
+        if (auto* ui = xml->getChildByName ("UI"))
+            lastTab = juce::jmax (0, ui->getIntAttribute ("tab", 0));
+
+        juce::String name;
+        std::vector<float> snapshot;
+        if (auto* pr = xml->getChildByName ("Preset"))
+        {
+            auto v = parseValues (pr->getStringAttribute ("snapshot"));
+            if ((int) v.size() == fx->getNumParams())
+            {
+                name = pr->getStringAttribute ("name").substring (0, 64);
+                snapshot = std::move (v);
+            }
+        }
+        const juce::ScopedLock sl (stateLock);
+        presetName = name;
+        presetSnapshot = std::move (snapshot);
+    }
+    else if (effectHost == nullptr)
+    {
+        // no effect chosen in the state: only the trims apply (pass-through instance)
+        if (auto* trims = xml->getChildByName ("Trims"))
+        {
+            inTrimParam->setValueNotifyingHost (inTrimParam->convertTo0to1 ((float) trims->getDoubleAttribute ("in", 0.0)));
+            outTrimParam->setValueNotifyingHost (outTrimParam->convertTo0to1 ((float) trims->getDoubleAttribute ("out", 0.0)));
         }
     }
 

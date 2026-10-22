@@ -33,7 +33,7 @@ public:
     /** Pushes a parameter value into the audio instance if it changed. */
     void setParameter (int index, float value) noexcept
     {
-        if (lastPushed[(size_t) index] != value)
+        if (! juce::exactlyEqual (lastPushed[(size_t) index], value))   // NaN at start: always pushes
         {
             lastPushed[(size_t) index] = value;
             audioFx->setParameter (index, value);
@@ -54,6 +54,9 @@ public:
     bool textToValue (int index, const juce::String& text, float& result);
 
 private:
+    int probeSteps (int index);
+    std::vector<int> stepCache;   // message thread only; -1 = not probed yet
+
     const EffectInfo& info;
     std::unique_ptr<AirwinConsolidatedBase> audioFx, displayFx;
     int numParams = 0;

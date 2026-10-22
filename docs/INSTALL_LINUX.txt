@@ -1,0 +1,17 @@
+Daylight_aw - Linux install (VST3)
+==================================
+
+Linux builds are made automatically and passed the same tests, but are community-tested:
+please report anything odd.
+
+1. Close your DAW.
+2. Copy the folder "Daylight_aw.vst3" to:
+       ~/.vst3/            (just for you)       or
+       /usr/lib/vst3/      (all users, needs sudo)
+3. Rescan plugins in your DAW (REAPER, Bitwig, Ardour, Carla ...).
+
+Your presets, favourites and the User theme live in:
+    ~/Documents/big_tyme_designs/Daylight_aw/   (or your XDG documents folder)
+
+Daylight_aw is free and open source (GNU AGPL v3). Not an official Airwindows release.
+All sound comes from the original Airwindows code by Chris Johnson (MIT).

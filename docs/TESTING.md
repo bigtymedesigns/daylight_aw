@@ -73,6 +73,13 @@ Tick each line. Write down anything odd, with the effect name and what you did.
 - [ ] Tooltips look right in Light and Dark, and at 150 % / 200 % zoom
 - [ ] REAPER's preset field (top of the FX window) shows "ToTape9 - Warm Tape" after loading a preset
 
+### Release candidate checks (0.6.0)
+- [ ] Fresh install (rename `Documents\big_tyme_designs` first): tooltips are off; Settings → Tooltips On works
+- [ ] Theme buttons read Light, Dark, Original, User
+- [ ] A/B: set odd values in A and B, save the project, reopen, switch A/B: both exactly as before
+- [ ] Rename a preset changing only upper/lower case; rename onto an existing name is refused
+- [ ] Opening the window of a big effect (ConsoleXChannel) is quick
+
 ### Original theme, New category, trim knobs (0.5.0)
 - [ ] Settings → Theme → **Original**: every open instance switches to the fader view at once, no window size change
 - [ ] Faders show Airwindows' own names and values; drag left/right, Shift = fine, wheel, double-click = default,
