@@ -77,7 +77,7 @@ class SettingsPanel : public PanelBase,
                       private juce::ListBoxModel
 {
 public:
-    SettingsPanel (UiContext& c, std::function<void()> onThemeOrZoomChanged);
+    SettingsPanel (UiContext& c, std::function<void()> onThemeOrZoomChanged, std::function<void()> onShowInfo);
     ~SettingsPanel() override;
     void paint (juce::Graphics&) override;
     void resized() override;
@@ -97,12 +97,11 @@ private:
     void confirmName();
     void stopNaming();
 
-    std::function<void()> onChanged;
+    std::function<void()> onChanged, onShowInfo;
     juce::OwnedArray<PillButton> zoomButtons, themeButtons;
     PillButton openThemeFolder, resetButton, infoButton, savePreset, nameOk, nameCancel;
     juce::Slider inTrim, outTrim;
     std::unique_ptr<juce::SliderParameterAttachment> inAttach, outAttach;
-    bool showInfo = false;
     juce::Rectangle<int> left, right;
 
     PresetStore store { PresetStore::defaultRoot() };
@@ -113,6 +112,26 @@ private:
     juce::File renamingFile;
     bool confirmReplace = false;
     juce::String message;
+};
+
+// =============================================================================================
+/** Full Airwindopedia text for the chosen effect (scrollable). */
+class InfoPanel : public PanelBase
+{
+public:
+    InfoPanel (UiContext& c, std::function<void()> onClose);
+    void paint (juce::Graphics&) override;
+    void resized() override;
+    void refresh();
+
+    /** Airwindopedia text embedded for this effect id (empty if none). */
+    static juce::String docFor (const juce::String& effectId);
+
+private:
+    std::function<void()> onClose;
+    PillButton close;
+    juce::TextEditor text;
+    juce::String headline;
 };
 
 // =============================================================================================

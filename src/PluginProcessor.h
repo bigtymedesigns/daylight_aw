@@ -89,7 +89,7 @@ public:
     /** Records that the current values were just saved as this preset. */
     void markPresetSaved (const juce::String& name);
     /** Called when the current preset was renamed or deleted on disk. */
-    void setPresetName (const juce::String& name) { presetName = name; sendChangeMessage(); }
+    void setPresetName (const juce::String& name) { presetName = name; presetNameChanged(); }
     juce::String getPresetName() const { return presetName; }
     /** True when a preset is loaded and any value differs from it ("*" in the menu bar). */
     bool isPresetModified() const;
@@ -108,6 +108,7 @@ private:
                                                  T* l, T* r, int n) noexcept;
 
     void setSlotNamesFromEffect();
+    void presetNameChanged();
     std::vector<float> captureEffectValues() const;
     void applyEffectValues (const std::vector<float>& values);
 

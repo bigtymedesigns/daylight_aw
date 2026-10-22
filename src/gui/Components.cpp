@@ -57,6 +57,38 @@ void DaylightLookAndFeel::applyTheme()
     setColour (juce::Label::textColourId, t.panelText);
     setColour (juce::ScrollBar::thumbColourId, t.panelText.withAlpha (0.35f));
     setColour (juce::ListBox::backgroundColourId, juce::Colours::transparentBlack);
+    setColour (juce::TooltipWindow::backgroundColourId, t.panelFill.withAlpha (1.0f));
+    setColour (juce::TooltipWindow::textColourId, t.panelText);
+    setColour (juce::TooltipWindow::outlineColourId, t.panelBorder);
+}
+
+juce::Rectangle<int> DaylightLookAndFeel::getTooltipBounds (const juce::String& text, juce::Point<int> pos, juce::Rectangle<int> parentArea)
+{
+    const auto font = fonts::medium (12.0f);
+    int w = 0, lines = 0;
+    for (auto& line : juce::StringArray::fromLines (text))
+    {
+        w = juce::jmax (w, (int) fonts::width (font, line));
+        ++lines;
+    }
+    w = juce::jmin (w + 18, 320);
+    const int h = lines * 17 + 10;
+    return juce::Rectangle<int> (pos.x > parentArea.getCentreX() ? pos.x - (w + 12) : pos.x + 12,
+                                 pos.y > parentArea.getCentreY() ? pos.y - (h + 8) : pos.y + 18, w, h)
+        .constrainedWithin (parentArea);
+}
+
+void DaylightLookAndFeel::drawTooltip (juce::Graphics& g, const juce::String& text, int width, int height)
+{
+    const auto& t = ctx.theme;
+    auto r = juce::Rectangle<float> (0.0f, 0.0f, (float) width, (float) height);
+    g.setColour (findColour (juce::TooltipWindow::backgroundColourId));
+    g.fillRoundedRectangle (r, 5.0f);
+    g.setColour (findColour (juce::TooltipWindow::outlineColourId));
+    g.drawRoundedRectangle (r.reduced (0.5f), 5.0f, 1.0f);
+    g.setColour (t.panelText);
+    g.setFont (fonts::medium (12.0f));
+    g.drawFittedText (text, juce::Rectangle<int> (9, 5, width - 18, height - 10), juce::Justification::topLeft, 8);
 }
 
 void DaylightLookAndFeel::drawLinearSlider (juce::Graphics& g, int x, int y, int w, int h, float pos, float, float,
@@ -145,6 +177,7 @@ BypassButton::BypassButton (UiContext& c)
 {
     setMouseCursor (juce::MouseCursor::PointingHandCursor);
     setTitle ("Bypass");
+    setTooltip ("Bypass (the same switch as your DAW's bypass)");
     attachment.sendInitialUpdate();
 }
 
@@ -195,6 +228,17 @@ ParamControl::ParamControl (UiContext& c, const ControlSpec& s)
     attachment.sendInitialUpdate();
     setTitle (spec.label);
     setRepaintsOnMouseActivity (false);
+
+    juce::String tip;
+    if (auto* fx = ctx.processor.getEffectHost())
+    {
+        const auto original = fx->getParamNames()[spec.param];
+        if (original != spec.label)
+            tip << "Airwindows name: " << original << "\n";
+    }
+    tip << (spec.type == ControlType::knob ? "Drag (Shift = fine) or scroll. Double-click: default.\nDouble-click the value to type it."
+                                           : "Click or drag to choose. Double-click: default.");
+    setTooltip (tip);
 }
 
 ParamControl::~ParamControl() = default;

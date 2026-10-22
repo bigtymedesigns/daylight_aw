@@ -1,4 +1,4 @@
-# Daylight_aw build spec (v0.2)
+# Daylight_aw build spec (v0.3)
 
 ## Identity
 
@@ -94,6 +94,14 @@ unchanged. Broken data is ignored.
 - Delete moves the file to the system trash.
 - The menu bar shows `Effect · Preset`, with `*` when any value differs from the loaded or saved preset.
   The name and the snapshot are saved with the session.
+
+## Effect info and tooltips
+
+- The Airwindopedia text for each included effect is embedded (`third_party/airwin_consolidated/awpdoc/`,
+  from the pinned airwin2rack commit, MIT). It is shown in a scrollable Effect info panel.
+- Tooltips use the panel theme tokens. Controls show their original Airwindows parameter name when the
+  layout renames them.
+- Program name reported to the host: `Effect` or `Effect - Preset`.
 
 ## Data-driven pipeline
 

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum macOS version")
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Universal binary on macOS")
 
-project(Daylight_aw VERSION 0.2.0 LANGUAGES C CXX)
+project(Daylight_aw VERSION 0.3.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -81,6 +81,17 @@ foreach(layout ${DAYLIGHT_LAYOUT_FILES})
     daylight_asset(${layout} ${layout_name})
 endforeach()
 
+list(LENGTH DAYLIGHT_DOC_FILES doc_count)
+if(doc_count GREATER 0)
+    math(EXPR doc_last "${doc_count} - 1")
+    foreach(i RANGE 0 ${doc_last} 2)
+        math(EXPR j "${i} + 1")
+        list(GET DAYLIGHT_DOC_FILES ${i} doc_src)
+        list(GET DAYLIGHT_DOC_FILES ${j} doc_name)
+        daylight_asset(${doc_src} ${doc_name})
+    endforeach()
+endif()
+
 juce_add_binary_data(daylight_assets HEADER_NAME BinaryData.h NAMESPACE BinaryData SOURCES ${DAYLIGHT_ASSETS})
 
 # ---- Shared source list ------------------------------------------------------------------------
@@ -154,7 +165,8 @@ if(DAYLIGHT_BUILD_TESTS)
     juce_add_console_app(DaylightTests PRODUCT_NAME "DaylightTests")
     target_sources(DaylightTests PRIVATE tests/TestMain.cpp ${DAYLIGHT_SOURCES})
     target_include_directories(DaylightTests PRIVATE src)
-    target_compile_definitions(DaylightTests PRIVATE ${DAYLIGHT_DEFINITIONS} JUCE_STANDALONE_APPLICATION=1)
+    target_compile_definitions(DaylightTests PRIVATE ${DAYLIGHT_DEFINITIONS} JUCE_STANDALONE_APPLICATION=1
+        DAYLIGHT_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures")
     target_link_libraries(DaylightTests
         PRIVATE ${DAYLIGHT_LIBS}
         PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)

@@ -61,6 +61,9 @@ public:
         addAndMakeVisible (bypass);
 
         logo.onClick = [this] { toggleAbout(); };
+        logo.setTooltip ("About Daylight_aw");
+        abA.setTooltip ("Setting A. Switch between A and B to compare two settings.");
+        abB.setTooltip ("Setting B. Switch between A and B to compare two settings.");
         logo.ctx = &ctx;
 
         abA.joinedRight = true;
@@ -126,6 +129,8 @@ public:
                 for (int i = 0; i < (int) layout.pages.size(); ++i)
                 {
                     auto* t = tabs.add (new TabButton (*this, i));
+                    t->setTooltip (layout.pages[(size_t) i].name.isNotEmpty() ? layout.pages[(size_t) i].name
+                                                                              : "Page " + juce::String (i + 1));
                     addAndMakeVisible (t);
                 }
         }
@@ -143,6 +148,7 @@ public:
     void refreshTopRow()
     {
         const bool has = ctx.processor.hasEffect();
+        menuBar.setTooltip (has ? "Presets and settings" : ctx.processor.hasUnknownEffect() ? "" : "Choose an effect");
         abA.setEnabled (has);
         abB.setEnabled (has);
         abA.setToggleState (has && ctx.processor.getActiveAB() == 0, juce::dontSendNotification);
@@ -158,6 +164,7 @@ public:
         backdrop.repaint();
         if (selector != nullptr) selector->refresh();
         if (settingsPanel != nullptr) settingsPanel->refresh();
+        if (info != nullptr) info->refresh();
         repaintAll (*this);
     }
 
@@ -192,6 +199,8 @@ public:
             settingsPanel->setBounds (panelArea.withHeight (juce::jmin (panelArea.getHeight(), 300)));
         if (about != nullptr)
             about->setBounds (kMargin, 50, 300, 230);
+        if (info != nullptr)
+            info->setBounds (panelArea.withTrimmedBottom (getHeight() >= kLargeHeight ? 48 : 0));
         if (confirm != nullptr)
             confirm->setBounds (getLocalBounds());
     }
@@ -199,7 +208,7 @@ public:
     // ---- overlays -------------------------------------------------------------------------
     void toggleMenu()
     {
-        if (selector != nullptr || settingsPanel != nullptr)
+        if (selector != nullptr || settingsPanel != nullptr || info != nullptr)
         {
             closePanels();
             return;
@@ -215,6 +224,7 @@ public:
         selector.reset();
         settingsPanel.reset();
         about.reset();
+        info.reset();
         menuBar.repaint();
         backdrop.repaint();
     }
@@ -232,8 +242,21 @@ public:
     void openSettings()
     {
         closePanels();
-        settingsPanel = std::make_unique<SettingsPanel> (ctx, [this] { if (onSettingsChanged) onSettingsChanged(); });
+        settingsPanel = std::make_unique<SettingsPanel> (ctx, [this] { if (onSettingsChanged) onSettingsChanged(); },
+                                                         [this] { juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<Content> (this)]
+                                                                  { if (safe != nullptr) safe->openInfo(); }); });
         addAndMakeVisible (*settingsPanel);
+        resized();
+        menuBar.repaint();
+    }
+
+    void openInfo()
+    {
+        if (! ctx.processor.hasEffect())
+            return;
+        closePanels();
+        info = std::make_unique<InfoPanel> (ctx, [this] { info.reset(); menuBar.repaint(); });
+        addAndMakeVisible (*info);
         resized();
         menuBar.repaint();
     }
@@ -289,7 +312,8 @@ public:
         UiContext* ctx = nullptr;
     };
 
-    struct MenuBar : public juce::Component
+    struct MenuBar : public juce::Component,
+                     public juce::SettableTooltipClient
     {
         explicit MenuBar (Content& o)
             : owner (o),
@@ -336,7 +360,7 @@ public:
             const auto label = menuLabel (proc);
 
             auto trig = triggerArea();
-            const bool open = owner.selector != nullptr || owner.settingsPanel != nullptr;
+            const bool open = owner.selector != nullptr || owner.settingsPanel != nullptr || owner.info != nullptr;
             if (open)
             {
                 g.setColour (t.text.withAlpha (0.08f));
@@ -386,7 +410,8 @@ public:
         juce::ParameterAttachment inAttach, outAttach;
     };
 
-    struct TabButton : public juce::Component
+    struct TabButton : public juce::Component,
+                       public juce::SettableTooltipClient
     {
         TabButton (Content& o, int i) : owner (o), index (i)
         {
@@ -568,7 +593,8 @@ private:
 
         // keep overlays on top
         for (juce::Component* c : { (juce::Component*) selector.get(), (juce::Component*) settingsPanel.get(),
-                                    (juce::Component*) about.get(), (juce::Component*) confirm.get() })
+                                    (juce::Component*) about.get(), (juce::Component*) info.get(),
+                                    (juce::Component*) confirm.get() })
             if (c != nullptr) c->toFront (false);
     }
 
@@ -629,7 +655,10 @@ private:
     std::unique_ptr<SelectorPanel> selector;
     std::unique_ptr<SettingsPanel> settingsPanel;
     std::unique_ptr<AboutPanel> about;
+    std::unique_ptr<InfoPanel> info;
     std::unique_ptr<ConfirmDialog> confirm;
+
+    juce::TooltipWindow tooltipWindow { this, 900 };   // inside the content so it follows the zoom
 };
 
 // =============================================================================================
@@ -691,6 +720,12 @@ void DaylightEditor::showSettingsPanel()
 {
     if (content != nullptr && ctx.processor.hasEffect())
         content->openSettings();
+}
+
+void DaylightEditor::showInfoPanel()
+{
+    if (content != nullptr)
+        content->openInfo();
 }
 
 void DaylightEditor::resized()

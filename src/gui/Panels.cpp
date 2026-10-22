@@ -1,4 +1,5 @@
 #include "Panels.h"
+#include "BinaryData.h"
 #include "Fonts.h"
 
 namespace dlaw
@@ -379,8 +380,8 @@ bool ConfirmDialog::keyPressed (const juce::KeyPress& k)
 }
 
 // =============================================================================================
-SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed)
-    : PanelBase (c), onChanged (std::move (changed)),
+SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed, std::function<void()> showInfoFn)
+    : PanelBase (c), onChanged (std::move (changed)), onShowInfo (std::move (showInfoFn)),
       openThemeFolder (c, "Open theme folder"), resetButton (c, "Reset to defaults"),
       infoButton (c, "Effect info"), savePreset (c, "Save preset"),
       nameOk (c, "Save"), nameCancel (c, "Cancel")
@@ -417,7 +418,7 @@ SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed)
     addChildComponent (openThemeFolder);
 
     resetButton.onClick = [this] { ctx.processor.resetToDefaults(); };
-    infoButton.onClick = [this] { showInfo = ! showInfo; infoButton.setToggleState (showInfo, juce::dontSendNotification); repaint(); };
+    infoButton.onClick = [this] { if (onShowInfo) onShowInfo(); };
     addAndMakeVisible (resetButton);
     addAndMakeVisible (infoButton);
 
@@ -798,15 +799,107 @@ void SettingsPanel::paint (juce::Graphics& g)
 
     drawHeading (g, "EFFECT" + (fx != nullptr ? kDot + juce::String (fx->getInfo().name).toUpperCase() : juce::String()),
                  right.withHeight (16));
-    if (showInfo && fx != nullptr)
+    if (fx != nullptr)
     {
         juce::String text = fx->getInfo().description;
         if (fx->getInfo().isDither)
             text << "\n\nThis is a dither: keep the output trim at 0 dB.";
         g.setColour (t.panelText.withAlpha (0.85f));
         g.setFont (fonts::medium (12.0f));
-        g.drawFittedText (text, right.withTrimmedTop (84), juce::Justification::topLeft, 10);
+        g.drawFittedText (text, right.withTrimmedTop (86), juce::Justification::topLeft, 8);
     }
+}
+
+// =============================================================================================
+juce::String InfoPanel::docFor (const juce::String& effectId)
+{
+    int size = 0;
+    if (auto* data = BinaryData::getNamedResource (("doc_" + effectId + "_txt").toRawUTF8(), size))
+        return juce::String::fromUTF8 (data, size);
+    return {};
+}
+
+InfoPanel::InfoPanel (UiContext& c, std::function<void()> closeFn)
+    : PanelBase (c), onClose (std::move (closeFn)), close (c, "Close")
+{
+    close.onClick = [this]
+    {
+        // close after this click has finished (the panel deletes itself)
+        juce::Component::SafePointer<InfoPanel> safe (this);
+        juce::MessageManager::callAsync ([safe] { if (safe != nullptr && safe->onClose) safe->onClose(); });
+    };
+    addAndMakeVisible (close);
+
+    text.setMultiLine (true, true);
+    text.setReadOnly (true);
+    text.setCaretVisible (false);
+    text.setScrollbarsShown (true);
+    text.setFont (fonts::medium (13.0f));
+    text.setIndents (4, 2);
+    text.setColour (juce::TextEditor::outlineColourId, juce::Colours::transparentBlack);
+    text.setColour (juce::TextEditor::focusedOutlineColourId, juce::Colours::transparentBlack);
+    text.setTitle ("Effect info");
+    addAndMakeVisible (text);
+    refresh();
+}
+
+void InfoPanel::refresh()
+{
+    auto* fx = ctx.processor.getEffectHost();
+    if (fx == nullptr)
+        return;
+
+    auto doc = docFor (fx->getInfo().id).trim();
+    juce::String body;
+    if (doc.startsWith ("#"))
+    {
+        headline = doc.upToFirstOccurrenceOf ("\n", false, false).fromFirstOccurrenceOf ("#", false, false).trim();
+        body = doc.fromFirstOccurrenceOf ("\n", false, false).trim();
+    }
+    else
+    {
+        headline = fx->getInfo().description;
+        body = doc;
+    }
+
+    if (body.isEmpty())
+        body = fx->getInfo().description;
+    if (fx->getInfo().isDither)
+        body << "\n\nNote: this is a dither. Keep Daylight_aw's output trim at 0 dB.";
+
+    text.setText (body, false);
+    text.applyColourToAllText (ctx.theme.panelText);
+    text.moveCaretToTop (false);
+    repaint();
+}
+
+void InfoPanel::resized()
+{
+    auto r = getLocalBounds().reduced (14, 12);
+    auto bottom = r.removeFromBottom (24);
+    close.setBounds (bottom.removeFromRight (70));
+    r.removeFromTop (44);
+    r.removeFromBottom (6);
+    text.setBounds (r);
+}
+
+void InfoPanel::paint (juce::Graphics& g)
+{
+    PanelBase::paint (g);
+    const auto& t = ctx.theme;
+    auto r = getLocalBounds().reduced (14, 12);
+    auto* fx = ctx.processor.getEffectHost();
+
+    drawHeading (g, "EFFECT INFO" + (fx != nullptr ? kDot + juce::String (fx->getInfo().name).toUpperCase() : juce::String()),
+                 r.removeFromTop (16));
+    g.setColour (t.panelText);
+    g.setFont (fonts::extraBold (13.5f));
+    g.drawFittedText (headline, r.removeFromTop (26), juce::Justification::centredLeft, 1);
+
+    g.setColour (t.panelText.withAlpha (0.65f));
+    g.setFont (fonts::medium (11.0f));
+    g.drawText ("Text from the Airwindopedia by Chris Johnson (Airwindows).",
+                r.removeFromBottom (24).withTrimmedRight (80), juce::Justification::centredLeft, true);
 }
 
 // =============================================================================================

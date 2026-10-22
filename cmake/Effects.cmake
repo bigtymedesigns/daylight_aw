@@ -66,3 +66,28 @@ set(DAYLIGHT_LAYOUT_FILES
     layouts/totape9.json
     layouts/tube2.json
 )
+
+# pairs: source file, embedded name
+set(DAYLIGHT_DOC_FILES
+    third_party/airwin_consolidated/awpdoc/PurestGain.txt doc_purestgain.txt
+    third_party/airwin_consolidated/awpdoc/Tube2.txt doc_tube2.txt
+    third_party/airwin_consolidated/awpdoc/Console9Channel.txt doc_console9channel.txt
+    third_party/airwin_consolidated/awpdoc/Console9Buss.txt doc_console9buss.txt
+    third_party/airwin_consolidated/awpdoc/NotJustAnotherDither.txt doc_notjustanotherdither.txt
+    third_party/airwin_consolidated/awpdoc/DeEss.txt doc_deess.txt
+    third_party/airwin_consolidated/awpdoc/ButterComp2.txt doc_buttercomp2.txt
+    third_party/airwin_consolidated/awpdoc/DubSub2.txt doc_dubsub2.txt
+    third_party/airwin_consolidated/awpdoc/ADClip8.txt doc_adclip8.txt
+    third_party/airwin_consolidated/awpdoc/Monitoring3.txt doc_monitoring3.txt
+    third_party/airwin_consolidated/awpdoc/Density2.txt doc_density2.txt
+    third_party/airwin_consolidated/awpdoc/Capacitor2.txt doc_capacitor2.txt
+    third_party/airwin_consolidated/awpdoc/PocketVerbs.txt doc_pocketverbs.txt
+    third_party/airwin_consolidated/awpdoc/Galactic.txt doc_galactic.txt
+    third_party/airwin_consolidated/awpdoc/EveryTrim.txt doc_everytrim.txt
+    third_party/airwin_consolidated/awpdoc/Pressure5.txt doc_pressure5.txt
+    third_party/airwin_consolidated/awpdoc/Cabs.txt doc_cabs.txt
+    third_party/airwin_consolidated/awpdoc/ToTape9.txt doc_totape9.txt
+    third_party/airwin_consolidated/awpdoc/CStrip.txt doc_cstrip.txt
+    third_party/airwin_consolidated/awpdoc/ConsoleXChannel.txt doc_consolexchannel.txt
+    third_party/airwin_consolidated/awpdoc/Ultrasonic.txt doc_ultrasonic.txt
+)

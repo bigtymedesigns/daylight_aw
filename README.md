@@ -11,6 +11,9 @@ A free, open-source VST3 / AU plugin by **big_tyme_designs**.
   with tabs for big effects.
 - Light, Dark and a User theme you can edit yourself (`themes/README.md`).
 - A/B compare, input/output trim, zoom 100–200 %, full automation, sessions restore exactly.
+- User presets per effect, the full Airwindopedia text for every effect, and tooltips.
+
+See `CHANGELOG.md` for what changed in each version.
 
 Not an official Airwindows release. All DSP is by Chris Johnson / Airwindows (MIT). Please
 support him: https://www.patreon.com/airwindows

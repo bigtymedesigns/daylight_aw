@@ -244,7 +244,8 @@ void DaylightProcessor::setSlotNamesFromEffect()
 const juce::String DaylightProcessor::getProgramName (int)
 {
     if (effectHost != nullptr)
-        return effectHost->getInfo().name;
+        return presetName.isEmpty() ? juce::String (effectHost->getInfo().name)
+                                    : juce::String (effectHost->getInfo().name) + " - " + presetName;
     if (hasUnknownEffect())
         return unknownEffectId;
     return "Choose effect";
@@ -308,7 +309,7 @@ void DaylightProcessor::resetToDefaults()
     applyEffectValues (d);
     presetName = {};
     presetSnapshot.clear();
-    sendChangeMessage();
+    presetNameChanged();
 }
 
 bool DaylightProcessor::applyPreset (const PresetData& preset)
@@ -331,7 +332,7 @@ bool DaylightProcessor::applyPreset (const PresetData& preset)
     applyEffectValues (v);
     presetName = preset.name;
     presetSnapshot = captureEffectValues();
-    sendChangeMessage();
+    presetNameChanged();
     return true;
 }
 
@@ -339,6 +340,13 @@ void DaylightProcessor::markPresetSaved (const juce::String& name)
 {
     presetName = name;
     presetSnapshot = captureEffectValues();
+    presetNameChanged();
+}
+
+void DaylightProcessor::presetNameChanged()
+{
+    // the DAW shows the program name ("ToTape9 - Warm Tape") in its preset field
+    updateHostDisplay (ChangeDetails().withProgramChanged (true));
     sendChangeMessage();
 }
 

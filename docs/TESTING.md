@@ -64,6 +64,15 @@ Tick each line. Write down anything odd, with the effect name and what you did.
 - [ ] Save the project with a preset loaded and edited, reopen: the name and the "*" are back
 - [ ] Files are in `Documents\big_tyme_designs\Daylight_aw\Presets\<Effect>\` and open in a text editor
 
+### Effect info + tooltips (0.3.0)
+- [ ] Settings → **Effect info** opens the full Airwindopedia text; it scrolls; Close returns
+- [ ] Clicking the effect name while Effect info is open closes it
+- [ ] Hovering a knob for about a second shows a tooltip. Renamed controls show their Airwindows
+      name (e.g. ConsoleXChannel "Thresh" → "FC Thrs")
+- [ ] Tooltips also on A/B, BYPASS, the logo, the menu bar and the tab buttons
+- [ ] Tooltips look right in Light and Dark, and at 150 % / 200 % zoom
+- [ ] REAPER's preset field (top of the FX window) shows "ToTape9 - Warm Tape" after loading a preset
+
 ### Host integration
 - [ ] The REAPER parameter list (the "Param" button) shows the effect's real parameter names
 - [ ] Automation: write automation for 2 controls, play back; the knobs move

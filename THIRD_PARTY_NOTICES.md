@@ -14,6 +14,9 @@ Airwindows plugins in a common form.
 - Pinned commit: see `manifest/effects.json`
 - Licence: MIT - `third_party/airwin_consolidated/LICENSE.md`
 
+The Effect info texts (`third_party/airwin_consolidated/awpdoc/`) are the Airwindopedia entries by
+Chris Johnson, as included in Airwindows Consolidated (MIT).
+
 Daylight_aw is **not** an official Airwindows release. Please support Chris at
 https://www.patreon.com/airwindows.
 

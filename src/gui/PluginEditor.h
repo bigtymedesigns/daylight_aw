@@ -18,6 +18,8 @@ public:
 
     /** Opens the presets + settings panel (used by the snapshot tests). */
     void showSettingsPanel();
+    /** Opens the effect info panel (used by the snapshot tests). */
+    void showInfoPanel();
 
 private:
     class Content;

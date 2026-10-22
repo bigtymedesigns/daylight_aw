@@ -9,6 +9,8 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <cstdlib>
 #include <iostream>
+#include <thread>
+#include <atomic>
 
 #include "gui/PluginEditor.h"
 
@@ -381,6 +383,112 @@ void testPresets()
     root.deleteRecursively();
 }
 
+void testEffectDocs()
+{
+    std::cout << "Effect info texts ..." << std::endl;
+    for (auto& e : getAllEffects())
+    {
+        const auto doc = InfoPanel::docFor (e.id);
+        check (doc.length() > 200 && doc.startsWith ("#"), juce::String ("Airwindopedia text for ") + e.id);
+    }
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// Audio thread processing while the "GUI" changes everything it can. Under ThreadSanitizer
+// (CI job) this proves there are no data races between the audio and message threads.
+void testThreadedStress()
+{
+    std::cout << "Threaded stress (audio + GUI threads) ..." << std::endl;
+    auto p = makeProcessor (48000.0, 256);
+    p->selectEffect ("consolexchannel");
+
+    std::atomic<bool> stop { false };
+    std::atomic<int> blocks { 0 };
+    bool finite = true;
+
+    std::thread audio ([&]
+    {
+        juce::AudioBuffer<float> buf (2, 256);
+        juce::MidiBuffer midi;
+        juce::Random rnd (1);
+        while (! stop.load())
+        {
+            for (int ch = 0; ch < 2; ++ch)
+                for (int i = 0; i < 256; ++i)
+                    buf.setSample (ch, i, rnd.nextFloat() * 0.5f - 0.25f);
+            p->processBlock (buf, midi);
+            finite = finite && allFinite (buf);
+            ++blocks;
+        }
+    });
+
+    juce::Random rnd (2);
+    const auto end = juce::Time::getMillisecondCounter() + 600;
+    int round = 0;
+    while (juce::Time::getMillisecondCounter() < end)
+    {
+        const int n = p->getEffectHost()->getNumParams();
+        p->getSlot (rnd.nextInt (n)).setValueNotifyingHost (rnd.nextFloat());
+        p->getInputTrim().setValueNotifyingHost (rnd.nextFloat());
+        p->getOutputTrim().setValueNotifyingHost (rnd.nextFloat());
+        if (round % 7 == 0) p->getBypass().setValueNotifyingHost (p->getBypass().get() ? 0.0f : 1.0f);
+        if (round % 11 == 0) p->switchAB (round % 2);
+        if (round % 13 == 0)
+        {
+            juce::MemoryBlock mb;
+            p->getStateInformation (mb);
+            p->setStateInformation (mb.getData(), (int) mb.getSize());
+        }
+        if (round % 17 == 0) p->resetToDefaults();
+        ++round;
+        juce::Thread::sleep (1);
+    }
+
+    stop = true;
+    audio.join();
+    check (blocks.load() > 10, "audio thread kept running (" + juce::String (blocks.load()) + " blocks)");
+    check (finite, "output stayed finite under concurrent changes");
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// Sessions saved by every released version must load forever. Each release adds a fixture
+// (tests/fixtures/session_<version>_*.xml); this test loads them all.
+void testOldSessions (const juce::File& fixtures)
+{
+    std::cout << "Sessions from older versions ..." << std::endl;
+    auto files = fixtures.findChildFiles (juce::File::findFiles, false, "session_*.xml");
+    check (files.size() > 0, "fixtures found in " + fixtures.getFullPathName());
+
+    for (auto& f : files)
+    {
+        const auto text = f.loadFileAsString();
+        auto xml = juce::parseXML (text);
+        check (xml != nullptr, "fixture parses: " + f.getFileName());
+        if (xml == nullptr)
+            continue;
+
+        auto p = makeProcessor();
+        p->setStateInformation (text.toRawUTF8(), (int) text.getNumBytesAsUTF8());
+        const auto id = xml->getStringAttribute ("effectId");
+        check (p->hasEffect() && juce::String (p->getEffectHost()->getInfo().id) == id, "effect restored: " + f.getFileName());
+
+        bool valuesOk = p->hasEffect();
+        for (auto* e : xml->getChildWithTagNameIterator ("Param"))
+            if (p->hasEffect())
+            {
+                const int idx = p->getEffectHost()->getParamNames().indexOf (e->getStringAttribute ("name"));
+                valuesOk = valuesOk && idx >= 0
+                        && std::abs (p->getSlot (idx).get() - (float) e->getDoubleAttribute ("value")) < 1.0e-6f;
+            }
+        check (valuesOk, "parameter values restored: " + f.getFileName());
+
+        if (auto* trims = xml->getChildByName ("Trims"))
+            check (std::abs (p->getInputTrim().get() - (float) trims->getDoubleAttribute ("in")) < 1.0e-4f, "trims restored: " + f.getFileName());
+    }
+}
+
 void testLayouts()
 {
     std::cout << "Layouts ..." << std::endl;
@@ -437,12 +545,14 @@ void renderSnapshots (const juce::File& dir)
     {
         settings->setTheme (theme);
 
-        auto shoot = [&] (DaylightProcessor& p, const juce::String& name, bool settingsOpen = false)
+        auto shoot = [&] (DaylightProcessor& p, const juce::String& name, int panel = 0)
         {
             std::unique_ptr<juce::AudioProcessorEditor> ed (p.createEditor());
-            if (settingsOpen)
-                if (auto* d = dynamic_cast<DaylightEditor*> (ed.get()))
-                    d->showSettingsPanel();
+            if (auto* d = dynamic_cast<DaylightEditor*> (ed.get()))
+            {
+                if (panel == 1) d->showSettingsPanel();
+                if (panel == 2) d->showInfoPanel();
+            }
             auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 1.0f);
             juce::PNGImageFormat png;
             auto f = dir.getChildFile (name + "_" + toString (theme) + ".png");
@@ -479,11 +589,13 @@ void renderSnapshots (const juce::File& dir)
             PresetStore::load (store.fileFor (fx->getInfo(), "Warm Tape"), d);
             p->applyPreset (d);
             p->getSlot (0).setValueNotifyingHost (0.8f);
-            shoot (*p, "zz_totape9_settings", true);
+            shoot (*p, "zz_totape9_settings", 1);
+            shoot (*p, "zz_totape9_info", 2);
 
             auto small = makeProcessor();
             small->selectEffect ("deess");
-            shoot (*small, "zz_deess_settings", true);
+            shoot (*small, "zz_deess_settings", 1);
+            shoot (*small, "zz_deess_info", 2);
 
             tempDir.getFile().deleteRecursively();
             PresetStore::setDefaultRootForTesting ({});
@@ -502,6 +614,9 @@ int main (int argc, char* argv[])
     testState();
     testLayouts();
     testPresets();
+    testEffectDocs();
+    testThreadedStress();
+    testOldSessions (juce::File (DAYLIGHT_FIXTURES_DIR));
     testAllEffects();
 
     for (int i = 1; i + 1 < argc; ++i)

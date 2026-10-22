@@ -16,6 +16,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "manifest" / "effects.json"
 AW_DIR = "third_party/airwin_consolidated/autogen_airwin"
+DOC_DIR = "third_party/airwin_consolidated/awpdoc"   # Airwindopedia texts (Effect info)
 OUT_CMAKE = ROOT / "cmake" / "Effects.cmake"
 OUT_CPP = ROOT / "src" / "generated" / "EffectList.gen.cpp"
 
@@ -75,6 +76,13 @@ def main():
     cmake += [f"    {s}" for s in sources]
     cmake += [")", "", "set(DAYLIGHT_LAYOUT_FILES"]
     cmake += [f"    {l}" for l in layouts]
+    cmake += [")", "", "# pairs: source file, embedded name", "set(DAYLIGHT_DOC_FILES"]
+    for e in included:
+        doc = f"{DOC_DIR}/{e['upstream']}.txt"
+        if (ROOT / doc).exists():
+            cmake.append(f"    {doc} doc_{e['id']}.txt")
+        else:
+            print(f"gen_effects: note: no Airwindopedia text for '{e['id']}' ({doc})")
     cmake += [")", ""]
     cmake_text = "\n".join(cmake)
 

@@ -46,7 +46,7 @@ def main():
         head = "(unknown)"
     print(f"pinned commit : {pinned}\nupstream HEAD : {head}\n")
 
-    changed_effects, missing, changed_base = [], [], []
+    changed_effects, missing, changed_base, changed_docs = [], [], [], []
 
     for f in BASE_FILES:
         if not (src / f).exists():
@@ -59,6 +59,10 @@ def main():
             continue
         n = e["upstream"]
         files = [f"{n}.h", f"{n}.cpp", f"{n}Proc.cpp"]
+        doc_up = upstream_root / "res" / "awpdoc" / f"{n}.txt"
+        doc_local = LOCAL / "awpdoc" / f"{n}.txt"
+        if doc_up.exists() and (not doc_local.exists() or not filecmp.cmp(doc_up, doc_local, shallow=False)):
+            changed_docs.append((doc_up, doc_local))
         diffs = []
         for f in files:
             up = up_aw / f
@@ -84,7 +88,9 @@ def main():
         for f in missing:
             print(f"  {f}")
         print()
-    if not (changed_base or changed_effects or missing):
+    if changed_docs:
+        print(f"Effect info texts (Airwindopedia) changed or new: {len(changed_docs)} (text only, no sound change)\n")
+    if not (changed_base or changed_effects or missing or changed_docs):
         print("All included effects are identical to upstream. Nothing to do.")
         return
 
@@ -99,6 +105,9 @@ def main():
     for e, diffs in changed_effects:
         for f in diffs:
             shutil.copy2(up_aw / f, LOCAL / "autogen_airwin" / f)
+    for up, local in changed_docs:
+        local.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(up, local)
     if (upstream_root / "LICENSE.md").exists():
         shutil.copy2(upstream_root / "LICENSE.md", LOCAL / "LICENSE.md")
 

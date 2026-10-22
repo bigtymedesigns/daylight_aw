@@ -80,6 +80,29 @@ jobs:
         run: xvfb-run -a ./build/DaylightTests_artefacts/Debug/DaylightTests --snapshots snapshots
 
   # ------------------------------------------------------------------------------------------
+  tsan:
+    name: Linux ThreadSanitizer
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build xvfb libx11-dev libxext-dev libxrandr-dev \
+            libxinerama-dev libxcursor-dev libfreetype-dev libfontconfig1-dev libasound2-dev
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DDAYLIGHT_TSAN=ON
+      - name: Build
+        run: cmake --build build --target DaylightTests
+      - name: Tests (includes the audio + GUI thread stress test)
+        env:
+          TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
+        run: |
+          # newer kernels use more address randomisation than TSan supports
+          sudo sysctl vm.mmap_rnd_bits=28
+          xvfb-run -a ./build/DaylightTests_artefacts/RelWithDebInfo/DaylightTests
+
+  # ------------------------------------------------------------------------------------------
   windows:
     name: Windows VST3
     runs-on: windows-2022
@@ -173,7 +196,7 @@ jobs:
   release:
     name: GitHub Release (tags only)
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [linux, sanitizers, windows, macos]
+    needs: [linux, sanitizers, tsan, windows, macos]
     runs-on: ubuntu-24.04
     permissions:
       contents: write

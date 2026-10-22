@@ -31,6 +31,8 @@ public:
     void drawTextEditorOutline (juce::Graphics&, int w, int h, juce::TextEditor&) override;
     void drawScrollbar (juce::Graphics&, juce::ScrollBar&, int x, int y, int w, int h, bool vertical,
                         int thumbStart, int thumbSize, bool over, bool down) override;
+    juce::Rectangle<int> getTooltipBounds (const juce::String& text, juce::Point<int> screenPos, juce::Rectangle<int> parentArea) override;
+    void drawTooltip (juce::Graphics&, const juce::String& text, int width, int height) override;
 
 private:
     UiContext& ctx;
@@ -52,7 +54,8 @@ private:
 };
 
 /** The round BYPASS button (linked to the DAW's own bypass parameter). */
-class BypassButton : public juce::Component
+class BypassButton : public juce::Component,
+                     public juce::SettableTooltipClient
 {
 public:
     explicit BypassButton (UiContext& c);
@@ -66,6 +69,7 @@ private:
 
 /** One parameter: knob, stepped knob or switch, with its name above and value below. */
 class ParamControl : public juce::Component,
+                     public juce::SettableTooltipClient,
                      private juce::TextEditor::Listener
 {
 public:
