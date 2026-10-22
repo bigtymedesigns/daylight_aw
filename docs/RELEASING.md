@@ -7,13 +7,15 @@ Actions *Artifacts* are only for testing: they need a login and are deleted afte
 
 ## Steps
 
-1. Set the version in `CMakeLists.txt` (`project(Daylight_aw VERSION 1.0.0 ...)`) and add a section to
+1. In `manifest/effects.json` set `"latest": {"until": "<today>"}` (the Latest folder counts back from it).
+   Rebuild the manual (`tools/manual/build_manual.py`, see its header) so it shows the current effects.
+2. Set the version in `CMakeLists.txt` (`project(Daylight_aw VERSION 1.0.0 ...)`) and add a section to
    `CHANGELOG.md`. Commit and push, then wait for a green Actions run.
-2. On github.com, open **Releases → Draft a new release**.
+3. On github.com, open **Releases → Draft a new release**.
    - **Choose a tag**: type `v1.0.0` (must match the version, with a `v`), then *Create new tag on publish*.
    - Title: `Daylight_aw 1.0.0`. Description: paste the CHANGELOG section.
    - Click **Publish release**.
-3. Within ~20 minutes Actions builds everything again and attaches the zips to the release:
+4. Within ~25 minutes Actions builds everything again and attaches the zips to the release:
    - `Daylight_aw-v1.0.0-Windows-VST3.zip`
    - `Daylight_aw-v1.0.0-macOS-VST3-AU.zip`
    - `Daylight_aw-v1.0.0-Linux-VST3.zip`

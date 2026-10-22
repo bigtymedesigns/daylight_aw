@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "PluginEditor.h"
+#include "UserLayouts.h"
 #include "BinaryData.h"
 #include "Fonts.h"
 
@@ -23,14 +24,6 @@ juce::String menuLabel (const DaylightProcessor& p)
         return label;
     }
     return p.hasUnknownEffect() ? p.getUnknownEffectId() : juce::String ("Choose effect");
-}
-
-juce::String layoutJsonFor (const juce::String& effectId)
-{
-    int size = 0;
-    if (auto* data = BinaryData::getNamedResource ((effectId + "_json").toRawUTF8(), size))
-        return juce::String::fromUTF8 (data, size);
-    return {};
 }
 
 void drawGlowingText (juce::Graphics& g, const juce::String& text, const juce::Font& font, float x, float baseline,
@@ -83,6 +76,26 @@ public:
         updateTooltips();
     }
 
+    static juce::Time userLayoutTime (const juce::String& id)
+    {
+        const auto f = userlayouts::fileFor (id);
+        return f.existsAsFile() ? f.getLastModificationTime() : juce::Time();
+    }
+
+    /** Called about once a second: picks up a user layout file that was created, edited or removed. */
+    void checkUserLayout()
+    {
+        if (builtListView)
+            return;
+        if (auto* fx = ctx.processor.getEffectHost())
+            if (userLayoutTime (fx->getInfo().id) != userLayoutStamp)
+            {
+                rebuild();
+                if (settingsPanel != nullptr)
+                    settingsPanel->refresh();
+            }
+    }
+
     /** Processor sent a change: rebuild only when the effect itself changed, else just refresh. */
     void processorChanged()
     {
@@ -121,7 +134,14 @@ public:
             for (int i = 0; i < fx->getNumParams(); ++i)
                 facts.push_back ({ fx->getParamNames()[i], builtListView ? 0 : fx->detectSteps (i) });
 
-            layout = builtListView ? buildListLayout (facts) : buildLayout (facts, layoutJsonFor (fx->getInfo().id));
+            const juce::String id (fx->getInfo().id);
+            bool custom = false;
+            const auto json = builtListView ? juce::String() : userlayouts::effectiveJson (id, custom);
+            layout = builtListView ? buildListLayout (facts) : buildLayout (facts, json);
+            auto& st = userlayouts::status (id);
+            st.custom = custom;
+            st.warnings = layout.warnings;
+            userLayoutStamp = userLayoutTime (id);
             for ([[maybe_unused]] auto& w : layout.warnings)
                 DBG ("Layout warning (" << fx->getInfo().id << "): " << w);
 
@@ -686,6 +706,7 @@ private:
     }
 
     EffectHost* builtHost = nullptr;
+    juce::Time userLayoutStamp;
     bool builtListView = false;
     bool builtUnknown = false;
     juce::String shownMenuLabel;
@@ -824,6 +845,7 @@ juce::Time DaylightEditor::userThemeTime()
 void DaylightEditor::timerCallback()
 {
     settings->reloadIfChanged();
+    content->checkUserLayout();
 
     if (settings->getTheme() == ThemeId::user)
     {

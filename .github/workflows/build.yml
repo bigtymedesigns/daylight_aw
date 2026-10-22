@@ -135,6 +135,7 @@ jobs:
           mkdir -p dist/Daylight_aw
           cp -r build/Daylight_aw_artefacts/Release/VST3/Daylight_aw.vst3 dist/Daylight_aw/
           cp docs/INSTALL_WINDOWS.txt dist/Daylight_aw/INSTALL.txt
+          cp docs/Daylight_aw_Manual.pdf dist/Daylight_aw/
           cp LICENSE THIRD_PARTY_NOTICES.md dist/Daylight_aw/
 
       - uses: actions/upload-artifact@v7
@@ -188,6 +189,7 @@ jobs:
           cp -R build/Daylight_aw_artefacts/Release/VST3/Daylight_aw.vst3 dist/Daylight_aw/
           cp -R build/Daylight_aw_artefacts/Release/AU/Daylight_aw.component dist/Daylight_aw/
           cp docs/INSTALL_MAC.txt dist/Daylight_aw/INSTALL.txt
+          cp docs/Daylight_aw_Manual.pdf dist/Daylight_aw/
           cp LICENSE THIRD_PARTY_NOTICES.md dist/Daylight_aw/
           # zip with ditto so bundle attributes survive
           cd dist && ditto -c -k --keepParent Daylight_aw ../Daylight_aw-macOS.zip
@@ -217,6 +219,7 @@ jobs:
           mkdir -p dist/Daylight_aw
           cp -r build/Daylight_aw_artefacts/Release/VST3/Daylight_aw.vst3 dist/Daylight_aw/
           cp docs/INSTALL_LINUX.txt dist/Daylight_aw/INSTALL.txt
+          cp docs/Daylight_aw_Manual.pdf dist/Daylight_aw/
           cp LICENSE THIRD_PARTY_NOTICES.md dist/Daylight_aw/
       - uses: actions/upload-artifact@v7
         with:

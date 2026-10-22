@@ -1,0 +1,26 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Crush",
+      "controls": [
+        "Derez",
+        "Trim",
+        "Square"
+      ]
+    },
+    {
+      "title": "Tone",
+      "controls": [
+        "Bright",
+        "Bassis"
+      ]
+    },
+    {
+      "title": "Output",
+      "controls": [
+        "Output"
+      ]
+    }
+  ]
+}

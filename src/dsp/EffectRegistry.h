@@ -21,6 +21,7 @@ struct EffectInfo
     double tailSeconds;      // reverb/delay tail reported to the host, so it is never cut off
     bool isDither;           // output trim should stay at 0 dB
     bool hasSharedState;     // original code keeps tiny state shared by all instances (detected by the generator)
+    bool isLatest;           // released by Airwindows in the months before this Daylight_aw version ("Latest" folder)
     int numParams;
     std::function<std::unique_ptr<AirwinConsolidatedBase>()> create;
 };
@@ -30,9 +31,6 @@ const std::vector<EffectInfo>& getAllEffects();
 
 /** Returns nullptr when the id is unknown (e.g. a session from a newer version). */
 const EffectInfo* findEffect (const std::string& id);
-
-/** True for effects added in the newest batch (the highest 'since' version): the "New" category. */
-bool isNewEffect (const EffectInfo&);
 
 /** Compares "1.2.3" style versions: negative, zero or positive like strcmp. */
 int compareVersions (const std::string& a, const std::string& b);

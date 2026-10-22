@@ -1,0 +1,29 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Bands",
+      "controls": [
+        "High",
+        {
+          "param": "HMid",
+          "label": "High Mid"
+        },
+        "Mid",
+        {
+          "param": "LMid",
+          "label": "Low Mid"
+        },
+        "Bass"
+      ]
+    },
+    {
+      "title": "More",
+      "controls": [
+        "Sub",
+        "Speed",
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

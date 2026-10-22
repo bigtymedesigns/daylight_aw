@@ -1,0 +1,35 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Room",
+      "controls": [
+        {
+          "param": "SmpRate",
+          "label": "Rate"
+        },
+        {
+          "param": "Livenes",
+          "label": "Liveness"
+        },
+        {
+          "param": "Nonlin",
+          "label": "Nonlinear"
+        }
+      ]
+    },
+    {
+      "title": "Tone",
+      "controls": [
+        "Treble",
+        "Bass"
+      ]
+    },
+    {
+      "title": "Mix",
+      "controls": [
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

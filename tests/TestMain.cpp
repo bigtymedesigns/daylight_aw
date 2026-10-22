@@ -13,6 +13,7 @@
 #include <atomic>
 
 #include "gui/PluginEditor.h"
+#include "gui/UserLayouts.h"
 
 #include "PluginProcessor.h"
 #include "gui/Layout.h"
@@ -169,7 +170,7 @@ void testSelectionAndNames()
     check (p->selectEffect ("totape9"), "select totape9");
     check (p->getSlot (0).getName (64) == "Input", "slot 1 named after the effect");
     check (p->getSlot (9).getName (64) == "-", "unused slot named -");
-    check (! p->selectEffect ("galactic"), "second selection refused (locked)");
+    check (! p->selectEffect ("galactic3"), "second selection refused (locked)");
     check (p->getProgramName (0) == "ToTape9", "program name = effect name");
     check (! p->selectEffect ("doesnotexist"), "unknown id refused");
 }
@@ -187,7 +188,7 @@ void testPassThroughAndBypass()
     }
     {
         auto p = makeProcessor();
-        p->selectEffect ("density2");
+        p->selectEffect ("tube2");
         p->getBypass().setValueNotifyingHost (1.0f);
         juce::AudioBuffer<float> warm (2, 4096);
         fillNoise (warm, 1);
@@ -349,7 +350,7 @@ void testPresets()
     check (p->getSlot (1).get() == fx->getDefault (1), "missing value -> effect default");
 
     PresetData other = data;
-    other.effectId = "galactic";
+    other.effectId = "galactic3";
     check (! p->applyPreset (other), "refuse preset of another effect");
 
     // reset clears the preset name
@@ -414,21 +415,20 @@ void testOriginalTheme()
     }
 }
 
-void testNewCategory()
+void testLatestCategory()
 {
-    std::cout << "New category ..." << std::endl;
+    std::cout << "Latest category ..." << std::endl;
     check (compareVersions ("0.1.0", "0.1.0") == 0 && compareVersions ("0.2.0", "0.10.0") < 0
            && compareVersions ("1.0.0", "0.9.9") > 0, "version compare");
-    std::string newest = "0.0.0";
-    for (auto& e : getAllEffects())
-        if (compareVersions (e.since, newest) > 0) newest = e.since;
     int n = 0;
     for (auto& e : getAllEffects())
     {
         check (compareVersions (e.since, kVersion) <= 0, juce::String ("'since' not newer than this build: ") + e.id);
-        if (isNewEffect (e)) { ++n; check (newest == e.since, juce::String ("new effect is from newest batch: ") + e.id); }
+        if (e.isLatest) ++n;
     }
-    check (n > 0, "New category is never empty");
+    check (n > 0 && n < (int) getAllEffects().size(), "Latest folder holds some, not all, effects");
+    check (findEffect ("verbsevens") != nullptr && findEffect ("verbsevens")->isLatest, "newest release is in Latest");
+    check (! findEffect ("purestgain")->isLatest, "old classic is not in Latest");
 }
 
 void testEffectDocs()
@@ -449,7 +449,7 @@ void testThreadedStress()
 {
     std::cout << "Threaded stress (audio + GUI threads) ..." << std::endl;
     auto p = makeProcessor (48000.0, 256);
-    p->selectEffect ("consolexchannel");
+    p->selectEffect ("stonefirecomp");
 
     std::atomic<bool> stop { false };
     std::atomic<int> blocks { 0 };
@@ -526,7 +526,8 @@ void testOldSessions (const juce::File& fixtures)
         for (auto* e : xml->getChildWithTagNameIterator ("Param"))
             if (p->hasEffect())
             {
-                const int idx = p->getEffectHost()->getParamNames().indexOf (e->getStringAttribute ("name"));
+                const int idx = e->getIntAttribute ("index", -1);   // same index + name (names can repeat)
+                valuesOk = valuesOk && p->getEffectHost()->getParamNames()[idx] == e->getStringAttribute ("name");
                 valuesOk = valuesOk && idx >= 0
                         && std::abs (p->getSlot (idx).get() - (float) e->getDoubleAttribute ("value")) < 1.0e-6f;
             }
@@ -544,7 +545,7 @@ void testStateExtras()
     std::cout << "State extras (exact A/B, unknown -> known, chunked blocks) ..." << std::endl;
 
     {
-        auto rev = makeProcessor(); rev->selectEffect ("galactic");
+        auto rev = makeProcessor(); rev->selectEffect ("galactic3");
         auto tape = makeProcessor(); tape->selectEffect ("totape9");
         check (rev->getTailLengthSeconds() >= 5.0 && tape->getTailLengthSeconds() < 0.001, "reverb tail reported to host");
     }
@@ -552,7 +553,7 @@ void testStateExtras()
     // A/B values survive a save exactly (not rounded)
     {
         auto p = makeProcessor();
-        p->selectEffect ("galactic");
+        p->selectEffect ("galactic3");
         p->getSlot (0).setValueNotifyingHost (0.12345679f);
         p->switchAB (1);
         p->getSlot (0).setValueNotifyingHost (0.9f);
@@ -564,6 +565,32 @@ void testStateExtras()
         check (q->getSlot (0).get() == 0.12345679f, "A/B slot restored bit-exactly");
     }
 
+    // effects that use a parameter name twice (StoneFireComp: two "Attack"s) keep every value
+    {
+        juce::TemporaryFile tmp;
+        PresetStore store (tmp.getFile());
+        auto p = makeProcessor();
+        p->selectEffect ("stonefirecomp");
+        auto* fx = p->getEffectHost();
+        std::vector<float> v;
+        for (int i = 0; i < fx->getNumParams(); ++i) v.push_back (0.05f + 0.09f * (float) i);
+        store.save (fx->getInfo(), "Dup", fx->getParamNames(), v);
+        PresetData d;
+        PresetStore::load (store.fileFor (fx->getInfo(), "Dup"), d);
+        p->applyPreset (d);
+        bool ok = true;
+        for (int i = 0; i < fx->getNumParams(); ++i) ok = ok && p->getSlot (i).get() == v[(size_t) i];
+        check (ok, "preset with repeated parameter names restores every slot");
+        juce::MemoryBlock mb;
+        p->getStateInformation (mb);
+        auto q = makeProcessor();
+        q->setStateInformation (mb.getData(), (int) mb.getSize());
+        ok = true;
+        for (int i = 0; i < fx->getNumParams(); ++i) ok = ok && q->getSlot (i).get() == v[(size_t) i];
+        check (ok, "session with repeated parameter names restores every slot");
+        tmp.getFile().deleteRecursively();
+    }
+
     // a session of a known effect replaces the "needs a newer version" placeholder
     {
         auto p = makeProcessor();
@@ -571,16 +598,16 @@ void testStateExtras()
         p->setStateInformation (unknown.toRawUTF8(), (int) unknown.getNumBytesAsUTF8());
         check (p->hasUnknownEffect(), "unknown effect placeholder");
         auto donor = makeProcessor();
-        donor->selectEffect ("deess");
+        donor->selectEffect ("debess");
         juce::MemoryBlock mb;
         donor->getStateInformation (mb);
         p->setStateInformation (mb.getData(), (int) mb.getSize());
-        check (! p->hasUnknownEffect() && p->hasEffect() && juce::String (p->getEffectHost()->getInfo().id) == "deess",
+        check (! p->hasUnknownEffect() && p->hasEffect() && juce::String (p->getEffectHost()->getInfo().id) == "debess",
                "known state replaces unknown placeholder");
     }
 
     // host blocks larger than prepared (chunking) and mono double stay bit-identical
-    for (auto id : { "totape9", "galactic" })
+    for (auto id : { "totape9", "galactic3" })
     {
         const auto* info = findEffect (id);
         std::srand (4321);
@@ -603,6 +630,73 @@ void testStateExtras()
         }
         check (maxDiff (a, b, 2) == 0.0, juce::String ("chunked big host blocks bit-identical: ") + id);
     }
+}
+
+
+// ---------------------------------------------------------------------------------------------
+void testUserLayouts()
+{
+    std::cout << "User layouts ..." << std::endl;
+    juce::TemporaryFile tempDir;
+    userlayouts::setFolderForTesting (tempDir.getFile());
+
+    auto sameControls = [] (const EffectLayout& a, const EffectLayout& b)
+    {
+        std::vector<std::tuple<int, int, int, juce::String, juce::String>> x, y;
+        auto collect = [] (const EffectLayout& l, auto& out)
+        {
+            for (auto& p : l.pages) for (auto& r : p.rows) for (auto& g : r.groups) for (auto& c : g.controls)
+                out.emplace_back (c.param, (int) c.type, c.steps, c.label, g.title);
+        };
+        collect (a, x); collect (b, y);
+        return x == y && a.pages.size() == b.pages.size() && a.small == b.small;
+    };
+
+    for (auto& e : getAllEffects())
+    {
+        auto p = makeProcessor();
+        p->selectEffect (e.id);
+        auto* fx = p->getEffectHost();
+        if (fx->getNumParams() == 0)
+            continue;
+        std::vector<ParamFacts> facts;
+        for (int i = 0; i < fx->getNumParams(); ++i)
+            facts.push_back ({ fx->getParamNames()[i], fx->detectSteps (i) });
+
+        // "Edit layout" writes a copy of what is on screen: reading it back gives the same layout
+        check (userlayouts::create (*fx), juce::String ("user layout created: ") + e.id);
+        bool isUser = false;
+        const auto json = userlayouts::effectiveJson (e.id, isUser);
+        const auto original = buildLayout (facts, userlayouts::builtInJson (e.id));
+        const auto copy = buildLayout (facts, json);
+        check (isUser && copy.warnings.isEmpty() && sameControls (original, copy),
+               juce::String ("user layout copy = built-in layout: ") + e.id);
+    }
+
+    // a user's edit wins; broken files never lose parameters
+    auto p = makeProcessor();
+    p->selectEffect ("totape9");
+    auto* fx = p->getEffectHost();
+    std::vector<ParamFacts> facts;
+    for (int i = 0; i < fx->getNumParams(); ++i)
+        facts.push_back ({ fx->getParamNames()[i], 0 });
+
+    userlayouts::fileFor ("totape9").replaceWithText (R"({"groups":[{"title":"Mine","controls":[{"param":"Output","label":"Loud"},"Nope"]}]})");
+    bool isUser = false;
+    auto l = buildLayout (facts, userlayouts::effectiveJson ("totape9", isUser));
+    check (isUser && l.pages[0].rows[0].groups[0].controls[0].label == "Loud", "user layout used");
+    check (l.numControls() == fx->getNumParams() && l.warnings.size() >= 2, "unknown name + missing parameters repaired");
+
+    userlayouts::fileFor ("totape9").replaceWithText ("{ broken");
+    l = buildLayout (facts, userlayouts::effectiveJson ("totape9", isUser));
+    check (l.numControls() == fx->getNumParams() && ! l.warnings.isEmpty(), "broken user layout falls back safely");
+
+    check (userlayouts::remove ("totape9") && ! userlayouts::fileFor ("totape9").exists(), "remove user layout");
+    userlayouts::effectiveJson ("totape9", isUser);
+    check (! isUser, "built-in layout after remove");
+
+    userlayouts::setFolderForTesting ({});
+    tempDir.getFile().deleteRecursively();
 }
 
 void testLayouts()
@@ -641,8 +735,8 @@ void testLayouts()
     std::cout << "  small " << small << ", large " << large << ", with tabs " << tabbed << std::endl;
 
     // Stepped / switch detection on known effects
-    for (auto [id, index, steps] : { std::tuple { "pocketverbs", 0, 6 }, std::tuple { "adclip8", 2, 8 },
-                                     std::tuple { "monitoring3", 0, 17 }, std::tuple { "notjustanotherdither", 0, 2 },
+    for (auto [id, index, steps] : { std::tuple { "golem", 2, 6 }, std::tuple { "adclip9", 4, 3 },
+                                     std::tuple { "monitoring3", 0, 17 }, std::tuple { "pauldither", 0, 2 },
                                      std::tuple { "totape9", 0, 0 } })
     {
         EffectHost host (*findEffect (id), 48000.0);
@@ -709,9 +803,9 @@ void renderSnapshots (const juce::File& dir)
             shoot (*p, "zz_totape9_info", 2);
 
             auto small = makeProcessor();
-            small->selectEffect ("deess");
-            shoot (*small, "zz_deess_settings", 1);
-            shoot (*small, "zz_deess_info", 2);
+            small->selectEffect ("debess");
+            shoot (*small, "zz_debess_settings", 1);
+            shoot (*small, "zz_debess_info", 2);
 
             tempDir.getFile().deleteRecursively();
             PresetStore::setDefaultRootForTesting ({});
@@ -725,18 +819,116 @@ int main (int argc, char* argv[])
 {
     juce::ScopedJuceInitialiser_GUI juceInit;
 
+    if (argc > 1 && juce::String (argv[1]) == "--list-steps")
+    {
+        // diagnostic: which parameters show named choices (stepped knobs / switches)
+        for (auto& e : getAllEffects())
+        {
+            EffectHost host (e, 48000.0);
+            for (int i = 0; i < host.getNumParams(); ++i)
+                if (const int n = host.detectSteps (i); n > 0)
+                    std::cout << e.id << " " << i << " " << host.getParamNames()[i] << " " << n << std::endl;
+        }
+        return 0;
+    }
+
     testSelectionAndNames();
     testPassThroughAndBypass();
     testState();
     testLayouts();
     testPresets();
     testEffectDocs();
-    testNewCategory();
+    testLatestCategory();
     testOriginalTheme();
     testStateExtras();
+    testUserLayouts();
     testThreadedStress();
     testOldSessions (juce::File (DAYLIGHT_FIXTURES_DIR));
     testAllEffects();
+
+    for (int i = 1; i + 1 < argc; ++i)
+        if (juce::String (argv[i]) == "--manual")
+        {
+            // pictures for the PDF manual, 2x resolution
+            const auto dir = juce::File::getCurrentWorkingDirectory().getChildFile (argv[i + 1]);
+            dir.createDirectory();
+            juce::SharedResourcePointer<GlobalSettings> settings;
+            const auto original = settings->getTheme();
+            juce::TemporaryFile tempDir;
+            PresetStore::setDefaultRootForTesting (tempDir.getFile());
+
+            auto shot = [&] (ThemeId theme, const char* id, const juce::String& name, int panel)
+            {
+                settings->setTheme (theme);
+                auto p = makeProcessor();
+                if (id != nullptr) p->selectEffect (id);
+                if (panel == 1 && p->hasEffect())
+                {
+                    auto* fx = p->getEffectHost();
+                    std::vector<float> v;
+                    for (int k = 0; k < fx->getNumParams(); ++k) v.push_back (p->getSlot (k).get());
+                    PresetStore store (PresetStore::defaultRoot());
+                    for (auto n : { "Warm Tape", "Bright Bus", "Lo-fi Cassette" })
+                        store.save (fx->getInfo(), n, fx->getParamNames(), v);
+                    PresetData d;
+                    PresetStore::load (store.fileFor (fx->getInfo(), "Warm Tape"), d);
+                    p->applyPreset (d);
+                }
+                std::unique_ptr<juce::AudioProcessorEditor> ed (p->createEditor());
+                if (auto* e = dynamic_cast<DaylightEditor*> (ed.get()))
+                {
+                    if (panel == 1) e->showSettingsPanel();
+                    if (panel == 2) e->showInfoPanel();
+                }
+                auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 2.0f);
+                auto f = dir.getChildFile (name + ".png");
+                f.deleteFile();
+                juce::FileOutputStream os (f);
+                juce::PNGImageFormat().writeImageToStream (img, os);
+            };
+            shot (ThemeId::light, nullptr, "selector", 0);
+            shot (ThemeId::light, "totape9", "light", 0);
+            shot (ThemeId::dark, "totape9", "dark", 0);
+            shot (ThemeId::original, "totape9", "original", 0);
+            shot (ThemeId::dark, "stonefirecomp", "large", 0);
+            shot (ThemeId::light, "debess", "small", 0);
+            shot (ThemeId::light, "totape9", "settings", 1);
+            shot (ThemeId::light, "totape9", "info", 2);
+            shot (ThemeId::light, "cliponly3", "nocontrols", 0);
+
+            PresetStore::setDefaultRootForTesting ({});
+            tempDir.getFile().deleteRecursively();
+            settings->setTheme (original);
+        }
+
+    for (int i = 1; i + 1 < argc; ++i)
+        if (juce::String (argv[i]) == "--controls")
+        {
+            // design review: effects showing every control type, every theme, 2x resolution
+            const auto dir = juce::File::getCurrentWorkingDirectory().getChildFile (argv[i + 1]);
+            dir.createDirectory();
+            juce::SharedResourcePointer<GlobalSettings> settings;
+            const auto original = settings->getTheme();
+            for (auto theme : { ThemeId::light, ThemeId::dark, ThemeId::original })
+            {
+                settings->setTheme (theme);
+                for (auto id : { "totape9", "golem", "monitoring3", "pauldither", "debess" })
+                {
+                    auto p = makeProcessor();
+                    p->selectEffect (id);
+                    std::unique_ptr<juce::AudioProcessorEditor> ed (p->createEditor());
+                    if (juce::String (id) == "debess")
+                        if (auto* d = dynamic_cast<DaylightEditor*> (ed.get()))
+                            d->showSettingsPanel();
+                    auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 2.0f);
+                    auto f = dir.getChildFile (juce::String (id) + "_" + toString (theme) + ".png");
+                    f.deleteFile();
+                    juce::FileOutputStream os (f);
+                    juce::PNGImageFormat().writeImageToStream (img, os);
+                }
+            }
+            settings->setTheme (original);
+        }
 
     for (int i = 1; i + 1 < argc; ++i)
         if (juce::String (argv[i]) == "--knob-styles")
@@ -751,7 +943,7 @@ int main (int argc, char* argv[])
                 {
                     Theme::knobStyleOverrideForTesting() = style;
                     settings->setTheme (theme);
-                    for (auto id : { "totape9", "pocketverbs" })
+                    for (auto id : { "totape9", "golem" })
                     {
                         auto p = makeProcessor();
                         p->selectEffect (id);

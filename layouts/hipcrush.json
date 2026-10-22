@@ -1,0 +1,62 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "High",
+      "controls": [
+        {
+          "param": "Hi Freq",
+          "label": "Freq"
+        },
+        {
+          "param": "High",
+          "label": "Level"
+        },
+        {
+          "param": "HiCrush",
+          "label": "Crush"
+        }
+      ]
+    },
+    {
+      "title": "Mid",
+      "controls": [
+        {
+          "param": "MidFreq",
+          "label": "Freq"
+        },
+        {
+          "param": "Mid",
+          "label": "Level"
+        },
+        {
+          "param": "MdCrush",
+          "label": "Crush"
+        }
+      ]
+    },
+    {
+      "title": "Low",
+      "controls": [
+        {
+          "param": "Lo Freq",
+          "label": "Freq"
+        },
+        {
+          "param": "Low",
+          "label": "Level"
+        },
+        {
+          "param": "LoCrush",
+          "label": "Crush"
+        }
+      ]
+    },
+    {
+      "title": "Mix",
+      "controls": [
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

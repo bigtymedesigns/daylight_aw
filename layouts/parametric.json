@@ -1,0 +1,62 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Treble",
+      "controls": [
+        {
+          "param": "Tr Freq",
+          "label": "Freq"
+        },
+        {
+          "param": "Treble",
+          "label": "Gain"
+        },
+        {
+          "param": "Tr Reso",
+          "label": "Reso"
+        }
+      ]
+    },
+    {
+      "title": "High mid",
+      "controls": [
+        {
+          "param": "HM Freq",
+          "label": "Freq"
+        },
+        {
+          "param": "HighMid",
+          "label": "Gain"
+        },
+        {
+          "param": "HM Reso",
+          "label": "Reso"
+        }
+      ]
+    },
+    {
+      "title": "Low mid",
+      "controls": [
+        {
+          "param": "LM Freq",
+          "label": "Freq"
+        },
+        {
+          "param": "LowMid",
+          "label": "Gain"
+        },
+        {
+          "param": "LM Reso",
+          "label": "Reso"
+        }
+      ]
+    },
+    {
+      "title": "Mix",
+      "controls": [
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

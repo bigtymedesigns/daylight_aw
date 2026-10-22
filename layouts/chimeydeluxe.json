@@ -1,0 +1,28 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Amp",
+      "controls": [
+        "Hell",
+        "Fizz",
+        "Pick",
+        "Satan",
+        "Danger"
+      ]
+    },
+    {
+      "title": "Body",
+      "controls": [
+        {
+          "param": "Crtical",
+          "label": "Critical"
+        },
+        "H Meat",
+        "L Meat",
+        "Swing",
+        "Rarely"
+      ]
+    }
+  ]
+}

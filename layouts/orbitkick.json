@@ -1,0 +1,26 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Kick",
+      "controls": [
+        "Drop",
+        "Shape",
+        "Start",
+        "Finish"
+      ]
+    },
+    {
+      "title": "Trigger",
+      "controls": [
+        "Thresh"
+      ]
+    },
+    {
+      "title": "Mix",
+      "controls": [
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

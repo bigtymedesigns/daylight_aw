@@ -1,0 +1,41 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Gain",
+      "controls": [
+        "High",
+        {
+          "param": "HMid",
+          "label": "High Mid"
+        },
+        {
+          "param": "LMid",
+          "label": "Low Mid"
+        },
+        "Bass"
+      ]
+    },
+    {
+      "title": "Frequency",
+      "controls": [
+        {
+          "param": "HighF",
+          "label": "High"
+        },
+        {
+          "param": "HMidF",
+          "label": "High Mid"
+        },
+        {
+          "param": "LMidF",
+          "label": "Low Mid"
+        },
+        {
+          "param": "BassF",
+          "label": "Bass"
+        }
+      ]
+    }
+  ]
+}

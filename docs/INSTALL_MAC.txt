@@ -7,8 +7,9 @@ Daylight_aw - macOS install (AU + VST3)
      Daylight_aw.vst3       ->  ~/Library/Audio/Plug-Ins/VST3/
    (In Finder: Go > Go to Folder... and paste the path. "~" means your home folder.)
 
-3. These test builds are not signed by Apple, so macOS blocks them at first.
-   Open Terminal (Applications > Utilities > Terminal) and paste these two lines:
+3. Daylight_aw is free and is not signed through Apple's paid developer program, so macOS
+   blocks it the first time. This is normal for many free plugins. To allow it once,
+   open Terminal (Applications > Utilities > Terminal) and paste these two lines:
 
      xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/Components/Daylight_aw.component
      xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Daylight_aw.vst3

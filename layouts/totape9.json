@@ -1,10 +1,48 @@
 {
   "formatVersion": 1,
   "groups": [
-    { "title": "Input",   "controls": [ "Input" ] },
-    { "title": "Tone",    "controls": [ "Tilt", "Shape" ] },
-    { "title": "Flutter", "controls": [ "Flutter", { "param": "FlutSpd", "label": "Speed" } ] },
-    { "title": "Head",    "controls": [ "Bias", { "param": "HeadBmp", "label": "Bump" }, { "param": "HeadFrq", "label": "Freq" } ] },
-    { "title": "Output",  "controls": [ "Output" ] }
+    {
+      "title": "Input",
+      "controls": [
+        "Input"
+      ]
+    },
+    {
+      "title": "Tone",
+      "controls": [
+        "Tilt",
+        "Shape"
+      ]
+    },
+    {
+      "title": "Flutter",
+      "controls": [
+        "Flutter",
+        {
+          "param": "FlutSpd",
+          "label": "Speed"
+        }
+      ]
+    },
+    {
+      "title": "Head",
+      "controls": [
+        "Bias",
+        {
+          "param": "HeadBmp",
+          "label": "Bump"
+        },
+        {
+          "param": "HeadFrq",
+          "label": "Freq"
+        }
+      ]
+    },
+    {
+      "title": "Output",
+      "controls": [
+        "Output"
+      ]
+    }
   ]
 }

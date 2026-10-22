@@ -8,7 +8,8 @@ Everything happens on GitHub, and GitHub builds the plugins, so you don't need a
 | You want to... | Rebuild needed? | Where |
 |---|---|---|
 | Change colours or the look | **No.** Use the User theme | `Documents/big_tyme_designs/Daylight_aw/Themes/User/` (see `themes/README.md`) |
-| Change or add a layout for an effect | Yes | `layouts/<id>.json` |
+| Make your own layout for an effect | **No.** Settings → Edit layout | `Documents/big_tyme_designs/Daylight_aw/Layouts/` (see `docs/LAYOUTS.md`) |
+| Change the built-in layout everyone gets | Yes | `layouts/<id>.json` (same format: copy your file there) |
 | Add an Airwindows effect | Yes | `manifest/effects.json` + 3 source files |
 | Change the built-in themes | Yes | `themes/<name>/theme.json` + images |
 
@@ -35,7 +36,10 @@ Everything happens on GitHub, and GitHub builds the plugins, so you don't need a
      "category": "Saturation", "included": true, "description": "One sentence." }
    ```
    - `id`: lower-case letters/digits, permanent. Never rename or reuse it.
-   - `since`: the Daylight_aw version that first includes it (fills the **New** category).
+   - `since`: the Daylight_aw version that first includes it.
+   - `released`: the date Airwindows first published it (YYYY-MM-DD). The **Latest** folder shows the
+     effects released in the months before `"latest": {"until": ...}` at the top of the manifest:
+     set `until` to the release date of each new Daylight_aw version.
    - Optional `"tail": 10` for reverbs/delays: seconds the effect keeps sounding after the input
      stops, so DAWs don't cut it off when they pause silent plugins or render.
 4. Optional: `layouts/<id>.json` (copy an existing one). Without it the effect gets an automatic layout.

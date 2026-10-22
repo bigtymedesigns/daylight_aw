@@ -102,7 +102,9 @@ private:
 
     std::function<void()> onChanged, onShowInfo;
     juce::OwnedArray<PillButton> zoomButtons, themeButtons, tooltipButtons;
-    PillButton openThemeFolder, resetButton, infoButton, savePreset, nameOk, nameCancel;
+    PillButton openThemeFolder, resetButton, infoButton, savePreset, nameOk, nameCancel,
+               editLayoutButton, removeLayoutButton;
+    juce::String layoutMessage;
     TrimKnob inTrim, outTrim;
     juce::Rectangle<int> left, right;
 

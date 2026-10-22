@@ -1,0 +1,47 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Amp",
+      "controls": [
+        {
+          "param": "Compres",
+          "label": "Compress"
+        },
+        {
+          "param": "Presnce",
+          "label": "Presence"
+        }
+      ]
+    },
+    {
+      "title": "EQ",
+      "controls": [
+        "High",
+        "Mid",
+        "Low",
+        "Sub"
+      ]
+    },
+    {
+      "title": "Speaker",
+      "controls": [
+        {
+          "param": "HSpeakr",
+          "label": "High Spk"
+        },
+        {
+          "param": "LSpeakr",
+          "label": "Low Spk"
+        },
+        "Speed"
+      ]
+    },
+    {
+      "title": "Output",
+      "controls": [
+        "Output"
+      ]
+    }
+  ]
+}

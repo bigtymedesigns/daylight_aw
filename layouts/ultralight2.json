@@ -1,0 +1,33 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Room",
+      "controls": [
+        "Damping",
+        {
+          "param": "UnSolid",
+          "label": "Unsolid"
+        },
+        {
+          "param": "UnReflc",
+          "label": "Unreflect"
+        },
+        {
+          "param": "Predlay",
+          "label": "Predelay"
+        },
+        {
+          "param": "Distnce",
+          "label": "Distance"
+        }
+      ]
+    },
+    {
+      "title": "Mix",
+      "controls": [
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

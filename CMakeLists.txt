@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum macOS version")
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Universal binary on macOS")
 
-project(Daylight_aw VERSION 0.6.0 LANGUAGES C CXX)
+project(Daylight_aw VERSION 1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -87,6 +87,7 @@ daylight_asset(themes/dark/paper.png     dark_paper.png)
 daylight_asset(themes/dark/figure.png    dark_figure.png)
 daylight_asset(themes/original/theme.json original_theme.json)
 daylight_asset(themes/README.md          theme_readme.md)
+daylight_asset(docs/LAYOUTS.md           layouts_readme.md)
 daylight_asset(resources/fonts/shantell_medium.ttf    shantell_medium.ttf)
 daylight_asset(resources/fonts/shantell_semibold.ttf  shantell_semibold.ttf)
 daylight_asset(resources/fonts/shantell_extrabold.ttf shantell_extrabold.ttf)
@@ -121,7 +122,8 @@ set(DAYLIGHT_SOURCES
     src/gui/Panels.cpp
     src/gui/PluginEditor.cpp
     src/gui/Settings.cpp
-    src/gui/Theme.cpp)
+    src/gui/Theme.cpp
+    src/gui/UserLayouts.cpp)
 
 set(DAYLIGHT_DEFINITIONS
     DAYLIGHT_VERSION_STRING="${PROJECT_VERSION}"

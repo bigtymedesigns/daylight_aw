@@ -1,0 +1,32 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Treble",
+      "controls": [
+        "Hiss",
+        "Glitter",
+        "Rat",
+        "Fizz"
+      ]
+    },
+    {
+      "title": "Mids",
+      "controls": [
+        "Scrape",
+        "Chug",
+        "Yowr",
+        "Snarl"
+      ]
+    },
+    {
+      "title": "Mix",
+      "controls": [
+        {
+          "param": "I/Dr/Wt",
+          "label": "Inv/Wet"
+        }
+      ]
+    }
+  ]
+}

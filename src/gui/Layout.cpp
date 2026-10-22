@@ -114,17 +114,22 @@ bool parseGroups (const juce::var& groupsVar, const std::vector<ParamFacts>& par
             for (auto& cv : *controls)
             {
                 const auto name = cv.isString() ? cv.toString() : cv.getProperty ("param", "").toString();
+                // first not-yet-used parameter with this name (some effects use a name twice)
                 int index = -1;
+                bool known = false;
                 for (size_t i = 0; i < params.size(); ++i)
                     if (params[i].name == name)
-                        index = (int) i;
+                    {
+                        known = true;
+                        if (! used[i]) { index = (int) i; break; }
+                    }
 
-                if (index < 0)
+                if (! known)
                 {
                     warnings.add ("Unknown parameter \"" + name + "\" in layout - ignored.");
                     continue;
                 }
-                if (used[(size_t) index])
+                if (index < 0)
                 {
                     warnings.add ("Parameter \"" + name + "\" appears twice in layout - second ignored.");
                     continue;

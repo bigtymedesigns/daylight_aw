@@ -1,0 +1,27 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "EQ",
+      "controls": [
+        "Treble",
+        {
+          "param": "MidFreq",
+          "label": "Mid Freq"
+        },
+        {
+          "param": "MidPeak",
+          "label": "Mid Peak"
+        },
+        "Bass"
+      ]
+    },
+    {
+      "title": "Channel",
+      "controls": [
+        "Pan",
+        "Fader"
+      ]
+    }
+  ]
+}

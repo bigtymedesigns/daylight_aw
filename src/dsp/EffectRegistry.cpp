@@ -27,16 +27,4 @@ int compareVersions (const std::string& a, const std::string& b)
     return 0;
 }
 
-bool isNewEffect (const EffectInfo& info)
-{
-    static const std::string newest = []
-    {
-        std::string best = "0.0.0";
-        for (const auto& e : getAllEffects())
-            if (compareVersions (e.since, best) > 0)
-                best = e.since;
-        return best;
-    }();
-    return compareVersions (info.since, newest) == 0;
-}
 } // namespace dlaw

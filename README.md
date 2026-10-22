@@ -1,17 +1,19 @@
 # Daylight_aw
 
 **Original Airwindows effects in a calm, hand-drawn interface.**
-A free, open-source VST3 / AU plugin by **big_tyme_designs**.
+A free, open-source VST3 / AU plugin by **big_tyme_designs**, with 135 Airwindows effects.
+Manual: `docs/Daylight_aw_Manual.pdf` (also in every download).
 
-- One Airwindows effect per instance, chosen once from a searchable list (with categories,
-  favourites and recently used).
+- One Airwindows effect per instance, chosen once from a searchable list (categories, favourites,
+  recently used and the newest Airwindows releases in **Latest**).
 - The sound is the **original Airwindows code, unchanged**. Automatic tests prove the output is
   bit-identical.
 - Each effect gets its own layout, with related controls grouped. The window is Small or Large,
   with tabs for big effects.
-- Light, Dark and a User theme you can edit yourself (`themes/README.md`).
+- Light, Dark, Original (plain DAW-style faders) and a User theme you can edit (`themes/README.md`).
 - A/B compare, input/output trim, zoom 100–200 %, full automation, sessions restore exactly.
 - User presets per effect, the full Airwindopedia text for every effect, and tooltips.
+- Make your own layouts without rebuilding: Settings → Edit layout (`docs/LAYOUTS.md`).
 
 See `CHANGELOG.md` for what changed in each version.
 
@@ -78,8 +80,8 @@ which included effects changed. Apply with `--apply`, then bump `version` for th
 **Never** rename or remove an effect `id`, or reorder parameter slots. Old sessions depend on
 them. Sessions store the effect id plus parameter names, so loading stays robust.
 
-**Release.** Bump `project(... VERSION x.y.z)` in `CMakeLists.txt`, push a tag `vX.Y.Z`. GitHub
-builds and publishes the Release.
+**Release.** See `docs/RELEASING.md`: bump the version, then publish a release on github.com.
+GitHub builds and attaches the downloads.
 
 ## Contributing and releases
 

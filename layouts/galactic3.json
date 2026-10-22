@@ -1,0 +1,24 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Space",
+      "controls": [
+        "Replace",
+        {
+          "param": "Brightns",
+          "label": "Bright"
+        },
+        "Detune",
+        "Derez",
+        "Bigness"
+      ]
+    },
+    {
+      "title": "Mix",
+      "controls": [
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

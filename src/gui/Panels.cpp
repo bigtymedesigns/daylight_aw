@@ -1,4 +1,5 @@
 #include "Panels.h"
+#include "UserLayouts.h"
 #include "BinaryData.h"
 #include "Fonts.h"
 
@@ -180,7 +181,7 @@ void SelectorPanel::rebuildCategories()
     categoryRows.clear();
     categoryRows.add (new CategoryRow (*this, "Favourites", "Favourites"));
     categoryRows.add (new CategoryRow (*this, "Recent", "Recently used"));
-    categoryRows.add (new CategoryRow (*this, "New", "New"));
+    categoryRows.add (new CategoryRow (*this, "Latest", "Latest"));
     categoryRows.add (new CategoryRow (*this, "All", "All effects"));
 
     juce::StringArray cats;
@@ -202,11 +203,11 @@ void SelectorPanel::refresh()
         if (r->key == "Favourites")      r->count = ctx.settings.getFavourites().size();
         else if (r->key == "Recent")     r->count = ctx.settings.getRecent().size();
         else if (r->key == "All")        r->count = (int) getAllEffects().size();
-        else if (r->key == "New")
+        else if (r->key == "Latest")
         {
             r->count = 0;
             for (auto& e : getAllEffects())
-                if (isNewEffect (e))
+                if (e.isLatest)
                     ++r->count;
         }
         else
@@ -243,7 +244,7 @@ void SelectorPanel::rebuildList()
     else
     {
         for (auto& e : getAllEffects())
-            if (category == "All" || category == e.category || (category == "New" && isNewEffect (e)))
+            if (category == "All" || category == e.category || (category == "Latest" && e.isLatest))
                 items.push_back (&e);
     }
 
@@ -270,7 +271,7 @@ juce::Component* SelectorPanel::refreshComponentForRow (int row, bool, juce::Com
 
     r->info = juce::isPositiveAndBelow (row, (int) items.size()) ? items[(size_t) row] : nullptr;
     r->showCategory = search.getText().isNotEmpty() || category == "Favourites" || category == "Recent"
-                      || category == "All" || category == "New";
+                      || category == "All" || category == "Latest";
     r->repaint();
     return r;
 }
@@ -326,7 +327,7 @@ void SelectorPanel::paint (juce::Graphics& g)
                        : category == "Favourites" ? juce::String ("FAVOURITES")
                        : category == "Recent" ? juce::String ("RECENTLY USED")
                        : category == "All" ? juce::String ("ALL EFFECTS")
-                       : category == "New" ? juce::String ("NEW IN THE LATEST UPDATE")
+                       : category == "Latest" ? juce::String ("LATEST AIRWINDOWS RELEASES")
                        : category.toUpperCase();
     drawHeading (g, title, heading);
 
@@ -404,6 +405,7 @@ SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed, std::
       openThemeFolder (c, "Open theme folder"), resetButton (c, "Reset to defaults"),
       infoButton (c, "Effect info"), savePreset (c, "Save preset"),
       nameOk (c, "Save"), nameCancel (c, "Cancel"),
+      editLayoutButton (c, "Edit layout"), removeLayoutButton (c, "Remove"),
       inTrim (c, c.processor.getInputTrim(), "Input"), outTrim (c, c.processor.getOutputTrim(), "Output")
 {
     int i = 0;
@@ -451,6 +453,35 @@ SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed, std::
     infoButton.onClick = [this] { if (onShowInfo) onShowInfo(); };
     addAndMakeVisible (resetButton);
     addAndMakeVisible (infoButton);
+
+    // ---- user layouts (Documents/.../Layouts/<id>.json) ----
+    editLayoutButton.setTooltip ("Make your own layout for this effect: opens its layout file. Save it in any text editor.");
+    editLayoutButton.onClick = [this]
+    {
+        if (auto* fx = ctx.processor.getEffectHost())
+        {
+            if (userlayouts::create (*fx))
+            {
+                userlayouts::fileFor (fx->getInfo().id).revealToUser();
+                layoutMessage = "Edit " + juce::String (fx->getInfo().id) + ".json in a text editor. Changes show up live.";
+            }
+            else
+                layoutMessage = "Couldn't create the layout file. Is the Documents folder writable?";
+            refresh();
+        }
+    };
+    removeLayoutButton.setTooltip ("Remove your layout (to the trash) and use the built-in one again.");
+    removeLayoutButton.onClick = [this]
+    {
+        if (auto* fx = ctx.processor.getEffectHost())
+        {
+            layoutMessage = userlayouts::remove (fx->getInfo().id) ? juce::String ("Back to the built-in layout.")
+                                                                    : juce::String ("Couldn't remove the layout file.");
+            refresh();
+        }
+    };
+    addChildComponent (editLayoutButton);
+    addChildComponent (removeLayoutButton);
 
     // ---- presets ----
     savePreset.onClick = [this] { startNaming (NameMode::saving); };
@@ -795,6 +826,16 @@ void SettingsPanel::resized()
 
     resetButton.setBounds (right.withTrimmedTop (22).withHeight (24));
     infoButton.setBounds (right.withTrimmedTop (52).withHeight (24));
+
+    auto* fx = ctx.processor.getEffectHost();
+    const bool layouts = fx != nullptr && ! ctx.theme.listView && fx->getNumParams() > 0;
+    const bool custom = layouts && userlayouts::fileFor (fx->getInfo().id).existsAsFile();
+    auto lr = right.withTrimmedTop (82).withHeight (24);
+    removeLayoutButton.setVisible (custom);
+    if (custom)
+        removeLayoutButton.setBounds (lr.removeFromRight (58).withTrimmedLeft (4));
+    editLayoutButton.setVisible (layouts);
+    editLayoutButton.setBounds (lr);
 }
 
 void SettingsPanel::paint (juce::Graphics& g)
@@ -847,12 +888,23 @@ void SettingsPanel::paint (juce::Graphics& g)
                  right.withHeight (16));
     if (fx != nullptr)
     {
-        juce::String text = fx->getInfo().description;
-        if (fx->getInfo().isDither)
-            text << "\n\nThis is a dither: keep the output trim at 0 dB.";
+        const auto st = userlayouts::status (fx->getInfo().id);
+        juce::String text;
+        if (layoutMessage.isNotEmpty())
+            text = layoutMessage;
+        else if (st.custom && ! ctx.theme.listView)
+            text = st.warnings.isEmpty() ? juce::String ("Your own layout is in use.")
+                                         : "Your layout: " + juce::String (st.warnings.size()) + " problem(s) fixed: " + st.warnings[0];
+        else
+        {
+            text = fx->getInfo().description;
+            if (fx->getInfo().isDither)
+                text << "\n\nThis is a dither: keep the output trim at 0 dB.";
+        }
         g.setColour (t.panelText.withAlpha (0.85f));
         g.setFont (fonts::medium (12.0f));
-        g.drawFittedText (text, right.withTrimmedTop (86), juce::Justification::topLeft, 8);
+        const int top = ctx.theme.listView ? 86 : 114;
+        g.drawFittedText (text, right.withTrimmedTop (top), juce::Justification::topLeft, 8);
     }
 }
 

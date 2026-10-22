@@ -1,6 +1,8 @@
 #include "PluginProcessor.h"
 #include "gui/PluginEditor.h"
 
+#include <map>
+
 namespace dlaw
 {
 namespace
@@ -367,9 +369,13 @@ bool DaylightProcessor::applyPreset (const PresetData& preset)
     for (int i = 0; i < effectHost->getNumParams(); ++i)
         v.push_back (effectHost->getDefault (i));
 
+    std::map<juce::String, int> seen;   // the n-th "Attack" in the file goes to the n-th "Attack"
     for (const auto& [name, value] : preset.values)
     {
-        const int index = names.indexOf (name);
+        int index = -1;
+        for (int i = 0, n = 0; i < names.size(); ++i)
+            if (names[i] == name && n++ == seen[name]) { index = i; break; }
+        ++seen[name];
         if (index >= 0)
             v[(size_t) index] = value;
     }
@@ -577,14 +583,12 @@ void DaylightProcessor::setStateInformation (const void* data, int sizeInBytes)
         const auto& names = fx->getParamNames();
         for (auto* p : xml->getChildWithTagNameIterator ("Param"))
         {
-            // Match by parameter name first (safe across updates), index as fallback.
-            int index = names.indexOf (p->getStringAttribute ("name"));
-            if (index < 0)
-            {
-                const int fallback = p->getIntAttribute ("index", -1);
-                if (fallback >= 0 && fallback < fx->getNumParams() && names[fallback] == p->getStringAttribute ("name"))
-                    index = fallback;
-            }
+            // Same index + same name: exact. Otherwise find the name (safe if upstream reorders).
+            // Some effects use one name twice (e.g. two "Attack"s), so the index check comes first.
+            const auto name = p->getStringAttribute ("name");
+            int index = p->getIntAttribute ("index", -1);
+            if (! (index >= 0 && index < fx->getNumParams() && names[index] == name))
+                index = names.indexOf (name);
             if (index >= 0)
             {
                 const double v = p->getDoubleAttribute ("value", 0.5);

@@ -1,0 +1,47 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Compressor",
+      "controls": [
+        {
+          "param": "Thresld",
+          "label": "Thresh"
+        },
+        {
+          "param": "C Ratio",
+          "label": "Ratio"
+        },
+        {
+          "param": "C Atk",
+          "label": "Attack"
+        },
+        {
+          "param": "C Rls",
+          "label": "Release"
+        }
+      ]
+    },
+    {
+      "title": "Gate",
+      "controls": [
+        {
+          "param": "Thresld",
+          "label": "Thresh"
+        },
+        {
+          "param": "G Ratio",
+          "label": "Ratio"
+        },
+        {
+          "param": "G Sust",
+          "label": "Sustain"
+        },
+        {
+          "param": "G Rls",
+          "label": "Release"
+        }
+      ]
+    }
+  ]
+}

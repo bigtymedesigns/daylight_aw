@@ -1,0 +1,24 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Pitch",
+      "controls": [
+        "Note",
+        "Bend",
+        "Grind",
+        {
+          "param": "Feedbck",
+          "label": "Feedback"
+        }
+      ]
+    },
+    {
+      "title": "Output",
+      "controls": [
+        "Output",
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Reverb",
+      "controls": [
+        "Regen",
+        "Derez",
+        "Filter",
+        {
+          "param": "EarlyRF",
+          "label": "Early"
+        },
+        {
+          "param": "Positin",
+          "label": "Position"
+        }
+      ]
+    },
+    {
+      "title": "Mix",
+      "controls": [
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

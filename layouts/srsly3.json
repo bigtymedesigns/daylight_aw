@@ -1,0 +1,24 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Stereo",
+      "controls": [
+        "Center",
+        "Space",
+        "Level",
+        "Q",
+        {
+          "param": "Nonlin",
+          "label": "Nonlinear"
+        }
+      ]
+    },
+    {
+      "title": "Mix",
+      "controls": [
+        "Dry/Wet"
+      ]
+    }
+  ]
+}

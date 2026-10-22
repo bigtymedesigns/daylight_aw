@@ -73,6 +73,22 @@ Tick each line. Write down anything odd, with the effect name and what you did.
 - [ ] Tooltips look right in Light and Dark, and at 150 % / 200 % zoom
 - [ ] REAPER's preset field (top of the FX window) shows "ToTape9 - Warm Tape" after loading a preset
 
+### Final 1.0 checks
+- [ ] Effect list: 135 effects; **Latest** shows 13 (newest Airwindows releases); search works
+- [ ] Try a few from different categories, including VerbSevens, Galactic3, ToTape9, Pop3, StoneFireComp
+- [ ] StoneFireComp: set both Attack knobs differently, save + reopen project: both come back right
+- [ ] Reverbs: render a short clip with a long reverb, the tail is not cut
+- [ ] Original theme with a 10-control effect (ChimeyGuitar2): all faders visible
+- [ ] Open `Daylight_aw_Manual.pdf` from the download zip
+
+### Your own layouts (0.6.0)
+- [ ] ToTape9 → Settings → **Edit layout**: Explorer opens with `totape9.json` selected
+- [ ] Open it in Notepad, change a `"title"` or add `"label"`, save: the window changes within a second
+- [ ] Put a typo in a parameter name: Settings says what was fixed, the control still appears
+- [ ] Break the file (delete a bracket): the built-in layout appears, nothing crashes
+- [ ] **Remove**: back to the built-in layout; the file is in the Recycle Bin
+- [ ] Original theme: Edit layout is hidden (fader list is always original)
+
 ### Release candidate checks (0.6.0)
 - [ ] Fresh install (rename `Documents\big_tyme_designs` first): tooltips are off; Settings → Tooltips On works
 - [ ] Theme buttons read Light, Dark, Original, User

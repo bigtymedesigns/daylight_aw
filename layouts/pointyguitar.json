@@ -1,0 +1,44 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Amp",
+      "controls": [
+        "Drive",
+        {
+          "param": "Presnce",
+          "label": "Presence"
+        }
+      ]
+    },
+    {
+      "title": "EQ",
+      "controls": [
+        "High",
+        "Mid",
+        "Low",
+        "Sub"
+      ]
+    },
+    {
+      "title": "Speaker",
+      "controls": [
+        {
+          "param": "HSpeakr",
+          "label": "High Spk"
+        },
+        {
+          "param": "LSpeakr",
+          "label": "Low Spk"
+        }
+      ]
+    },
+    {
+      "title": "Output",
+      "controls": [
+        "Gate",
+        "Output"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Tone",
+      "controls": [
+        {
+          "param": "Sidepas",
+          "label": "Sidepass"
+        },
+        "Glue",
+        "Scope",
+        "Skronk",
+        "Girth"
+      ]
+    },
+    {
+      "title": "Output",
+      "controls": [
+        "Drive",
+        "Dither"
+      ]
+    }
+  ]
+}

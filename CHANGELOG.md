@@ -3,7 +3,26 @@
 All notable changes to Daylight_aw. Versions follow semantic versioning.
 Sessions and presets from every earlier version keep loading (tested with fixtures in `tests/fixtures`).
 
+## 1.0.0
+- **135 effects**: the newest version of every Airwindows plugin Chris Johnson recommends, plus his
+  latest releases (ADClip9, BezEQ3, ChannelX, Longhand, Ultralight2, VerbSevens). All from the current
+  Airwindows Consolidated. The test effects of the 0.x builds are gone.
+- **Latest** folder in the effect list: Airwindows releases from the 6 months before this version
+  (manifest fields `released` and `latest`). It replaces the "New" folder.
+- Hand-made layouts for every effect with 6 or more controls (35); the rest use the automatic row.
+- Effects that use a parameter name twice (Pop3, StoneFireComp) restore every value correctly in
+  sessions, presets and layouts.
+- Every effect is compiled in its own unit, so one effect's code can never affect another's
+  (fixes VerbSevens building next to the k-reverbs).
+- Reverbs and delays report a 10 s tail to the DAW.
+- **PDF manual** (docs/Daylight_aw_Manual.pdf) in every download.
+
 ## 0.6.0 (release candidate)
+- **Your own layouts, no rebuild**: Settings → **Edit layout** writes the current layout to
+  `Documents/big_tyme_designs/Daylight_aw/Layouts/<effect id>.json` and shows it; edit it in any text
+  editor and the window updates live. **Remove** goes back to the built-in layout. Broken or
+  incomplete files are repaired (Settings lists what was fixed); no parameter can ever go missing.
+  Guide: docs/LAYOUTS.md (also copied into that folder).
 - Reverbs report their tail to the DAW (Galactic, PocketVerbs: 10 s), so hosts that pause silent
   plugins or render offline never cut the reverb off (manifest field `tail`).
 - Tooltips are off for new installs (Settings → Tooltips On). Theme order: Light, Dark, Original, User.

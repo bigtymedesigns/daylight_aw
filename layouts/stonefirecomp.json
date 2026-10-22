@@ -1,0 +1,42 @@
+{
+  "formatVersion": 1,
+  "groups": [
+    {
+      "title": "Fire",
+      "controls": [
+        {
+          "param": "Fire Th",
+          "label": "Thresh"
+        },
+        "Attack",
+        "Release",
+        {
+          "param": "Fire",
+          "label": "Amount"
+        }
+      ]
+    },
+    {
+      "title": "Stone",
+      "controls": [
+        {
+          "param": "StoneTh",
+          "label": "Thresh"
+        },
+        "Attack",
+        "Release",
+        {
+          "param": "Stone",
+          "label": "Amount"
+        }
+      ]
+    },
+    {
+      "title": "Crossover",
+      "controls": [
+        "Range",
+        "Ratio"
+      ]
+    }
+  ]
+}
