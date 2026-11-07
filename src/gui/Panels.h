@@ -17,7 +17,7 @@ protected:
 };
 
 // =============================================================================================
-/** Effect chooser: categories, search, favourites (right-click or star), recently used, descriptions. */
+/** Effect chooser: categories, search, favourites (right-click or star), recently used, New, Last added, descriptions. */
 class SelectorPanel : public PanelBase,
                       private juce::ListBoxModel,
                       private juce::TextEditor::Listener
@@ -48,6 +48,7 @@ private:
     juce::ListBox list;
     juce::OwnedArray<CategoryRow> categoryRows;
     juce::Component categoryHolder;
+    juce::Viewport categoryView;   // the folder column scrolls when there are more folders than fit
     juce::String category = "Favourites";
     std::vector<const EffectInfo*> items;
     const EffectInfo* hovered = nullptr;

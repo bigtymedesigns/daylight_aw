@@ -14,7 +14,7 @@ Two kinds of testing:
 | Pass-through / bypass / trims / mono | no effect chosen = untouched audio; bypass and trims behave; mono tracks work |
 | Session state | save/load round trip; unknown effects from newer versions are kept; broken data is ignored |
 | Layouts | every parameter of every effect is on screen; group/row/tab limits hold |
-| GUI snapshots | every effect drawn in Light and Dark (download "gui-snapshots" from the run) |
+| GUI snapshots | every effect drawn in Default, a sample in Light, Dark and Original (download "gui-snapshots" from the run) |
 | pluginval (strictness 10) | host-style stress test: threads, automation, editor, state, odd buffer sizes |
 | auval (Mac) | Apple's Audio Unit validation |
 | Sanitizers | no memory errors or undefined behaviour |
@@ -74,7 +74,11 @@ Tick each line. Write down anything odd, with the effect name and what you did.
 - [ ] REAPER's preset field (top of the FX window) shows "ToTape9 - Warm Tape" after loading a preset
 
 ### Final 1.0 checks
-- [ ] Effect list: 135 effects; **Latest** shows 13 (newest Airwindows releases); search works
+- [ ] Effect list: 531 effects; **New** shows 17, **Last added** shows 0 with a short note; search works
+- [ ] The folder column scrolls (mouse wheel) down to XYZ Filters
+- [ ] Fresh install: the theme is **Default**; buttons read Default, Light, Dark, Original, User; knobs are perfectly round
+- [ ] An existing install keeps the theme it had
+- [ ] A few new effects: PunchyDeluxe, Ultralight3, kCathedral5, ConsoleX2Channel (2 pages), Pafnuty
 - [ ] Try a few from different categories, including VerbSevens, Galactic3, ToTape9, Pop3, StoneFireComp
 - [ ] StoneFireComp: set both Attack knobs differently, save + reopen project: both come back right
 - [ ] Reverbs: render a short clip with a long reverb, the tail is not cut

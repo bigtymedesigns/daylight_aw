@@ -7,15 +7,21 @@ Actions *Artifacts* are only for testing: they need a login and are deleted afte
 
 ## Steps
 
-1. In `manifest/effects.json` set `"latest": {"until": "<today>"}` (the Latest folder counts back from it).
-   Rebuild the manual (`tools/manual/build_manual.py`, see its header) so it shows the current effects.
-2. Set the version in `CMakeLists.txt` (`project(Daylight_aw VERSION 1.0.0 ...)`) and add a section to
+1. Set the version in `CMakeLists.txt` (`project(Daylight_aw VERSION 1.1.0 ...)`).
+2. In `manifest/effects.json` update `"release"` at the top:
+   - `"version"`: the same version as in CMakeLists.txt (the build checks this).
+   - `"date"`: the release date. The **New** folder shows Airwindows releases from the `newMonths` (3)
+     months before it.
+   - `"previous"`: the version before this one (e.g. `"1.0.0"`). The **Last added** folder then shows
+     the effects whose `"since"` is this version, i.e. the ones added in this update.
+   New effects get `"since": "<this version>"` (see CONTRIBUTING.md).
+3. Rebuild the manual (`tools/manual/build_manual.py`, see its header) and add a section to
    `CHANGELOG.md`. Commit and push, then wait for a green Actions run.
-3. On github.com, open **Releases → Draft a new release**.
+4. On github.com, open **Releases → Draft a new release**.
    - **Choose a tag**: type `v1.0.0` (must match the version, with a `v`), then *Create new tag on publish*.
    - Title: `Daylight_aw 1.0.0`. Description: paste the CHANGELOG section.
    - Click **Publish release**.
-4. Within ~25 minutes Actions builds everything again and attaches the zips to the release:
+5. Within ~40 minutes Actions builds everything again and attaches the zips to the release:
    - `Daylight_aw-v1.0.0-Windows-VST3.zip`
    - `Daylight_aw-v1.0.0-macOS-VST3-AU.zip`
    - `Daylight_aw-v1.0.0-Linux-VST3.zip`

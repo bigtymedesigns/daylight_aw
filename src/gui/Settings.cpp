@@ -18,7 +18,7 @@ void GlobalSettings::load()
     if (! root.isObject())
         return; // broken file: keep defaults, it will be rewritten on the next change
 
-    theme = themeIdFromString (root.getProperty ("theme", "light").toString());
+    theme = themeIdFromString (root.getProperty ("theme", "default").toString());
 
     const int z = (int) root.getProperty ("zoom", 100);
     zoom = 100;

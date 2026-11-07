@@ -79,6 +79,7 @@ macro(daylight_asset src name)
     list(APPEND DAYLIGHT_ASSETS ${ASSET_DIR}/${name})
 endmacro()
 
+daylight_asset(themes/default/theme.json default_theme.json)
 daylight_asset(themes/light/theme.json   light_theme.json)
 daylight_asset(themes/light/paper.png    light_paper.png)
 daylight_asset(themes/light/figure.png   light_figure.png)

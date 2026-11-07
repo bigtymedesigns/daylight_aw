@@ -21,7 +21,8 @@ struct EffectInfo
     double tailSeconds;      // reverb/delay tail reported to the host, so it is never cut off
     bool isDither;           // output trim should stay at 0 dB
     bool hasSharedState;     // original code keeps tiny state shared by all instances (detected by the generator)
-    bool isLatest;           // released by Airwindows in the months before this Daylight_aw version ("Latest" folder)
+    bool isNew;              // released by Airwindows in the months before this Daylight_aw release ("New" folder)
+    bool isLastAdded;        // added to Daylight_aw in this update ("Last added" folder; empty in the first release)
     int numParams;
     std::function<std::unique_ptr<AirwinConsolidatedBase>()> create;
 };

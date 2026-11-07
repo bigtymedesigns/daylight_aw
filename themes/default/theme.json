@@ -1,0 +1,58 @@
+{
+  "formatVersion": 1,
+  "name": "Default",
+  "author": "big_tyme_designs",
+  "tokens": {
+    "style.view": "designed",
+    "style.font": "system",
+    "style.corner": 3,
+    "style.topBar": "#1B1C1E",
+
+    "paper.color": "#212326",
+    "paper.textureStrength": 0.0,
+    "horizon.color": "#FFFFFF",
+    "horizon.opacity": 0.0,
+
+    "ink.text": "#DCDEE0",
+    "ink.muted": "#A3A8AE",
+    "ink.groupTitle": "#29AE93",
+
+    "frame.color": "#4A4E54",
+    "frame.opacity": 1.0,
+    "frame.glowColor": "#000000",
+    "frame.glowRadius": 0,
+    "frame.glowStrength": 0.0,
+
+    "knob.fill": "#3A3D42",
+    "knob.edge": "#6A6F76",
+    "knob.pointer": "#C657EC",
+    "knob.shadow": "#00000066",
+    "knob.ticks": "#8A9096",
+    "knob.style": "round",
+
+    "slider.track": "#1A1B1D",
+    "slider.handle": "#D2373C",
+    "slider.handleBorder": "#7E2023",
+    "slider.centre": "#5A5E64",
+    "value.text": "#DCDEE0",
+
+    "select.fill": "#29AE9333",
+    "select.text": "#DCDEE0",
+
+    "bar.fill": "#2C2E32",
+    "bar.border": "#43464C",
+    "bar.glow": 0.0,
+
+    "panel.fill": "#2A2C30FA",
+    "panel.border": "#4A4E54",
+    "panel.text": "#DCDEE0",
+    "panel.glow": 0.0,
+
+    "button.outline": "#A3A8AE",
+    "button.activeFill": "#29AE93",
+    "button.activeText": "#111314",
+
+    "logo.color": "#DCDEE0",
+    "logo.glow": 0.0
+  }
+}

@@ -391,6 +391,18 @@ void testOriginalTheme()
            "Original theme: list view, system font, no images, no warnings");
     check (! Theme::builtInLight().listView && ! Theme::builtInDark().listView, "Light/Dark keep the designed view");
     check (themeIdFromString (toString (ThemeId::original)) == ThemeId::original, "theme id round trip");
+    for (auto id : { ThemeId::def, ThemeId::light, ThemeId::dark, ThemeId::original, ThemeId::user })
+        check (themeIdFromString (toString (id)) == id, "theme id round trip: " + toString (id));
+    check (themeIdFromString ("") == ThemeId::def && themeIdFromString ("nonsense") == ThemeId::def,
+           "missing or unknown theme setting falls back to Default");
+
+    const auto d = Theme::builtInDefault();
+    check (d.warnings.isEmpty() && d.name == "Default" && d.knobStyle == "round" && ! d.listView
+           && ! d.paper.isValid() && ! d.figure.isValid(), "Default theme: round knobs, designed view, no images, no warnings");
+    check (Theme::builtInLight().knobStyle == "grain" && Theme::builtInDark().knobStyle == "grain",
+           "Light/Dark keep their knob edge");
+    check (Theme::fromJson ("{\"tokens\":{\"knob.style\":\"round\"}}", Theme::builtInLight()).warnings.isEmpty(),
+           "knob.style round is accepted in user themes");
 
     for (auto& e : getAllEffects())
     {
@@ -415,30 +427,40 @@ void testOriginalTheme()
     }
 }
 
-void testLatestCategory()
+void testNewAndLastAdded()
 {
-    std::cout << "Latest category ..." << std::endl;
+    std::cout << "New + Last added folders ..." << std::endl;
     check (compareVersions ("0.1.0", "0.1.0") == 0 && compareVersions ("0.2.0", "0.10.0") < 0
            && compareVersions ("1.0.0", "0.9.9") > 0, "version compare");
-    int n = 0;
+    int n = 0, last = 0;
     for (auto& e : getAllEffects())
     {
         check (compareVersions (e.since, kVersion) <= 0, juce::String ("'since' not newer than this build: ") + e.id);
-        if (e.isLatest) ++n;
+        if (e.isNew) ++n;
+        if (e.isLastAdded) ++last;
     }
-    check (n > 0 && n < (int) getAllEffects().size(), "Latest folder holds some, not all, effects");
-    check (findEffect ("verbsevens") != nullptr && findEffect ("verbsevens")->isLatest, "newest release is in Latest");
-    check (! findEffect ("purestgain")->isLatest, "old classic is not in Latest");
+    check (n > 0 && n < 60, "New folder holds the recent releases only");
+    check (findEffect ("ultralight3") != nullptr && findEffect ("ultralight3")->isNew, "newest release is in New");
+    check (findEffect ("channelx")->isNew, "release from 11 weeks before 1.0.0 is in New");
+    check (! findEffect ("bezeq4")->isNew, "release from 5 months before 1.0.0 is not in New");
+    check (! findEffect ("purestgain")->isNew, "old classic is not in New");
+    check (last == 0, "Last added is empty in the first release");
 }
 
 void testEffectDocs()
 {
     std::cout << "Effect info texts ..." << std::endl;
+    int withDoc = 0;
     for (auto& e : getAllEffects())
     {
+        // A few very new effects have no Airwindopedia text yet: the panel then shows the description.
         const auto doc = InfoPanel::docFor (e.id);
+        if (doc.isEmpty())
+            continue;
+        ++withDoc;
         check (doc.length() > 200 && doc.startsWith ("#"), juce::String ("Airwindopedia text for ") + e.id);
     }
+    check (withDoc >= (int) getAllEffects().size() - 20, "almost every effect has its Airwindopedia text");
 }
 
 
@@ -751,7 +773,11 @@ void renderSnapshots (const juce::File& dir)
     juce::SharedResourcePointer<GlobalSettings> settings;
     const auto originalTheme = settings->getTheme();
 
-    for (auto theme : { ThemeId::light, ThemeId::dark, ThemeId::original })
+    // Every effect in the Default theme; a sample in the others (sizes and positions are identical in
+    // every designed theme, and the list view is checked for every effect by testOriginalTheme).
+    const juce::StringArray sample { "totape9", "stonefirecomp", "debess", "cliponly3", "golem", "monitoring3",
+                                     "pauldither", "kcathedral5", "consolexchannel", "galactic3" };
+    for (auto theme : { ThemeId::def, ThemeId::light, ThemeId::dark, ThemeId::original })
     {
         settings->setTheme (theme);
 
@@ -777,6 +803,8 @@ void renderSnapshots (const juce::File& dir)
         }
         for (auto& e : getAllEffects())
         {
+            if (theme != ThemeId::def && ! sample.contains (e.id))
+                continue;
             auto p = makeProcessor();
             p->selectEffect (e.id);
             shoot (*p, e.id);
@@ -838,7 +866,7 @@ int main (int argc, char* argv[])
     testLayouts();
     testPresets();
     testEffectDocs();
-    testLatestCategory();
+    testNewAndLastAdded();
     testOriginalTheme();
     testStateExtras();
     testUserLayouts();
@@ -886,15 +914,10 @@ int main (int argc, char* argv[])
                 juce::FileOutputStream os (f);
                 juce::PNGImageFormat().writeImageToStream (img, os);
             };
-            shot (ThemeId::light, nullptr, "selector", 0);
-            shot (ThemeId::light, "totape9", "light", 0);
-            shot (ThemeId::dark, "totape9", "dark", 0);
-            shot (ThemeId::original, "totape9", "original", 0);
-            shot (ThemeId::dark, "stonefirecomp", "large", 0);
-            shot (ThemeId::light, "debess", "small", 0);
-            shot (ThemeId::light, "totape9", "settings", 1);
-            shot (ThemeId::light, "totape9", "info", 2);
-            shot (ThemeId::light, "cliponly3", "nocontrols", 0);
+            shot (ThemeId::def, nullptr, "selector", 0);
+            shot (ThemeId::def, "totape9", "effect", 0);
+            shot (ThemeId::def, "stonefirecomp", "large", 0);
+            shot (ThemeId::def, "totape9", "settings", 1);
 
             PresetStore::setDefaultRootForTesting ({});
             tempDir.getFile().deleteRecursively();
@@ -909,7 +932,7 @@ int main (int argc, char* argv[])
             dir.createDirectory();
             juce::SharedResourcePointer<GlobalSettings> settings;
             const auto original = settings->getTheme();
-            for (auto theme : { ThemeId::light, ThemeId::dark, ThemeId::original })
+            for (auto theme : { ThemeId::def, ThemeId::light, ThemeId::dark, ThemeId::original })
             {
                 settings->setTheme (theme);
                 for (auto id : { "totape9", "golem", "monitoring3", "pauldither", "debess" })
@@ -938,7 +961,7 @@ int main (int argc, char* argv[])
             dir.createDirectory();
             juce::SharedResourcePointer<GlobalSettings> settings;
             const auto original = settings->getTheme();
-            for (auto style : { "rough", "soft", "grain" })
+            for (auto style : { "round", "rough", "soft", "grain" })
                 for (auto theme : { ThemeId::light, ThemeId::dark })
                 {
                     Theme::knobStyleOverrideForTesting() = style;

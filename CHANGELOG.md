@@ -4,18 +4,24 @@ All notable changes to Daylight_aw. Versions follow semantic versioning.
 Sessions and presets from every earlier version keep loading (tested with fixtures in `tests/fixtures`).
 
 ## 1.0.0
-- **135 effects**: the newest version of every Airwindows plugin Chris Johnson recommends, plus his
-  latest releases (ADClip9, BezEQ3, ChannelX, Longhand, Ultralight2, VerbSevens). All from the current
-  Airwindows Consolidated. The test effects of the 0.x builds are gone.
-- **Latest** folder in the effect list: Airwindows releases from the 6 months before this version
-  (manifest fields `released` and `latest`). It replaces the "New" folder.
-- Hand-made layouts for every effect with 6 or more controls (35); the rest use the automatic row.
+- **All 531 Airwindows effects** from the current Airwindows Consolidated (old versions included).
+  Effects without an Airwindows category are in their own **Unclassified** folder. Every effect is
+  tested bit-identical against the original code.
+- Effect browser folders: Favourites, Recently used, **New** (Airwindows releases of the 3 months
+  before this version), **Last added** (effects added in an update; empty in 1.0.0), All effects and
+  the categories. The folder column scrolls. Manifest field `release` replaces `latest`.
+- New built-in **Default** theme with perfectly round knobs; new installs start with it. Theme order:
+  Default, Light, Dark, Original, User. Theme files accept `knob.style: "round"`.
+- Effects start from cleared memory: a few original effects leave part of their state uninitialised,
+  which made two instances differ slightly at the start. Now every instance is repeatable.
+- Updated Airwindows code for ChannelX, kRockstar2, PurestWarm3, RetroBass, Ultralight2 and
+  VerbSevens (their `version` is now 2).
+- Hand-made layouts for 35 effects with 6 or more controls; all others use the automatic layout,
+  with pages for effects with more than 15 controls.
 - Effects that use a parameter name twice (Pop3, StoneFireComp) restore every value correctly in
-  sessions, presets and layouts.
-- Every effect is compiled in its own unit, so one effect's code can never affect another's
-  (fixes VerbSevens building next to the k-reverbs).
-- Reverbs and delays report a 10 s tail to the DAW.
-- **PDF manual** (docs/Daylight_aw_Manual.pdf) in every download.
+  sessions, presets and layouts. Every effect is compiled in its own unit.
+- Reverbs and ambiences report a 10 s tail to the DAW.
+- Short PDF instruction manual (docs/Daylight_aw_Manual.pdf) in every download.
 
 ## 0.6.0 (release candidate)
 - **Your own layouts, no rebuild**: Settings → **Edit layout** writes the current layout to

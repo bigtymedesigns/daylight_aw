@@ -744,7 +744,7 @@ private:
 // =============================================================================================
 DaylightEditor::DaylightEditor (DaylightProcessor& p)
     : juce::AudioProcessorEditor (p),
-      ctx { p, *settings, Theme::builtInLight() },
+      ctx { p, *settings, Theme::builtInDefault() },
       lookAndFeel (ctx)
 {
     loadTheme();
@@ -777,10 +777,11 @@ void DaylightEditor::loadTheme()
     {
         case ThemeId::dark: ctx.theme = Theme::builtInDark(); break;
         case ThemeId::user:
-            ensureUserThemeExists (ThemeId::light);
+            ensureUserThemeExists (ThemeId::def);
             ctx.theme = Theme::fromFolder (getUserThemeFolder(), Theme::builtInLight());
             userThemeStamp = userThemeTime();
             break;
+        case ThemeId::def: ctx.theme = Theme::builtInDefault(); break;
         case ThemeId::light: ctx.theme = Theme::builtInLight(); break;
         case ThemeId::original: ctx.theme = Theme::builtInOriginal(); break;
     }

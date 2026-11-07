@@ -12,11 +12,19 @@ juce::Point<float> polar (juce::Point<float> c, float radius, float degrees)
 }
 
 /** Knob outline for the theme's knob.style (deterministic per control).
+    round: an exact circle.
     rough: the original cut, hand-cut edge.
     soft:  round, slightly uneven pencil circle (low, smooth wobble).
     grain: practically round with a fine charcoal grain on the edge. */
 juce::Path knobOutline (const juce::String& style, float radius, int seed)
 {
+    if (style == "round")
+    {
+        juce::Path circle;
+        circle.addEllipse (-radius, -radius, radius * 2.0f, radius * 2.0f);
+        return circle;
+    }
+
     juce::Random rnd ((juce::int64) seed * 7919 + 17);
     const float p1 = rnd.nextFloat() * 6.28f, p2 = rnd.nextFloat() * 6.28f, p3 = rnd.nextFloat() * 6.28f;
 
@@ -634,7 +642,7 @@ void ParamControl::paint (juce::Graphics& g)
         g.setColour (t.knobFill);
         g.fillPath (disc);
         g.setColour (t.knobEdge);
-        g.strokePath (disc, juce::PathStrokeType (t.knobStyle == "soft" ? 1.3f : 1.5f));
+        g.strokePath (disc, juce::PathStrokeType (t.knobStyle == "soft" || t.knobStyle == "round" ? 1.3f : 1.5f));
         drawKnobEdgeDetail (g, t.knobStyle, c, 22.0f, s, spec.param + 1, t.knobEdge, t.knobFill);
 
         g.setColour (t.knobPointer);

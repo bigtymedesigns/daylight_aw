@@ -37,7 +37,7 @@ struct Theme
     juce::Colour knobPointer { 0xffece8df };
     juce::Colour knobShadow { 0x331e1c18 };
     juce::Colour knobTicks { 0xff2b2a28 };
-    juce::String knobStyle { "rough" };   // edge drawing: "rough" (cut), "soft" (pencil), "grain" (charcoal)
+    juce::String knobStyle { "rough" };   // edge drawing: "round" (exact circle), "rough" (cut), "soft" (pencil), "grain" (charcoal)
     /** Tests/previews only: forces a knob style on every loaded theme (empty = off). */
     static juce::String& knobStyleOverrideForTesting() { static juce::String s; return s; }
 
@@ -84,6 +84,7 @@ struct Theme
     /** Messages about invalid / missing values (shown in settings, never fatal). */
     juce::StringArray warnings;
 
+    static Theme builtInDefault();
     static Theme builtInLight();
     static Theme builtInDark();
     static Theme builtInOriginal();
@@ -99,7 +100,7 @@ struct Theme
 };
 
 /** Theme ids stored in the settings. */
-enum class ThemeId { light, dark, user, original };
+enum class ThemeId { light, dark, user, original, def };   // def = "Default", the theme new installs start with
 juce::String toString (ThemeId);
 ThemeId themeIdFromString (const juce::String&);
 

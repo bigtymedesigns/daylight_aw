@@ -133,10 +133,10 @@ Theme Theme::fromJson (const juce::String& jsonText, const Theme& base)
         if (! v.isVoid())
         {
             const auto style = v.toString().trim().toLowerCase();
-            if (style == "rough" || style == "soft" || style == "grain")
+            if (style == "round" || style == "rough" || style == "soft" || style == "grain")
                 t.knobStyle = style;
             else
-                t.warnings.add ("knob.style: use \"rough\", \"soft\" or \"grain\"");
+                t.warnings.add ("knob.style: use \"round\", \"rough\", \"soft\" or \"grain\"");
         }
     }
 
@@ -179,6 +179,18 @@ Theme Theme::fromJson (const juce::String& jsonText, const Theme& base)
     colour ("select.text", t.selectText);
 
     return t;
+}
+
+Theme Theme::builtInDefault()
+{
+    static const Theme cached = []
+    {
+        Theme t = fromJson (resourceText ("default_theme_json"), builtInLight());
+        t.paper = {};    // flat colours, no images
+        t.figure = {};
+        return t;
+    }();
+    return cached;
 }
 
 Theme Theme::builtInLight()
@@ -264,9 +276,10 @@ juce::String toString (ThemeId id)
         case ThemeId::dark: return "dark";
         case ThemeId::user: return "user";
         case ThemeId::original: return "original";
-        case ThemeId::light: break;
+        case ThemeId::light: return "light";
+        case ThemeId::def: break;
     }
-    return "light";
+    return "default";
 }
 
 ThemeId themeIdFromString (const juce::String& s)
@@ -274,7 +287,8 @@ ThemeId themeIdFromString (const juce::String& s)
     if (s == "dark") return ThemeId::dark;
     if (s == "user") return ThemeId::user;
     if (s == "original") return ThemeId::original;
-    return ThemeId::light;
+    if (s == "light") return ThemeId::light;
+    return ThemeId::def;
 }
 
 juce::File getUserDataFolder()
@@ -300,6 +314,7 @@ bool ensureUserThemeExists (ThemeId from)
 
     const bool dark = from == ThemeId::dark;
     const bool original = from == ThemeId::original;
+    const bool def = from == ThemeId::def;
     auto write = [&] (const char* resource, const char* fileName)
     {
         int size = 0;
@@ -308,8 +323,9 @@ bool ensureUserThemeExists (ThemeId from)
         return false;
     };
 
-    bool ok = write (original ? "original_theme_json" : dark ? "dark_theme_json" : "light_theme_json", "theme.json");
-    if (! original)
+    bool ok = write (def ? "default_theme_json" : original ? "original_theme_json" : dark ? "dark_theme_json" : "light_theme_json",
+                     "theme.json");
+    if (! original && ! def)
     {
         write (dark ? "dark_paper_png" : "light_paper_png", "paper.png");
         write (dark ? "dark_figure_png" : "light_figure_png", "figure.png");

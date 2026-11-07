@@ -3,127 +3,511 @@
 
 namespace dlaw::gen
 {
+std::unique_ptr<AirwinConsolidatedBase> make_acceleration(); int params_acceleration();
+std::unique_ptr<AirwinConsolidatedBase> make_acceleration2(); int params_acceleration2();
+std::unique_ptr<AirwinConsolidatedBase> make_adclip7(); int params_adclip7();
+std::unique_ptr<AirwinConsolidatedBase> make_adclip8(); int params_adclip8();
 std::unique_ptr<AirwinConsolidatedBase> make_adclip9(); int params_adclip9();
+std::unique_ptr<AirwinConsolidatedBase> make_adt(); int params_adt();
+std::unique_ptr<AirwinConsolidatedBase> make_air(); int params_air();
+std::unique_ptr<AirwinConsolidatedBase> make_air2(); int params_air2();
+std::unique_ptr<AirwinConsolidatedBase> make_air3(); int params_air3();
 std::unique_ptr<AirwinConsolidatedBase> make_air4(); int params_air4();
+std::unique_ptr<AirwinConsolidatedBase> make_angleeq(); int params_angleeq();
+std::unique_ptr<AirwinConsolidatedBase> make_anglefilter(); int params_anglefilter();
+std::unique_ptr<AirwinConsolidatedBase> make_apicolypse(); int params_apicolypse();
+std::unique_ptr<AirwinConsolidatedBase> make_aquickvoiceclip(); int params_aquickvoiceclip();
+std::unique_ptr<AirwinConsolidatedBase> make_atmospherebuss(); int params_atmospherebuss();
+std::unique_ptr<AirwinConsolidatedBase> make_atmospherechannel(); int params_atmospherechannel();
+std::unique_ptr<AirwinConsolidatedBase> make_aura(); int params_aura();
+std::unique_ptr<AirwinConsolidatedBase> make_autopan(); int params_autopan();
+std::unique_ptr<AirwinConsolidatedBase> make_average(); int params_average();
+std::unique_ptr<AirwinConsolidatedBase> make_avermatrix(); int params_avermatrix();
+std::unique_ptr<AirwinConsolidatedBase> make_balanced(); int params_balanced();
+std::unique_ptr<AirwinConsolidatedBase> make_bassamp(); int params_bassamp();
+std::unique_ptr<AirwinConsolidatedBase> make_bassdrive(); int params_bassdrive();
+std::unique_ptr<AirwinConsolidatedBase> make_basskit(); int params_basskit();
+std::unique_ptr<AirwinConsolidatedBase> make_baxandall(); int params_baxandall();
+std::unique_ptr<AirwinConsolidatedBase> make_baxandall2(); int params_baxandall2();
+std::unique_ptr<AirwinConsolidatedBase> make_baxandall3(); int params_baxandall3();
+std::unique_ptr<AirwinConsolidatedBase> make_beam(); int params_beam();
+std::unique_ptr<AirwinConsolidatedBase> make_bezeq(); int params_bezeq();
+std::unique_ptr<AirwinConsolidatedBase> make_bezeq2(); int params_bezeq2();
 std::unique_ptr<AirwinConsolidatedBase> make_bezeq3(); int params_bezeq3();
+std::unique_ptr<AirwinConsolidatedBase> make_bezeq4(); int params_bezeq4();
 std::unique_ptr<AirwinConsolidatedBase> make_bezicomp(); int params_bezicomp();
+std::unique_ptr<AirwinConsolidatedBase> make_bigamp(); int params_bigamp();
+std::unique_ptr<AirwinConsolidatedBase> make_biquad(); int params_biquad();
+std::unique_ptr<AirwinConsolidatedBase> make_biquad2(); int params_biquad2();
+std::unique_ptr<AirwinConsolidatedBase> make_biquaddouble(); int params_biquaddouble();
+std::unique_ptr<AirwinConsolidatedBase> make_biquadhilo(); int params_biquadhilo();
+std::unique_ptr<AirwinConsolidatedBase> make_biquadnonlin(); int params_biquadnonlin();
+std::unique_ptr<AirwinConsolidatedBase> make_biquadonehalf(); int params_biquadonehalf();
+std::unique_ptr<AirwinConsolidatedBase> make_biquadplus(); int params_biquadplus();
 std::unique_ptr<AirwinConsolidatedBase> make_biquadstack(); int params_biquadstack();
+std::unique_ptr<AirwinConsolidatedBase> make_biquadtriple(); int params_biquadtriple();
+std::unique_ptr<AirwinConsolidatedBase> make_bitdualpan(); int params_bitdualpan();
+std::unique_ptr<AirwinConsolidatedBase> make_bite(); int params_bite();
+std::unique_ptr<AirwinConsolidatedBase> make_bitglitter(); int params_bitglitter();
+std::unique_ptr<AirwinConsolidatedBase> make_bitshiftgain(); int params_bitshiftgain();
 std::unique_ptr<AirwinConsolidatedBase> make_bitshiftpan(); int params_bitshiftpan();
+std::unique_ptr<AirwinConsolidatedBase> make_blockparty(); int params_blockparty();
+std::unique_ptr<AirwinConsolidatedBase> make_brassrider(); int params_brassrider();
+std::unique_ptr<AirwinConsolidatedBase> make_brightambience(); int params_brightambience();
+std::unique_ptr<AirwinConsolidatedBase> make_brightambience2(); int params_brightambience2();
+std::unique_ptr<AirwinConsolidatedBase> make_brightambience3(); int params_brightambience3();
+std::unique_ptr<AirwinConsolidatedBase> make_buildatpdf(); int params_buildatpdf();
+std::unique_ptr<AirwinConsolidatedBase> make_busscolors4(); int params_busscolors4();
+std::unique_ptr<AirwinConsolidatedBase> make_buttercomp(); int params_buttercomp();
+std::unique_ptr<AirwinConsolidatedBase> make_buttercomp2(); int params_buttercomp2();
+std::unique_ptr<AirwinConsolidatedBase> make_c5rawbuss(); int params_c5rawbuss();
+std::unique_ptr<AirwinConsolidatedBase> make_c5rawchannel(); int params_c5rawchannel();
+std::unique_ptr<AirwinConsolidatedBase> make_cabs(); int params_cabs();
+std::unique_ptr<AirwinConsolidatedBase> make_cabs2(); int params_cabs2();
+std::unique_ptr<AirwinConsolidatedBase> make_calibre(); int params_calibre();
 std::unique_ptr<AirwinConsolidatedBase> make_cans(); int params_cans();
 std::unique_ptr<AirwinConsolidatedBase> make_cansaw(); int params_cansaw();
+std::unique_ptr<AirwinConsolidatedBase> make_capacitor(); int params_capacitor();
+std::unique_ptr<AirwinConsolidatedBase> make_capacitor2(); int params_capacitor2();
+std::unique_ptr<AirwinConsolidatedBase> make_chamber(); int params_chamber();
 std::unique_ptr<AirwinConsolidatedBase> make_chamber2(); int params_chamber2();
+std::unique_ptr<AirwinConsolidatedBase> make_channel4(); int params_channel4();
+std::unique_ptr<AirwinConsolidatedBase> make_channel5(); int params_channel5();
+std::unique_ptr<AirwinConsolidatedBase> make_channel6(); int params_channel6();
+std::unique_ptr<AirwinConsolidatedBase> make_channel7(); int params_channel7();
+std::unique_ptr<AirwinConsolidatedBase> make_channel8(); int params_channel8();
+std::unique_ptr<AirwinConsolidatedBase> make_channel9(); int params_channel9();
 std::unique_ptr<AirwinConsolidatedBase> make_channelx(); int params_channelx();
 std::unique_ptr<AirwinConsolidatedBase> make_chimeydeluxe(); int params_chimeydeluxe();
+std::unique_ptr<AirwinConsolidatedBase> make_chimeyguitar(); int params_chimeyguitar();
 std::unique_ptr<AirwinConsolidatedBase> make_chimeyguitar2(); int params_chimeyguitar2();
+std::unique_ptr<AirwinConsolidatedBase> make_chorus(); int params_chorus();
+std::unique_ptr<AirwinConsolidatedBase> make_chorusensemble(); int params_chorusensemble();
+std::unique_ptr<AirwinConsolidatedBase> make_chromeoxide(); int params_chromeoxide();
+std::unique_ptr<AirwinConsolidatedBase> make_cider(); int params_cider();
 std::unique_ptr<AirwinConsolidatedBase> make_clearcoat(); int params_clearcoat();
+std::unique_ptr<AirwinConsolidatedBase> make_cliponly2(); int params_cliponly2();
 std::unique_ptr<AirwinConsolidatedBase> make_cliponly3(); int params_cliponly3();
+std::unique_ptr<AirwinConsolidatedBase> make_clipsoftly(); int params_clipsoftly();
+std::unique_ptr<AirwinConsolidatedBase> make_cloudcoat(); int params_cloudcoat();
+std::unique_ptr<AirwinConsolidatedBase> make_coils(); int params_coils();
+std::unique_ptr<AirwinConsolidatedBase> make_coils2(); int params_coils2();
+std::unique_ptr<AirwinConsolidatedBase> make_cojones(); int params_cojones();
+std::unique_ptr<AirwinConsolidatedBase> make_compresaturator(); int params_compresaturator();
 std::unique_ptr<AirwinConsolidatedBase> make_console0buss(); int params_console0buss();
 std::unique_ptr<AirwinConsolidatedBase> make_console0channel(); int params_console0channel();
+std::unique_ptr<AirwinConsolidatedBase> make_console4buss(); int params_console4buss();
+std::unique_ptr<AirwinConsolidatedBase> make_console4channel(); int params_console4channel();
+std::unique_ptr<AirwinConsolidatedBase> make_console5buss(); int params_console5buss();
+std::unique_ptr<AirwinConsolidatedBase> make_console5channel(); int params_console5channel();
+std::unique_ptr<AirwinConsolidatedBase> make_console5darkch(); int params_console5darkch();
+std::unique_ptr<AirwinConsolidatedBase> make_console6buss(); int params_console6buss();
+std::unique_ptr<AirwinConsolidatedBase> make_console6channel(); int params_console6channel();
+std::unique_ptr<AirwinConsolidatedBase> make_console7buss(); int params_console7buss();
+std::unique_ptr<AirwinConsolidatedBase> make_console7cascade(); int params_console7cascade();
+std::unique_ptr<AirwinConsolidatedBase> make_console7channel(); int params_console7channel();
+std::unique_ptr<AirwinConsolidatedBase> make_console7crunch(); int params_console7crunch();
+std::unique_ptr<AirwinConsolidatedBase> make_console8busshype(); int params_console8busshype();
+std::unique_ptr<AirwinConsolidatedBase> make_console8bussin(); int params_console8bussin();
+std::unique_ptr<AirwinConsolidatedBase> make_console8bussout(); int params_console8bussout();
+std::unique_ptr<AirwinConsolidatedBase> make_console8channelhype(); int params_console8channelhype();
+std::unique_ptr<AirwinConsolidatedBase> make_console8channelin(); int params_console8channelin();
+std::unique_ptr<AirwinConsolidatedBase> make_console8channelout(); int params_console8channelout();
+std::unique_ptr<AirwinConsolidatedBase> make_console8litebuss(); int params_console8litebuss();
+std::unique_ptr<AirwinConsolidatedBase> make_console8litechannel(); int params_console8litechannel();
+std::unique_ptr<AirwinConsolidatedBase> make_console8subhype(); int params_console8subhype();
+std::unique_ptr<AirwinConsolidatedBase> make_console8subin(); int params_console8subin();
+std::unique_ptr<AirwinConsolidatedBase> make_console8subout(); int params_console8subout();
 std::unique_ptr<AirwinConsolidatedBase> make_console9buss(); int params_console9buss();
 std::unique_ptr<AirwinConsolidatedBase> make_console9channel(); int params_console9channel();
+std::unique_ptr<AirwinConsolidatedBase> make_consolehbuss(); int params_consolehbuss();
+std::unique_ptr<AirwinConsolidatedBase> make_consolehchannel(); int params_consolehchannel();
+std::unique_ptr<AirwinConsolidatedBase> make_consolehpre(); int params_consolehpre();
 std::unique_ptr<AirwinConsolidatedBase> make_consolelabuss(); int params_consolelabuss();
 std::unique_ptr<AirwinConsolidatedBase> make_consolelachannel(); int params_consolelachannel();
 std::unique_ptr<AirwinConsolidatedBase> make_consolemcbuss(); int params_consolemcbuss();
 std::unique_ptr<AirwinConsolidatedBase> make_consolemcchannel(); int params_consolemcchannel();
+std::unique_ptr<AirwinConsolidatedBase> make_consolemdbuss(); int params_consolemdbuss();
+std::unique_ptr<AirwinConsolidatedBase> make_consolemdchannel(); int params_consolemdchannel();
+std::unique_ptr<AirwinConsolidatedBase> make_consolex2buss(); int params_consolex2buss();
+std::unique_ptr<AirwinConsolidatedBase> make_consolex2channel(); int params_consolex2channel();
+std::unique_ptr<AirwinConsolidatedBase> make_consolex2pre(); int params_consolex2pre();
+std::unique_ptr<AirwinConsolidatedBase> make_consolex3(); int params_consolex3();
+std::unique_ptr<AirwinConsolidatedBase> make_consolexbuss(); int params_consolexbuss();
+std::unique_ptr<AirwinConsolidatedBase> make_consolexchannel(); int params_consolexchannel();
+std::unique_ptr<AirwinConsolidatedBase> make_consolexpre(); int params_consolexpre();
+std::unique_ptr<AirwinConsolidatedBase> make_contenthided(); int params_contenthided();
 std::unique_ptr<AirwinConsolidatedBase> make_creamcoat(); int params_creamcoat();
+std::unique_ptr<AirwinConsolidatedBase> make_creature(); int params_creature();
+std::unique_ptr<AirwinConsolidatedBase> make_crickbass(); int params_crickbass();
 std::unique_ptr<AirwinConsolidatedBase> make_crunchcoat(); int params_crunchcoat();
 std::unique_ptr<AirwinConsolidatedBase> make_crunchygroovewear(); int params_crunchygroovewear();
+std::unique_ptr<AirwinConsolidatedBase> make_crystal(); int params_crystal();
+std::unique_ptr<AirwinConsolidatedBase> make_cstrip(); int params_cstrip();
+std::unique_ptr<AirwinConsolidatedBase> make_cstrip2(); int params_cstrip2();
+std::unique_ptr<AirwinConsolidatedBase> make_curve(); int params_curve();
+std::unique_ptr<AirwinConsolidatedBase> make_dark(); int params_dark();
+std::unique_ptr<AirwinConsolidatedBase> make_darknoise(); int params_darknoise();
 std::unique_ptr<AirwinConsolidatedBase> make_dattorro(); int params_dattorro();
+std::unique_ptr<AirwinConsolidatedBase> make_dcvoltage(); int params_dcvoltage();
 std::unique_ptr<AirwinConsolidatedBase> make_debess(); int params_debess();
 std::unique_ptr<AirwinConsolidatedBase> make_debez(); int params_debez();
+std::unique_ptr<AirwinConsolidatedBase> make_deckwrecka(); int params_deckwrecka();
+std::unique_ptr<AirwinConsolidatedBase> make_decrackle(); int params_decrackle();
+std::unique_ptr<AirwinConsolidatedBase> make_deess(); int params_deess();
+std::unique_ptr<AirwinConsolidatedBase> make_dehiss(); int params_dehiss();
 std::unique_ptr<AirwinConsolidatedBase> make_denoise(); int params_denoise();
+std::unique_ptr<AirwinConsolidatedBase> make_density(); int params_density();
+std::unique_ptr<AirwinConsolidatedBase> make_density2(); int params_density2();
+std::unique_ptr<AirwinConsolidatedBase> make_density3(); int params_density3();
+std::unique_ptr<AirwinConsolidatedBase> make_derez(); int params_derez();
+std::unique_ptr<AirwinConsolidatedBase> make_derez2(); int params_derez2();
+std::unique_ptr<AirwinConsolidatedBase> make_derez3(); int params_derez3();
+std::unique_ptr<AirwinConsolidatedBase> make_derez4(); int params_derez4();
 std::unique_ptr<AirwinConsolidatedBase> make_derez5(); int params_derez5();
+std::unique_ptr<AirwinConsolidatedBase> make_desk(); int params_desk();
+std::unique_ptr<AirwinConsolidatedBase> make_desk4(); int params_desk4();
 std::unique_ptr<AirwinConsolidatedBase> make_digitalblack(); int params_digitalblack();
+std::unique_ptr<AirwinConsolidatedBase> make_dirt(); int params_dirt();
 std::unique_ptr<AirwinConsolidatedBase> make_discontapeity(); int params_discontapeity();
 std::unique_ptr<AirwinConsolidatedBase> make_discontinuity(); int params_discontinuity();
+std::unique_ptr<AirwinConsolidatedBase> make_disintegrate(); int params_disintegrate();
+std::unique_ptr<AirwinConsolidatedBase> make_distance(); int params_distance();
+std::unique_ptr<AirwinConsolidatedBase> make_distance2(); int params_distance2();
 std::unique_ptr<AirwinConsolidatedBase> make_distance3(); int params_distance3();
+std::unique_ptr<AirwinConsolidatedBase> make_distortion(); int params_distortion();
+std::unique_ptr<AirwinConsolidatedBase> make_ditherbox(); int params_ditherbox();
+std::unique_ptr<AirwinConsolidatedBase> make_ditherfloat(); int params_ditherfloat();
+std::unique_ptr<AirwinConsolidatedBase> make_dithermediskers(); int params_dithermediskers();
+std::unique_ptr<AirwinConsolidatedBase> make_dithermetimbers(); int params_dithermetimbers();
+std::unique_ptr<AirwinConsolidatedBase> make_donut(); int params_donut();
+std::unique_ptr<AirwinConsolidatedBase> make_doublelay(); int params_doublelay();
+std::unique_ptr<AirwinConsolidatedBase> make_doublepaul(); int params_doublepaul();
+std::unique_ptr<AirwinConsolidatedBase> make_drive(); int params_drive();
+std::unique_ptr<AirwinConsolidatedBase> make_drumslam(); int params_drumslam();
+std::unique_ptr<AirwinConsolidatedBase> make_dubcenter(); int params_dubcenter();
+std::unique_ptr<AirwinConsolidatedBase> make_dubly(); int params_dubly();
+std::unique_ptr<AirwinConsolidatedBase> make_dubly2(); int params_dubly2();
 std::unique_ptr<AirwinConsolidatedBase> make_dubly3(); int params_dubly3();
+std::unique_ptr<AirwinConsolidatedBase> make_dubplate(); int params_dubplate();
 std::unique_ptr<AirwinConsolidatedBase> make_dubplate2(); int params_dubplate2();
+std::unique_ptr<AirwinConsolidatedBase> make_dubsub(); int params_dubsub();
 std::unique_ptr<AirwinConsolidatedBase> make_dubsub2(); int params_dubsub2();
+std::unique_ptr<AirwinConsolidatedBase> make_dustbunny(); int params_dustbunny();
+std::unique_ptr<AirwinConsolidatedBase> make_dynamics(); int params_dynamics();
+std::unique_ptr<AirwinConsolidatedBase> make_dynamics2(); int params_dynamics2();
+std::unique_ptr<AirwinConsolidatedBase> make_dynamics3(); int params_dynamics3();
+std::unique_ptr<AirwinConsolidatedBase> make_dyno(); int params_dyno();
+std::unique_ptr<AirwinConsolidatedBase> make_echojam(); int params_echojam();
+std::unique_ptr<AirwinConsolidatedBase> make_edge(); int params_edge();
+std::unique_ptr<AirwinConsolidatedBase> make_edisdim(); int params_edisdim();
+std::unique_ptr<AirwinConsolidatedBase> make_elation(); int params_elation();
+std::unique_ptr<AirwinConsolidatedBase> make_electrohat(); int params_electrohat();
 std::unique_ptr<AirwinConsolidatedBase> make_elliptical(); int params_elliptical();
+std::unique_ptr<AirwinConsolidatedBase> make_energy(); int params_energy();
 std::unique_ptr<AirwinConsolidatedBase> make_energy2(); int params_energy2();
+std::unique_ptr<AirwinConsolidatedBase> make_ensemble(); int params_ensemble();
+std::unique_ptr<AirwinConsolidatedBase> make_eq(); int params_eq();
+std::unique_ptr<AirwinConsolidatedBase> make_everyconsole(); int params_everyconsole();
+std::unique_ptr<AirwinConsolidatedBase> make_everyslew(); int params_everyslew();
+std::unique_ptr<AirwinConsolidatedBase> make_everytrim(); int params_everytrim();
+std::unique_ptr<AirwinConsolidatedBase> make_exciter(); int params_exciter();
+std::unique_ptr<AirwinConsolidatedBase> make_facet(); int params_facet();
 std::unique_ptr<AirwinConsolidatedBase> make_fastdistance(); int params_fastdistance();
+std::unique_ptr<AirwinConsolidatedBase> make_fastdistance2(); int params_fastdistance2();
 std::unique_ptr<AirwinConsolidatedBase> make_fateq(); int params_fateq();
+std::unique_ptr<AirwinConsolidatedBase> make_fathomfive(); int params_fathomfive();
+std::unique_ptr<AirwinConsolidatedBase> make_finalclip(); int params_finalclip();
+std::unique_ptr<AirwinConsolidatedBase> make_fireamp(); int params_fireamp();
+std::unique_ptr<AirwinConsolidatedBase> make_flipity(); int params_flipity();
+std::unique_ptr<AirwinConsolidatedBase> make_floor(); int params_floor();
+std::unique_ptr<AirwinConsolidatedBase> make_flutter(); int params_flutter();
 std::unique_ptr<AirwinConsolidatedBase> make_flutter2(); int params_flutter2();
+std::unique_ptr<AirwinConsolidatedBase> make_focus(); int params_focus();
+std::unique_ptr<AirwinConsolidatedBase> make_fracture(); int params_fracture();
+std::unique_ptr<AirwinConsolidatedBase> make_fracture2(); int params_fracture2();
+std::unique_ptr<AirwinConsolidatedBase> make_fromtape(); int params_fromtape();
+std::unique_ptr<AirwinConsolidatedBase> make_galactic(); int params_galactic();
+std::unique_ptr<AirwinConsolidatedBase> make_galactic2(); int params_galactic2();
 std::unique_ptr<AirwinConsolidatedBase> make_galactic3(); int params_galactic3();
+std::unique_ptr<AirwinConsolidatedBase> make_galacticvibe(); int params_galacticvibe();
 std::unique_ptr<AirwinConsolidatedBase> make_gatelope(); int params_gatelope();
 std::unique_ptr<AirwinConsolidatedBase> make_glitchshifter(); int params_glitchshifter();
+std::unique_ptr<AirwinConsolidatedBase> make_goldenslew(); int params_goldenslew();
 std::unique_ptr<AirwinConsolidatedBase> make_golem(); int params_golem();
+std::unique_ptr<AirwinConsolidatedBase> make_grindamp(); int params_grindamp();
+std::unique_ptr<AirwinConsolidatedBase> make_gringer(); int params_gringer();
 std::unique_ptr<AirwinConsolidatedBase> make_groovewear(); int params_groovewear();
+std::unique_ptr<AirwinConsolidatedBase> make_guitarconditioner(); int params_guitarconditioner();
+std::unique_ptr<AirwinConsolidatedBase> make_hardvacuum(); int params_hardvacuum();
+std::unique_ptr<AirwinConsolidatedBase> make_hermepass(); int params_hermepass();
+std::unique_ptr<AirwinConsolidatedBase> make_hermetrim(); int params_hermetrim();
+std::unique_ptr<AirwinConsolidatedBase> make_highglossdither(); int params_highglossdither();
+std::unique_ptr<AirwinConsolidatedBase> make_highimpact(); int params_highimpact();
+std::unique_ptr<AirwinConsolidatedBase> make_highpass(); int params_highpass();
+std::unique_ptr<AirwinConsolidatedBase> make_highpass2(); int params_highpass2();
 std::unique_ptr<AirwinConsolidatedBase> make_hipcrush(); int params_hipcrush();
+std::unique_ptr<AirwinConsolidatedBase> make_holt(); int params_holt();
+std::unique_ptr<AirwinConsolidatedBase> make_holt2(); int params_holt2();
+std::unique_ptr<AirwinConsolidatedBase> make_hombre(); int params_hombre();
+std::unique_ptr<AirwinConsolidatedBase> make_huge(); int params_huge();
+std::unique_ptr<AirwinConsolidatedBase> make_hull(); int params_hull();
+std::unique_ptr<AirwinConsolidatedBase> make_hull2(); int params_hull2();
+std::unique_ptr<AirwinConsolidatedBase> make_hype(); int params_hype();
 std::unique_ptr<AirwinConsolidatedBase> make_hypersoft(); int params_hypersoft();
+std::unique_ptr<AirwinConsolidatedBase> make_hypersonic(); int params_hypersonic();
+std::unique_ptr<AirwinConsolidatedBase> make_hypersonx(); int params_hypersonx();
+std::unique_ptr<AirwinConsolidatedBase> make_infinity(); int params_infinity();
+std::unique_ptr<AirwinConsolidatedBase> make_infinity2(); int params_infinity2();
 std::unique_ptr<AirwinConsolidatedBase> make_inflamer(); int params_inflamer();
+std::unique_ptr<AirwinConsolidatedBase> make_infrasonic(); int params_infrasonic();
+std::unique_ptr<AirwinConsolidatedBase> make_interstage(); int params_interstage();
+std::unique_ptr<AirwinConsolidatedBase> make_ironoxide5(); int params_ironoxide5();
+std::unique_ptr<AirwinConsolidatedBase> make_ironoxideclassic(); int params_ironoxideclassic();
+std::unique_ptr<AirwinConsolidatedBase> make_ironoxideclassic2(); int params_ironoxideclassic2();
+std::unique_ptr<AirwinConsolidatedBase> make_isolator(); int params_isolator();
+std::unique_ptr<AirwinConsolidatedBase> make_isolator2(); int params_isolator2();
 std::unique_ptr<AirwinConsolidatedBase> make_isolator3(); int params_isolator3();
 std::unique_ptr<AirwinConsolidatedBase> make_kalienspaceship(); int params_kalienspaceship();
+std::unique_ptr<AirwinConsolidatedBase> make_kalman(); int params_kalman();
 std::unique_ptr<AirwinConsolidatedBase> make_kbeyond(); int params_kbeyond();
+std::unique_ptr<AirwinConsolidatedBase> make_kcathedral(); int params_kcathedral();
+std::unique_ptr<AirwinConsolidatedBase> make_kcathedral2(); int params_kcathedral2();
+std::unique_ptr<AirwinConsolidatedBase> make_kcathedral3(); int params_kcathedral3();
+std::unique_ptr<AirwinConsolidatedBase> make_kcathedral4(); int params_kcathedral4();
 std::unique_ptr<AirwinConsolidatedBase> make_kcathedral5(); int params_kcathedral5();
+std::unique_ptr<AirwinConsolidatedBase> make_kchamberar(); int params_kchamberar();
 std::unique_ptr<AirwinConsolidatedBase> make_kcosmos(); int params_kcosmos();
 std::unique_ptr<AirwinConsolidatedBase> make_kcybercity(); int params_kcybercity();
+std::unique_ptr<AirwinConsolidatedBase> make_kguitarhall(); int params_kguitarhall();
 std::unique_ptr<AirwinConsolidatedBase> make_kguitarhall2(); int params_kguitarhall2();
 std::unique_ptr<AirwinConsolidatedBase> make_kplate140(); int params_kplate140();
 std::unique_ptr<AirwinConsolidatedBase> make_kplate240(); int params_kplate240();
+std::unique_ptr<AirwinConsolidatedBase> make_kplatea(); int params_kplatea();
+std::unique_ptr<AirwinConsolidatedBase> make_kplateb(); int params_kplateb();
+std::unique_ptr<AirwinConsolidatedBase> make_kplatec(); int params_kplatec();
+std::unique_ptr<AirwinConsolidatedBase> make_kplated(); int params_kplated();
+std::unique_ptr<AirwinConsolidatedBase> make_krockstar(); int params_krockstar();
 std::unique_ptr<AirwinConsolidatedBase> make_krockstar2(); int params_krockstar2();
 std::unique_ptr<AirwinConsolidatedBase> make_kstation(); int params_kstation();
 std::unique_ptr<AirwinConsolidatedBase> make_kwoodroom(); int params_kwoodroom();
+std::unique_ptr<AirwinConsolidatedBase> make_leadamp(); int params_leadamp();
+std::unique_ptr<AirwinConsolidatedBase> make_leftomono(); int params_leftomono();
+std::unique_ptr<AirwinConsolidatedBase> make_lilamp(); int params_lilamp();
+std::unique_ptr<AirwinConsolidatedBase> make_logical4(); int params_logical4();
 std::unique_ptr<AirwinConsolidatedBase> make_longhand(); int params_longhand();
+std::unique_ptr<AirwinConsolidatedBase> make_loud(); int params_loud();
+std::unique_ptr<AirwinConsolidatedBase> make_lowpass(); int params_lowpass();
+std::unique_ptr<AirwinConsolidatedBase> make_lowpass2(); int params_lowpass2();
+std::unique_ptr<AirwinConsolidatedBase> make_lrconvolve(); int params_lrconvolve();
+std::unique_ptr<AirwinConsolidatedBase> make_lrconvolve2(); int params_lrconvolve2();
+std::unique_ptr<AirwinConsolidatedBase> make_lrconvolve3(); int params_lrconvolve3();
+std::unique_ptr<AirwinConsolidatedBase> make_lrfliptimer(); int params_lrfliptimer();
+std::unique_ptr<AirwinConsolidatedBase> make_luxor(); int params_luxor();
+std::unique_ptr<AirwinConsolidatedBase> make_mackeq(); int params_mackeq();
 std::unique_ptr<AirwinConsolidatedBase> make_mackity(); int params_mackity();
+std::unique_ptr<AirwinConsolidatedBase> make_mastering(); int params_mastering();
 std::unique_ptr<AirwinConsolidatedBase> make_mastering2(); int params_mastering2();
+std::unique_ptr<AirwinConsolidatedBase> make_matrixverb(); int params_matrixverb();
+std::unique_ptr<AirwinConsolidatedBase> make_melt(); int params_melt();
+std::unique_ptr<AirwinConsolidatedBase> make_midamp(); int params_midamp();
+std::unique_ptr<AirwinConsolidatedBase> make_midside(); int params_midside();
+std::unique_ptr<AirwinConsolidatedBase> make_mojo(); int params_mojo();
+std::unique_ptr<AirwinConsolidatedBase> make_monitoring(); int params_monitoring();
+std::unique_ptr<AirwinConsolidatedBase> make_monitoring2(); int params_monitoring2();
 std::unique_ptr<AirwinConsolidatedBase> make_monitoring3(); int params_monitoring3();
+std::unique_ptr<AirwinConsolidatedBase> make_monoam(); int params_monoam();
+std::unique_ptr<AirwinConsolidatedBase> make_msfliptimer(); int params_msfliptimer();
+std::unique_ptr<AirwinConsolidatedBase> make_multibanddistortion(); int params_multibanddistortion();
+std::unique_ptr<AirwinConsolidatedBase> make_mv(); int params_mv();
+std::unique_ptr<AirwinConsolidatedBase> make_mv2(); int params_mv2();
+std::unique_ptr<AirwinConsolidatedBase> make_naturalizedither(); int params_naturalizedither();
+std::unique_ptr<AirwinConsolidatedBase> make_ncseventeen(); int params_ncseventeen();
+std::unique_ptr<AirwinConsolidatedBase> make_neverland(); int params_neverland();
+std::unique_ptr<AirwinConsolidatedBase> make_nikola(); int params_nikola();
+std::unique_ptr<AirwinConsolidatedBase> make_nodedither(); int params_nodedither();
+std::unique_ptr<AirwinConsolidatedBase> make_noise(); int params_noise();
 std::unique_ptr<AirwinConsolidatedBase> make_nonlinearspace(); int params_nonlinearspace();
+std::unique_ptr<AirwinConsolidatedBase> make_notjustanothercd(); int params_notjustanothercd();
+std::unique_ptr<AirwinConsolidatedBase> make_notjustanotherdither(); int params_notjustanotherdither();
 std::unique_ptr<AirwinConsolidatedBase> make_onecornerclip(); int params_onecornerclip();
 std::unique_ptr<AirwinConsolidatedBase> make_orbitkick(); int params_orbitkick();
+std::unique_ptr<AirwinConsolidatedBase> make_overheads(); int params_overheads();
+std::unique_ptr<AirwinConsolidatedBase> make_pafnuty(); int params_pafnuty();
+std::unique_ptr<AirwinConsolidatedBase> make_pafnuty2(); int params_pafnuty2();
 std::unique_ptr<AirwinConsolidatedBase> make_parametric(); int params_parametric();
 std::unique_ptr<AirwinConsolidatedBase> make_pauldither(); int params_pauldither();
 std::unique_ptr<AirwinConsolidatedBase> make_paulwide(); int params_paulwide();
+std::unique_ptr<AirwinConsolidatedBase> make_pdbuss(); int params_pdbuss();
+std::unique_ptr<AirwinConsolidatedBase> make_pdchannel(); int params_pdchannel();
+std::unique_ptr<AirwinConsolidatedBase> make_peaksonly(); int params_peaksonly();
+std::unique_ptr<AirwinConsolidatedBase> make_pear(); int params_pear();
+std::unique_ptr<AirwinConsolidatedBase> make_pear2(); int params_pear2();
 std::unique_ptr<AirwinConsolidatedBase> make_peareq(); int params_peareq();
 std::unique_ptr<AirwinConsolidatedBase> make_pearliteeq(); int params_pearliteeq();
+std::unique_ptr<AirwinConsolidatedBase> make_phasenudge(); int params_phasenudge();
 std::unique_ptr<AirwinConsolidatedBase> make_pitchdelay(); int params_pitchdelay();
 std::unique_ptr<AirwinConsolidatedBase> make_pitchnasty(); int params_pitchnasty();
+std::unique_ptr<AirwinConsolidatedBase> make_platinumslew(); int params_platinumslew();
+std::unique_ptr<AirwinConsolidatedBase> make_pocketverbs(); int params_pocketverbs();
+std::unique_ptr<AirwinConsolidatedBase> make_pockey(); int params_pockey();
 std::unique_ptr<AirwinConsolidatedBase> make_pockey2(); int params_pockey2();
+std::unique_ptr<AirwinConsolidatedBase> make_podcast(); int params_podcast();
+std::unique_ptr<AirwinConsolidatedBase> make_podcastdeluxe(); int params_podcastdeluxe();
+std::unique_ptr<AirwinConsolidatedBase> make_point(); int params_point();
+std::unique_ptr<AirwinConsolidatedBase> make_pointydeluxe(); int params_pointydeluxe();
 std::unique_ptr<AirwinConsolidatedBase> make_pointyguitar(); int params_pointyguitar();
+std::unique_ptr<AirwinConsolidatedBase> make_pop(); int params_pop();
+std::unique_ptr<AirwinConsolidatedBase> make_pop2(); int params_pop2();
 std::unique_ptr<AirwinConsolidatedBase> make_pop3(); int params_pop3();
+std::unique_ptr<AirwinConsolidatedBase> make_powersag(); int params_powersag();
+std::unique_ptr<AirwinConsolidatedBase> make_powersag2(); int params_powersag2();
+std::unique_ptr<AirwinConsolidatedBase> make_precious(); int params_precious();
+std::unique_ptr<AirwinConsolidatedBase> make_preponderant(); int params_preponderant();
+std::unique_ptr<AirwinConsolidatedBase> make_pressure4(); int params_pressure4();
+std::unique_ptr<AirwinConsolidatedBase> make_pressure5(); int params_pressure5();
+std::unique_ptr<AirwinConsolidatedBase> make_pressure6(); int params_pressure6();
+std::unique_ptr<AirwinConsolidatedBase> make_primefir(); int params_primefir();
+std::unique_ptr<AirwinConsolidatedBase> make_punchydeluxe(); int params_punchydeluxe();
+std::unique_ptr<AirwinConsolidatedBase> make_punchyguitar(); int params_punchyguitar();
+std::unique_ptr<AirwinConsolidatedBase> make_purestair(); int params_purestair();
+std::unique_ptr<AirwinConsolidatedBase> make_purestconsole2buss(); int params_purestconsole2buss();
+std::unique_ptr<AirwinConsolidatedBase> make_purestconsole2channel(); int params_purestconsole2channel();
 std::unique_ptr<AirwinConsolidatedBase> make_purestconsole3buss(); int params_purestconsole3buss();
 std::unique_ptr<AirwinConsolidatedBase> make_purestconsole3channel(); int params_purestconsole3channel();
+std::unique_ptr<AirwinConsolidatedBase> make_purestconsole4buss(); int params_purestconsole4buss();
+std::unique_ptr<AirwinConsolidatedBase> make_purestconsole4channel(); int params_purestconsole4channel();
+std::unique_ptr<AirwinConsolidatedBase> make_purestconsolebuss(); int params_purestconsolebuss();
+std::unique_ptr<AirwinConsolidatedBase> make_purestconsolechannel(); int params_purestconsolechannel();
+std::unique_ptr<AirwinConsolidatedBase> make_purestdrive(); int params_purestdrive();
 std::unique_ptr<AirwinConsolidatedBase> make_purestdualpan(); int params_purestdualpan();
+std::unique_ptr<AirwinConsolidatedBase> make_purestecho(); int params_purestecho();
 std::unique_ptr<AirwinConsolidatedBase> make_purestfade(); int params_purestfade();
 std::unique_ptr<AirwinConsolidatedBase> make_purestgain(); int params_purestgain();
+std::unique_ptr<AirwinConsolidatedBase> make_purestsaturation(); int params_purestsaturation();
+std::unique_ptr<AirwinConsolidatedBase> make_purestsquish(); int params_purestsquish();
+std::unique_ptr<AirwinConsolidatedBase> make_purestwarm(); int params_purestwarm();
+std::unique_ptr<AirwinConsolidatedBase> make_purestwarm2(); int params_purestwarm2();
 std::unique_ptr<AirwinConsolidatedBase> make_purestwarm3(); int params_purestwarm3();
 std::unique_ptr<AirwinConsolidatedBase> make_pyewacket(); int params_pyewacket();
+std::unique_ptr<AirwinConsolidatedBase> make_rawglitters(); int params_rawglitters();
+std::unique_ptr<AirwinConsolidatedBase> make_rawtimbers(); int params_rawtimbers();
+std::unique_ptr<AirwinConsolidatedBase> make_recurve(); int params_recurve();
+std::unique_ptr<AirwinConsolidatedBase> make_remap(); int params_remap();
+std::unique_ptr<AirwinConsolidatedBase> make_reseq(); int params_reseq();
+std::unique_ptr<AirwinConsolidatedBase> make_reseq2(); int params_reseq2();
 std::unique_ptr<AirwinConsolidatedBase> make_retrobass(); int params_retrobass();
+std::unique_ptr<AirwinConsolidatedBase> make_reverb(); int params_reverb();
+std::unique_ptr<AirwinConsolidatedBase> make_righteous4(); int params_righteous4();
+std::unique_ptr<AirwinConsolidatedBase> make_rightomono(); int params_rightomono();
+std::unique_ptr<AirwinConsolidatedBase> make_ringmodulator(); int params_ringmodulator();
+std::unique_ptr<AirwinConsolidatedBase> make_sampledelay(); int params_sampledelay();
 std::unique_ptr<AirwinConsolidatedBase> make_shape(); int params_shape();
+std::unique_ptr<AirwinConsolidatedBase> make_shortbuss(); int params_shortbuss();
+std::unique_ptr<AirwinConsolidatedBase> make_sidedull(); int params_sidedull();
+std::unique_ptr<AirwinConsolidatedBase> make_sidepass(); int params_sidepass();
+std::unique_ptr<AirwinConsolidatedBase> make_silhouette(); int params_silhouette();
 std::unique_ptr<AirwinConsolidatedBase> make_silken(); int params_silken();
 std::unique_ptr<AirwinConsolidatedBase> make_sinew(); int params_sinew();
 std::unique_ptr<AirwinConsolidatedBase> make_singleendedtriode(); int params_singleendedtriode();
+std::unique_ptr<AirwinConsolidatedBase> make_slew(); int params_slew();
+std::unique_ptr<AirwinConsolidatedBase> make_slew2(); int params_slew2();
+std::unique_ptr<AirwinConsolidatedBase> make_slew3(); int params_slew3();
 std::unique_ptr<AirwinConsolidatedBase> make_slew4(); int params_slew4();
+std::unique_ptr<AirwinConsolidatedBase> make_slewonly(); int params_slewonly();
 std::unique_ptr<AirwinConsolidatedBase> make_slewsonic(); int params_slewsonic();
 std::unique_ptr<AirwinConsolidatedBase> make_smooth(); int params_smooth();
+std::unique_ptr<AirwinConsolidatedBase> make_smootheq(); int params_smootheq();
+std::unique_ptr<AirwinConsolidatedBase> make_smootheq2(); int params_smootheq2();
 std::unique_ptr<AirwinConsolidatedBase> make_smootheq3(); int params_smootheq3();
+std::unique_ptr<AirwinConsolidatedBase> make_softclock(); int params_softclock();
+std::unique_ptr<AirwinConsolidatedBase> make_softclock2(); int params_softclock2();
 std::unique_ptr<AirwinConsolidatedBase> make_softclock3(); int params_softclock3();
 std::unique_ptr<AirwinConsolidatedBase> make_softgate(); int params_softgate();
+std::unique_ptr<AirwinConsolidatedBase> make_spatializedither(); int params_spatializedither();
+std::unique_ptr<AirwinConsolidatedBase> make_spiral(); int params_spiral();
+std::unique_ptr<AirwinConsolidatedBase> make_spiral2(); int params_spiral2();
+std::unique_ptr<AirwinConsolidatedBase> make_spiral3(); int params_spiral3();
+std::unique_ptr<AirwinConsolidatedBase> make_squareroot(); int params_squareroot();
+std::unique_ptr<AirwinConsolidatedBase> make_srsly(); int params_srsly();
+std::unique_ptr<AirwinConsolidatedBase> make_srsly2(); int params_srsly2();
 std::unique_ptr<AirwinConsolidatedBase> make_srsly3(); int params_srsly3();
+std::unique_ptr<AirwinConsolidatedBase> make_starchild(); int params_starchild();
+std::unique_ptr<AirwinConsolidatedBase> make_starchild2(); int params_starchild2();
+std::unique_ptr<AirwinConsolidatedBase> make_stereochorus(); int params_stereochorus();
+std::unique_ptr<AirwinConsolidatedBase> make_stereodoubler(); int params_stereodoubler();
+std::unique_ptr<AirwinConsolidatedBase> make_stereoensemble(); int params_stereoensemble();
+std::unique_ptr<AirwinConsolidatedBase> make_stereofx(); int params_stereofx();
 std::unique_ptr<AirwinConsolidatedBase> make_stonefire(); int params_stonefire();
 std::unique_ptr<AirwinConsolidatedBase> make_stonefirecomp(); int params_stonefirecomp();
+std::unique_ptr<AirwinConsolidatedBase> make_studiotan(); int params_studiotan();
+std::unique_ptr<AirwinConsolidatedBase> make_subsonly(); int params_subsonly();
+std::unique_ptr<AirwinConsolidatedBase> make_subtight(); int params_subtight();
+std::unique_ptr<AirwinConsolidatedBase> make_surge(); int params_surge();
+std::unique_ptr<AirwinConsolidatedBase> make_surgetide(); int params_surgetide();
 std::unique_ptr<AirwinConsolidatedBase> make_suzan(); int params_suzan();
 std::unique_ptr<AirwinConsolidatedBase> make_sweeten(); int params_sweeten();
+std::unique_ptr<AirwinConsolidatedBase> make_sweetwide(); int params_sweetwide();
+std::unique_ptr<AirwinConsolidatedBase> make_swell(); int params_swell();
 std::unique_ptr<AirwinConsolidatedBase> make_takecare(); int params_takecare();
+std::unique_ptr<AirwinConsolidatedBase> make_tape(); int params_tape();
+std::unique_ptr<AirwinConsolidatedBase> make_tapebias(); int params_tapebias();
+std::unique_ptr<AirwinConsolidatedBase> make_tapedelay(); int params_tapedelay();
 std::unique_ptr<AirwinConsolidatedBase> make_tapedelay2(); int params_tapedelay2();
+std::unique_ptr<AirwinConsolidatedBase> make_tapedither(); int params_tapedither();
 std::unique_ptr<AirwinConsolidatedBase> make_tapedust(); int params_tapedust();
+std::unique_ptr<AirwinConsolidatedBase> make_tapefat(); int params_tapefat();
+std::unique_ptr<AirwinConsolidatedBase> make_tapehack(); int params_tapehack();
 std::unique_ptr<AirwinConsolidatedBase> make_tapehack2(); int params_tapehack2();
+std::unique_ptr<AirwinConsolidatedBase> make_tapehack3(); int params_tapehack3();
+std::unique_ptr<AirwinConsolidatedBase> make_texturize(); int params_texturize();
+std::unique_ptr<AirwinConsolidatedBase> make_texturizems(); int params_texturizems();
+std::unique_ptr<AirwinConsolidatedBase> make_thunder(); int params_thunder();
 std::unique_ptr<AirwinConsolidatedBase> make_toneslant(); int params_toneslant();
+std::unique_ptr<AirwinConsolidatedBase> make_totape5(); int params_totape5();
+std::unique_ptr<AirwinConsolidatedBase> make_totape6(); int params_totape6();
+std::unique_ptr<AirwinConsolidatedBase> make_totape7(); int params_totape7();
+std::unique_ptr<AirwinConsolidatedBase> make_totape8(); int params_totape8();
 std::unique_ptr<AirwinConsolidatedBase> make_totape9(); int params_totape9();
 std::unique_ptr<AirwinConsolidatedBase> make_tovinyl4(); int params_tovinyl4();
 std::unique_ptr<AirwinConsolidatedBase> make_tpdfdither(); int params_tpdfdither();
+std::unique_ptr<AirwinConsolidatedBase> make_tpdfwide(); int params_tpdfwide();
+std::unique_ptr<AirwinConsolidatedBase> make_transdesk(); int params_transdesk();
 std::unique_ptr<AirwinConsolidatedBase> make_tremolo(); int params_tremolo();
 std::unique_ptr<AirwinConsolidatedBase> make_tremosquare(); int params_tremosquare();
 std::unique_ptr<AirwinConsolidatedBase> make_trianglizer(); int params_trianglizer();
 std::unique_ptr<AirwinConsolidatedBase> make_triplespread(); int params_triplespread();
+std::unique_ptr<AirwinConsolidatedBase> make_tube(); int params_tube();
 std::unique_ptr<AirwinConsolidatedBase> make_tube2(); int params_tube2();
+std::unique_ptr<AirwinConsolidatedBase> make_tubedesk(); int params_tubedesk();
+std::unique_ptr<AirwinConsolidatedBase> make_ulawdecode(); int params_ulawdecode();
+std::unique_ptr<AirwinConsolidatedBase> make_ulawencode(); int params_ulawencode();
+std::unique_ptr<AirwinConsolidatedBase> make_ultralight(); int params_ultralight();
 std::unique_ptr<AirwinConsolidatedBase> make_ultralight2(); int params_ultralight2();
+std::unique_ptr<AirwinConsolidatedBase> make_ultralight3(); int params_ultralight3();
+std::unique_ptr<AirwinConsolidatedBase> make_ultrasonic(); int params_ultrasonic();
+std::unique_ptr<AirwinConsolidatedBase> make_ultrasoniclite(); int params_ultrasoniclite();
+std::unique_ptr<AirwinConsolidatedBase> make_ultrasonicmed(); int params_ultrasonicmed();
+std::unique_ptr<AirwinConsolidatedBase> make_ultrasonx(); int params_ultrasonx();
+std::unique_ptr<AirwinConsolidatedBase> make_unbox(); int params_unbox();
+std::unique_ptr<AirwinConsolidatedBase> make_varimu(); int params_varimu();
+std::unique_ptr<AirwinConsolidatedBase> make_verbity(); int params_verbity();
+std::unique_ptr<AirwinConsolidatedBase> make_verbity2(); int params_verbity2();
 std::unique_ptr<AirwinConsolidatedBase> make_verbsevens(); int params_verbsevens();
+std::unique_ptr<AirwinConsolidatedBase> make_verbsixes(); int params_verbsixes();
+std::unique_ptr<AirwinConsolidatedBase> make_verbthic(); int params_verbthic();
 std::unique_ptr<AirwinConsolidatedBase> make_verbtiny(); int params_verbtiny();
 std::unique_ptr<AirwinConsolidatedBase> make_vibrato(); int params_vibrato();
+std::unique_ptr<AirwinConsolidatedBase> make_vinyldither(); int params_vinyldither();
+std::unique_ptr<AirwinConsolidatedBase> make_voiceofthestarship(); int params_voiceofthestarship();
+std::unique_ptr<AirwinConsolidatedBase> make_voicetrick(); int params_voicetrick();
+std::unique_ptr<AirwinConsolidatedBase> make_weave(); int params_weave();
 std::unique_ptr<AirwinConsolidatedBase> make_weight(); int params_weight();
 std::unique_ptr<AirwinConsolidatedBase> make_wider(); int params_wider();
+std::unique_ptr<AirwinConsolidatedBase> make_wolfbot(); int params_wolfbot();
+std::unique_ptr<AirwinConsolidatedBase> make_woodenbox(); int params_woodenbox();
+std::unique_ptr<AirwinConsolidatedBase> make_woodenchest(); int params_woodenchest();
+std::unique_ptr<AirwinConsolidatedBase> make_x2buss(); int params_x2buss();
 std::unique_ptr<AirwinConsolidatedBase> make_xbandpass(); int params_xbandpass();
 std::unique_ptr<AirwinConsolidatedBase> make_xhighpass(); int params_xhighpass();
 std::unique_ptr<AirwinConsolidatedBase> make_xlowpass(); int params_xlowpass();
@@ -132,11 +516,23 @@ std::unique_ptr<AirwinConsolidatedBase> make_xregion(); int params_xregion();
 std::unique_ptr<AirwinConsolidatedBase> make_ybandpass(); int params_ybandpass();
 std::unique_ptr<AirwinConsolidatedBase> make_yhighpass(); int params_yhighpass();
 std::unique_ptr<AirwinConsolidatedBase> make_ylowpass(); int params_ylowpass();
+std::unique_ptr<AirwinConsolidatedBase> make_ynotbandpass(); int params_ynotbandpass();
 std::unique_ptr<AirwinConsolidatedBase> make_ynotch(); int params_ynotch();
+std::unique_ptr<AirwinConsolidatedBase> make_ynothighpass(); int params_ynothighpass();
+std::unique_ptr<AirwinConsolidatedBase> make_ynotlowpass(); int params_ynotlowpass();
+std::unique_ptr<AirwinConsolidatedBase> make_ynotnotch(); int params_ynotnotch();
+std::unique_ptr<AirwinConsolidatedBase> make_zacidlowpass(); int params_zacidlowpass();
+std::unique_ptr<AirwinConsolidatedBase> make_zbandpass(); int params_zbandpass();
 std::unique_ptr<AirwinConsolidatedBase> make_zbandpass2(); int params_zbandpass2();
+std::unique_ptr<AirwinConsolidatedBase> make_zhighpass(); int params_zhighpass();
 std::unique_ptr<AirwinConsolidatedBase> make_zhighpass2(); int params_zhighpass2();
+std::unique_ptr<AirwinConsolidatedBase> make_zlowpass(); int params_zlowpass();
 std::unique_ptr<AirwinConsolidatedBase> make_zlowpass2(); int params_zlowpass2();
+std::unique_ptr<AirwinConsolidatedBase> make_znotch(); int params_znotch();
 std::unique_ptr<AirwinConsolidatedBase> make_znotch2(); int params_znotch2();
+std::unique_ptr<AirwinConsolidatedBase> make_zoom(); int params_zoom();
+std::unique_ptr<AirwinConsolidatedBase> make_zoutputstage(); int params_zoutputstage();
+std::unique_ptr<AirwinConsolidatedBase> make_zregion(); int params_zregion();
 std::unique_ptr<AirwinConsolidatedBase> make_zregion2(); int params_zregion2();
 } // namespace dlaw::gen
 
@@ -145,141 +541,537 @@ namespace dlaw
 const std::vector<EffectInfo>& getAllEffects()
 {
     static const std::vector<EffectInfo> list {
-        { "adclip9", "ADClip9", "Clipping", "ADClip9 is the ClipOnly3 version of a loudenator/biggenator.", 1, "1.0.0", 0.0, false, false, true, gen::params_adclip9(), &gen::make_adclip9 },
-        { "air4", "Air4", "Brightness", "Air4 extends Air3 with controllable high frequency limiting.", 1, "1.0.0", 0.0, false, false, false, gen::params_air4(), &gen::make_air4 },
-        { "bezeq3", "BezEQ3", "Filter", "BezEQ3 refines the concept into four vivid, unified bands.", 1, "1.0.0", 0.0, false, false, true, gen::params_bezeq3(), &gen::make_bezeq3 },
-        { "bezicomp", "BeziComp", "Dynamics", "BeziComp is a radical compressor that eliminates aliasing!", 1, "1.0.0", 0.0, false, false, false, gen::params_bezicomp(), &gen::make_bezicomp },
-        { "biquadstack", "BiquadStack", "Biquads", "BiquadStack is a way of making a parametric EQ out of stacked biquad filters.", 1, "1.0.0", 0.0, false, false, false, gen::params_biquadstack(), &gen::make_biquadstack },
-        { "bitshiftpan", "BitShiftPan", "Utility", "BitShiftPan gives you a gain and a pan control that are ONLY done using bit shifts.", 1, "1.0.0", 0.0, false, false, false, gen::params_bitshiftpan(), &gen::make_bitshiftpan },
-        { "cans", "Cans", "Utility", "Cans is a room simulator for headphone mixers.", 1, "1.0.0", 0.0, false, false, false, gen::params_cans(), &gen::make_cans },
-        { "cansaw", "CansAW", "Utility", "CansAW is Chris's Airwindows room, in a plugin, for headphone mixers.", 1, "1.0.0", 0.0, false, false, false, gen::params_cansaw(), &gen::make_cansaw },
-        { "chamber2", "Chamber2", "Reverb", "Chamber2 is a feedforward reverb, a blur delay, and a glitch topping!", 1, "1.0.0", 10.0, false, false, false, gen::params_chamber2(), &gen::make_chamber2 },
-        { "channelx", "ChannelX", "Tone Color", "ChannelX translates Channel9 into a profusion of wild experiments.", 1, "1.0.0", 0.0, false, false, true, gen::params_channelx(), &gen::make_channelx },
-        { "chimeydeluxe", "ChimeyDeluxe", "Amp Sims", "ChimeyDeluxe is a very flexible compressed DI conditioner.", 1, "1.0.0", 0.0, false, false, false, gen::params_chimeydeluxe(), &gen::make_chimeydeluxe },
-        { "chimeyguitar2", "ChimeyGuitar2", "Amp Sims", "ChimeyGuitar2 is a wilder ChimeyGuitar.", 1, "1.0.0", 0.0, false, false, false, gen::params_chimeyguitar2(), &gen::make_chimeyguitar2 },
-        { "clearcoat", "ClearCoat", "Ambience", "ClearCoat is an array of bright ambience reverbs.", 1, "1.0.0", 10.0, false, false, false, gen::params_clearcoat(), &gen::make_clearcoat },
-        { "cliponly3", "ClipOnly3", "Clipping", "ClipOnly3 is just plain stinkin' loud.", 1, "1.0.0", 0.0, false, false, false, gen::params_cliponly3(), &gen::make_cliponly3 },
-        { "console0buss", "Console0Buss", "Consoles", "Console0Buss is a radical, minimalist Console system.", 1, "1.0.0", 0.0, false, false, false, gen::params_console0buss(), &gen::make_console0buss },
-        { "console0channel", "Console0Channel", "Consoles", "Console0Channel is a radical, minimalist Console system.", 1, "1.0.0", 0.0, false, false, false, gen::params_console0channel(), &gen::make_console0channel },
-        { "console9buss", "Console9Buss", "Consoles", "Console9Buss is just the summing from ConsoleX.", 1, "1.0.0", 0.0, false, false, false, gen::params_console9buss(), &gen::make_console9buss },
-        { "console9channel", "Console9Channel", "Consoles", "Console9Channel is just the summing from ConsoleX.", 1, "1.0.0", 0.0, false, false, false, gen::params_console9channel(), &gen::make_console9channel },
-        { "consolelabuss", "ConsoleLABuss", "Consoles", "ConsoleLABuss is the Airwindows take on the Quad Eight console.", 1, "1.0.0", 0.0, false, false, false, gen::params_consolelabuss(), &gen::make_consolelabuss },
-        { "consolelachannel", "ConsoleLAChannel", "Consoles", "ConsoleLAChannel is the Airwindows take on the Quad Eight console.", 1, "1.0.0", 0.0, false, false, false, gen::params_consolelachannel(), &gen::make_consolelachannel },
-        { "consolemcbuss", "ConsoleMCBuss", "Consoles", "ConsoleMCBuss is the initial, bright take on the MCI console.", 1, "1.0.0", 0.0, false, false, false, gen::params_consolemcbuss(), &gen::make_consolemcbuss },
-        { "consolemcchannel", "ConsoleMCChannel", "Consoles", "ConsoleMCChannel is the initial, bright take on the MCI console.", 1, "1.0.0", 0.0, false, false, false, gen::params_consolemcchannel(), &gen::make_consolemcchannel },
-        { "creamcoat", "CreamCoat", "Reverb", "CreamCoat is a swiss army knife reverb with soft undersampling.", 1, "1.0.0", 10.0, false, false, false, gen::params_creamcoat(), &gen::make_creamcoat },
-        { "crunchcoat", "CrunchCoat", "Reverb", "CrunchCoat is a cursed retro digital reverb!", 1, "1.0.0", 10.0, false, false, false, gen::params_crunchcoat(), &gen::make_crunchcoat },
-        { "crunchygroovewear", "CrunchyGrooveWear", "Lo-Fi", "CrunchyGrooveWear is a version of GrooveWear for more edge and distortion.", 1, "1.0.0", 0.0, false, false, false, gen::params_crunchygroovewear(), &gen::make_crunchygroovewear },
-        { "dattorro", "Dattorro", "Filter", "Dattorro is the resonant lowpass filter out of Donut.", 1, "1.0.0", 0.0, false, false, false, gen::params_dattorro(), &gen::make_dattorro },
-        { "debess", "DeBess", "Brightness", "DeBess is an improved DeEss, with perfect rejection of non-ess audio.", 1, "1.0.0", 0.0, false, false, false, gen::params_debess(), &gen::make_debess },
-        { "debez", "DeBez", "Lo-Fi", "DeBez gives you retro sampley textures!", 1, "1.0.0", 0.0, false, false, false, gen::params_debez(), &gen::make_debez },
-        { "denoise", "DeNoise", "Noise", "DeNoise can work as a multiband gate and as a wild effect.", 1, "1.0.0", 0.0, false, false, false, gen::params_denoise(), &gen::make_denoise },
-        { "derez5", "DeRez5", "Lo-Fi", "DeRez5 adds new forms of derezzing.", 1, "1.0.0", 0.0, false, false, true, gen::params_derez5(), &gen::make_derez5 },
-        { "digitalblack", "DigitalBlack", "Dynamics", "DigitalBlack is a quick, staccato gate.", 1, "1.0.0", 0.0, false, false, false, gen::params_digitalblack(), &gen::make_digitalblack },
-        { "discontapeity", "Discontapeity", "Subtlety", "Discontapeity combines air modeling with tape-style overdrive.", 1, "1.0.0", 0.0, false, false, false, gen::params_discontapeity(), &gen::make_discontapeity },
-        { "discontinuity", "Discontinuity", "Subtlety", "Discontinuity models air under intense loudness.", 1, "1.0.0", 0.0, false, false, false, gen::params_discontinuity(), &gen::make_discontinuity },
-        { "distance3", "Distance3", "Filter", "Distance3 combines the best parts of Distance and Discontinuity.", 1, "1.0.0", 0.0, false, false, false, gen::params_distance3(), &gen::make_distance3 },
-        { "dubly3", "Dubly3", "Effects", "Dubly3 refines and transforms the Dubly sound.", 1, "1.0.0", 0.0, false, false, false, gen::params_dubly3(), &gen::make_dubly3 },
-        { "dubplate2", "DubPlate2", "Utility", "DubPlate2 is like an ITB mastering house for electronic music.", 1, "1.0.0", 0.0, false, false, false, gen::params_dubplate2(), &gen::make_dubplate2 },
-        { "dubsub2", "DubSub2", "Bass", "DubSub2 is the essence of the Airwindows head bump.", 1, "1.0.0", 0.0, false, false, false, gen::params_dubsub2(), &gen::make_dubsub2 },
-        { "elliptical", "Elliptical", "Bass", "Elliptical highpasses the side channel.", 1, "1.0.0", 0.0, false, false, false, gen::params_elliptical(), &gen::make_elliptical },
-        { "energy2", "Energy2", "Effects", "Energy2 is electrifying fixed-frequency treble boosts for high sample rate.", 1, "1.0.0", 0.0, false, false, false, gen::params_energy2(), &gen::make_energy2 },
-        { "fastdistance", "FastDistance", "Filter", "FastDistance is a sort of ultra-efficient lowpass filter.", 1, "1.0.0", 0.0, false, false, true, gen::params_fastdistance(), &gen::make_fastdistance },
-        { "fateq", "FatEQ", "Filter", "FatEQ balances bands only with density.", 1, "1.0.0", 0.0, false, false, false, gen::params_fateq(), &gen::make_fateq },
-        { "flutter2", "Flutter2", "Lo-Fi", "Flutter2 is the flutter from ToTape7, standalone.", 1, "1.0.0", 0.0, false, false, false, gen::params_flutter2(), &gen::make_flutter2 },
-        { "galactic3", "Galactic3", "Reverb", "Galactic3 is exactly Galactic again, but with better undersampling.", 1, "1.0.0", 10.0, false, false, false, gen::params_galactic3(), &gen::make_galactic3 },
-        { "gatelope", "Gatelope", "Dynamics", "Gatelope is a special gate that applies filters.", 1, "1.0.0", 0.0, false, false, false, gen::params_gatelope(), &gen::make_gatelope },
-        { "glitchshifter", "GlitchShifter", "Effects", "GlitchShifter is a really gnarly, raw-sounding pitch shifter with a dose of insanity!", 1, "1.0.0", 0.0, false, false, false, gen::params_glitchshifter(), &gen::make_glitchshifter },
-        { "golem", "Golem", "Utility", "Golem lets you blend a stereo track of two mics on an amp.", 1, "1.0.0", 0.0, false, false, false, gen::params_golem(), &gen::make_golem },
-        { "groovewear", "GrooveWear", "Lo-Fi", "GrooveWear is for scrubbing highs off mechanically like a stylus would.", 1, "1.0.0", 0.0, false, false, false, gen::params_groovewear(), &gen::make_groovewear },
-        { "hipcrush", "HipCrush", "Lo-Fi", "HipCrush is the de-rez section for ConsoleH.", 1, "1.0.0", 0.0, false, false, false, gen::params_hipcrush(), &gen::make_hipcrush },
-        { "hypersoft", "Hypersoft", "Saturation", "Hypersoft is a more extreme form of soft-clipper.", 1, "1.0.0", 0.0, false, false, false, gen::params_hypersoft(), &gen::make_hypersoft },
-        { "inflamer", "Inflamer", "Subtlety", "Inflamer is an Airwindowsized take on the waveshapers in Oxford Inflator.", 1, "1.0.0", 0.0, false, false, false, gen::params_inflamer(), &gen::make_inflamer },
-        { "isolator3", "Isolator3", "Filter", "Isolator3 is Isolator2, but on one slider, with a band-narrower control.", 1, "1.0.0", 0.0, false, false, false, gen::params_isolator3(), &gen::make_isolator3 },
-        { "kalienspaceship", "kAlienSpaceship", "Reverb", "kAlienSpaceship is an unreal realistic reverb.", 1, "1.0.0", 10.0, false, false, false, gen::params_kalienspaceship(), &gen::make_kalienspaceship },
-        { "kbeyond", "kBeyond", "Reverb", "kBeyond is a recital hall.", 1, "1.0.0", 10.0, false, false, false, gen::params_kbeyond(), &gen::make_kbeyond },
-        { "kcathedral5", "kCathedral5", "Reverb", "kCathedral5 lets you place yourself anywhere you like in the space.", 1, "1.0.0", 10.0, false, false, false, gen::params_kcathedral5(), &gen::make_kcathedral5 },
-        { "kcosmos", "kCosmos", "Reverb", "kCosmos is infinite space ambient, or titanic hall.", 1, "1.0.0", 10.0, false, false, false, gen::params_kcosmos(), &gen::make_kcosmos },
-        { "kcybercity", "kCyberCity", "Reverb", "kCyberCity brings live atmosphere to deep reverb.", 1, "1.0.0", 10.0, false, false, true, gen::params_kcybercity(), &gen::make_kcybercity },
-        { "kguitarhall2", "kGuitarHall2", "Reverb", "kGuitarHall2 puts things in a Loud Room.", 1, "1.0.0", 10.0, false, false, false, gen::params_kguitarhall2(), &gen::make_kguitarhall2 },
-        { "kplate140", "kPlate140", "Reverb", "kPlate140 is a next-generation Airwindows plate reverb.", 1, "1.0.0", 10.0, false, false, false, gen::params_kplate140(), &gen::make_kplate140 },
-        { "kplate240", "kPlate240", "Reverb", "kPlate240 is for the texture of smaller, gold foil reverb.", 1, "1.0.0", 10.0, false, false, false, gen::params_kplate240(), &gen::make_kplate240 },
-        { "krockstar2", "kRockstar2", "Reverb", "kRockstar2 is a realistic hall reverb using a new matrix!", 1, "1.0.0", 10.0, false, false, true, gen::params_krockstar2(), &gen::make_krockstar2 },
-        { "kstation", "kStation", "Reverb", "kStation is a realistic small room modeled after David Bowie's vocal reverb.", 1, "1.0.0", 10.0, false, false, false, gen::params_kstation(), &gen::make_kstation },
-        { "kwoodroom", "kWoodRoom", "Reverb", "kWoodRoom is a small wooden performing space.", 1, "1.0.0", 10.0, false, false, false, gen::params_kwoodroom(), &gen::make_kwoodroom },
-        { "longhand", "Longhand", "Saturation", "Longhand is an experiment in softclipping.", 1, "1.0.0", 0.0, false, false, true, gen::params_longhand(), &gen::make_longhand },
-        { "mackity", "Mackity", "Distortion", "Mackity is an emulation of the input stage of a vintage Mackie 1202!", 1, "1.0.0", 0.0, false, false, false, gen::params_mackity(), &gen::make_mackity },
-        { "mastering2", "Mastering2", "Subtlety", "Mastering2 is Airwindows style, and can do elliptical EQ now!", 1, "1.0.0", 0.0, false, false, false, gen::params_mastering2(), &gen::make_mastering2 },
-        { "monitoring3", "Monitoring3", "Utility", "Monitoring3 is Monitoring, but with Ten Nines into Dark as the wordlength reducer.", 1, "1.0.0", 0.0, false, false, false, gen::params_monitoring3(), &gen::make_monitoring3 },
-        { "nonlinearspace", "NonlinearSpace", "Reverb", "NonlinearSpace is a flexible reverb plugin.", 1, "1.0.0", 10.0, false, false, false, gen::params_nonlinearspace(), &gen::make_nonlinearspace },
-        { "onecornerclip", "OneCornerClip", "Clipping", "OneCornerClip is an ultimate full-bandwidth clipper.", 1, "1.0.0", 0.0, false, false, false, gen::params_onecornerclip(), &gen::make_onecornerclip },
-        { "orbitkick", "OrbitKick", "Bass", "OrbitKick is a bass generator and kick drum reinforcer.", 1, "1.0.0", 0.0, false, false, false, gen::params_orbitkick(), &gen::make_orbitkick },
-        { "parametric", "Parametric", "Filter", "Parametric is three bands of ConsoleX EQ in advance.", 1, "1.0.0", 0.0, false, false, false, gen::params_parametric(), &gen::make_parametric },
-        { "pauldither", "PaulDither", "Dithers", "PaulDither is a highpassed TPDF dither. (quieter, airier)", 1, "1.0.0", 0.0, true, false, false, gen::params_pauldither(), &gen::make_pauldither },
-        { "paulwide", "PaulWide", "Dithers", "PaulWide is a highpassed TPDF wide dither. (quieter, airier AND wider)", 1, "1.0.0", 0.0, true, false, false, gen::params_paulwide(), &gen::make_paulwide },
-        { "peareq", "PearEQ", "Filter", "PearEQ is a six-band Pear-based graphic EQ.", 1, "1.0.0", 0.0, false, false, false, gen::params_peareq(), &gen::make_peareq },
-        { "pearliteeq", "PearLiteEQ", "Filter", "PearLiteEQ is a four-band Pear-based graphic EQ.", 1, "1.0.0", 0.0, false, false, false, gen::params_pearliteeq(), &gen::make_pearliteeq },
-        { "pitchdelay", "PitchDelay", "Ambience", "PitchDelay is TapeDelay2 but with pitch shift instead of flutter.", 1, "1.0.0", 10.0, false, false, false, gen::params_pitchdelay(), &gen::make_pitchdelay },
-        { "pitchnasty", "PitchNasty", "Effects", "PitchNasty is a primitive pitch shifter that also has primitive time-stretch artifacts.", 1, "1.0.0", 0.0, false, false, false, gen::params_pitchnasty(), &gen::make_pitchnasty },
-        { "pockey2", "Pockey2", "Lo-Fi", "Pockey2 is more efficient, more intense lo-fi hiphop in a plugin.", 1, "1.0.0", 0.0, false, false, false, gen::params_pockey2(), &gen::make_pockey2 },
-        { "pointyguitar", "PointyGuitar", "Amp Sims", "PointyGuitar is a supremely adaptable instrument amp.", 1, "1.0.0", 0.0, false, false, false, gen::params_pointyguitar(), &gen::make_pointyguitar },
-        { "pop3", "Pop3", "Dynamics", "Pop3 is the dynamics from ConsoleX.", 1, "1.0.0", 0.0, false, false, false, gen::params_pop3(), &gen::make_pop3 },
-        { "purestconsole3buss", "PurestConsole3Buss", "Consoles", "PurestConsole3Buss is an alternate algorithm for minimalist Console.", 1, "1.0.0", 0.0, false, false, false, gen::params_purestconsole3buss(), &gen::make_purestconsole3buss },
-        { "purestconsole3channel", "PurestConsole3Channel", "Consoles", "PurestConsole3Channel is an alternate algorithm for minimalist Console.", 1, "1.0.0", 0.0, false, false, false, gen::params_purestconsole3channel(), &gen::make_purestconsole3channel },
-        { "purestdualpan", "PurestDualPan", "Utility", "PurestDualPan is an updated PurestGain but as a dual pan.", 1, "1.0.0", 0.0, false, false, false, gen::params_purestdualpan(), &gen::make_purestdualpan },
-        { "purestfade", "PurestFade", "Utility", "PurestFade is just like PurestGain, but for LONG fades.", 1, "1.0.0", 0.0, false, false, false, gen::params_purestfade(), &gen::make_purestfade },
-        { "purestgain", "PurestGain", "Utility", "PurestGain is a high-res noise shaped gain, with smoothed fader.", 1, "1.0.0", 0.0, false, false, false, gen::params_purestgain(), &gen::make_purestgain },
-        { "purestwarm3", "PurestWarm3", "Subtlety", "PurestWarm3 is a subtle tone shaper and warmth adder.", 1, "1.0.0", 0.0, false, false, true, gen::params_purestwarm3(), &gen::make_purestwarm3 },
-        { "pyewacket", "Pyewacket", "Dynamics", "Pyewacket is an old school compressor for high definition transients. Adds no fatness, just energy.", 1, "1.0.0", 0.0, false, false, false, gen::params_pyewacket(), &gen::make_pyewacket },
-        { "retrobass", "RetroBass", "Filter", "RetroBass is a special kind of highpass.", 1, "1.0.0", 0.0, false, false, true, gen::params_retrobass(), &gen::make_retrobass },
-        { "shape", "Shape", "Subtlety", "Shape is an asymmetrical waveshaper for peak manipulating.", 1, "1.0.0", 0.0, false, false, false, gen::params_shape(), &gen::make_shape },
-        { "silken", "Silken", "Filter", "Silken is a high frequency boost that gives ambience and texture.", 1, "1.0.0", 0.0, false, false, false, gen::params_silken(), &gen::make_silken },
-        { "sinew", "Sinew", "Brightness", "Sinew combines sines and slew clipping for a tape bias effect!", 1, "1.0.0", 0.0, false, false, false, gen::params_sinew(), &gen::make_sinew },
-        { "singleendedtriode", "SingleEndedTriode", "Subtlety", "SingleEndedTriode is unusual analog modeling effects.", 1, "1.0.0", 0.0, false, false, false, gen::params_singleendedtriode(), &gen::make_singleendedtriode },
-        { "slew4", "Slew4", "Brightness", "Slew4 is tape compression without the tape, for brightness control.", 1, "1.0.0", 0.0, false, false, false, gen::params_slew4(), &gen::make_slew4 },
-        { "slewsonic", "SlewSonic", "Brightness", "SlewSonic combines SlewOnly with ultrasonic filtering to solo brightness.", 1, "1.0.0", 0.0, false, false, false, gen::params_slewsonic(), &gen::make_slewsonic },
-        { "smooth", "Smooth", "Brightness", "Smooth can tame pointy sounds or make drums explode.", 1, "1.0.0", 0.0, false, false, false, gen::params_smooth(), &gen::make_smooth },
-        { "smootheq3", "SmoothEQ3", "Filter", "SmoothEQ3 is the most approachable EQ.", 1, "1.0.0", 0.0, false, false, false, gen::params_smootheq3(), &gen::make_smootheq3 },
-        { "softclock3", "SoftClock3", "Utility", "SoftClock3 is a groove-oriented time reference.", 1, "1.0.0", 0.0, false, false, false, gen::params_softclock3(), &gen::make_softclock3 },
-        { "softgate", "SoftGate", "Dynamics", "SoftGate is a gate that can mute hiss and smooth sample tails.", 1, "1.0.0", 0.0, false, false, false, gen::params_softgate(), &gen::make_softgate },
-        { "srsly3", "Srsly3", "Stereo", "Srsly3 is Srsly2, with a Nonlin control to analogify the filters.", 1, "1.0.0", 0.0, false, false, false, gen::params_srsly3(), &gen::make_srsly3 },
-        { "stonefire", "Stonefire", "Filter", "Stonefire is the non-EQ EQ designed for ConsoleX.", 1, "1.0.0", 0.0, false, false, false, gen::params_stonefire(), &gen::make_stonefire },
-        { "stonefirecomp", "StoneFireComp", "Dynamics", "StoneFireComp is some of the dynamics for ConsoleX.", 1, "1.0.0", 0.0, false, false, false, gen::params_stonefirecomp(), &gen::make_stonefirecomp },
-        { "suzan", "Suzan", "Filter", "Suzan is a new type of ladder filter.", 1, "1.0.0", 0.0, false, false, true, gen::params_suzan(), &gen::make_suzan },
-        { "sweeten", "Sweeten", "Subtlety", "Sweeten is where you can find super-clean second harmonic.", 1, "1.0.0", 0.0, false, false, false, gen::params_sweeten(), &gen::make_sweeten },
-        { "takecare", "TakeCare", "Effects", "TakeCare is a lush chorus ensemble universe.", 1, "1.0.0", 0.0, false, false, false, gen::params_takecare(), &gen::make_takecare },
-        { "tapedelay2", "TapeDelay2", "Ambience", "TapeDelay2 is a new implementation of a flexible tape echo.", 1, "1.0.0", 10.0, false, false, false, gen::params_tapedelay2(), &gen::make_tapedelay2 },
-        { "tapedust", "TapeDust", "Noise", "TapeDust is just a special treble-erode noise, a ‘slew noise’ plugin.", 1, "1.0.0", 0.0, false, false, false, gen::params_tapedust(), &gen::make_tapedust },
-        { "tapehack2", "TapeHack2", "Tape", "TapeHack2 brings Airwindows tape to a new level.", 1, "1.0.0", 0.0, false, false, false, gen::params_tapehack2(), &gen::make_tapehack2 },
-        { "toneslant", "ToneSlant", "Filter", "ToneSlant is a super-transparent ‘tilt EQ’ with very low Q.", 1, "1.0.0", 0.0, false, false, false, gen::params_toneslant(), &gen::make_toneslant },
-        { "totape9", "ToTape9", "Tape", "ToTape9 is Airwindows tape emulation and brightness compression.", 1, "1.0.0", 0.0, false, false, false, gen::params_totape9(), &gen::make_totape9 },
-        { "tovinyl4", "ToVinyl4", "Stereo", "ToVinyl4 is a vinyl-mastering simulator bringing several vinyl-type colors.", 1, "1.0.0", 0.0, false, false, false, gen::params_tovinyl4(), &gen::make_tovinyl4 },
-        { "tpdfdither", "TPDFDither", "Dithers", "TPDFDither is TPDF dither. With 16/24 bit output and a DeRez control.", 1, "1.0.0", 0.0, true, false, false, gen::params_tpdfdither(), &gen::make_tpdfdither },
-        { "tremolo", "Tremolo", "Effects", "Tremolo is fluctuating saturation curves for a tubey tremolo.", 1, "1.0.0", 0.0, false, false, false, gen::params_tremolo(), &gen::make_tremolo },
-        { "tremosquare", "TremoSquare", "Effects", "TremoSquare is a squarewave tremolo effect that only switches on zero crossings.", 1, "1.0.0", 0.0, false, false, false, gen::params_tremosquare(), &gen::make_tremosquare },
-        { "trianglizer", "Trianglizer", "Effects", "Trianglizer is a special waveshaper that can transform sines into triangles.", 1, "1.0.0", 0.0, false, false, false, gen::params_trianglizer(), &gen::make_trianglizer },
-        { "triplespread", "TripleSpread", "Ambience", "TripleSpread is a stereo tripler with extra wideness and GlitchShifter processing.", 1, "1.0.0", 10.0, false, false, false, gen::params_triplespread(), &gen::make_triplespread },
-        { "tube2", "Tube2", "Saturation", "Tube2 extends Tube, with more sophisticated processing and input trim.", 1, "1.0.0", 0.0, false, false, false, gen::params_tube2(), &gen::make_tube2 },
-        { "ultralight2", "Ultralight2", "Reverb", "Ultralight2 is more of the most low-CPU matrix reverb I can make.", 1, "1.0.0", 10.0, false, false, true, gen::params_ultralight2(), &gen::make_ultralight2 },
-        { "verbsevens", "VerbSevens", "Reverb", "VerbSevens is a calibrated reference reverb plugin for reverb matrices.", 1, "1.0.0", 10.0, false, false, true, gen::params_verbsevens(), &gen::make_verbsevens },
-        { "verbtiny", "VerbTiny", "Reverb", "VerbTiny is a classic artificial reverb that expands reverb shape.", 1, "1.0.0", 10.0, false, false, false, gen::params_verbtiny(), &gen::make_verbtiny },
-        { "vibrato", "Vibrato", "Lo-Fi", "Vibrato lets you vibrato, chorus, flange, and make odd FM noises.", 1, "1.0.0", 0.0, false, false, false, gen::params_vibrato(), &gen::make_vibrato },
-        { "weight", "Weight", "Filter", "Weight is a very accurate sub-bass boost based on Holt.", 1, "1.0.0", 0.0, false, false, false, gen::params_weight(), &gen::make_weight },
-        { "wider", "Wider", "Stereo", "Wider is Airwindows stereo space shaping.", 1, "1.0.0", 0.0, false, false, false, gen::params_wider(), &gen::make_wider },
-        { "xbandpass", "XBandpass", "XYZ Filters", "XBandpass is a distorted digital EQ, inspired by retro sampler DSP.", 1, "1.0.0", 0.0, false, false, false, gen::params_xbandpass(), &gen::make_xbandpass },
-        { "xhighpass", "XHighpass", "XYZ Filters", "XHighpass is a distorted digital EQ, inspired by retro sampler DSP.", 1, "1.0.0", 0.0, false, false, false, gen::params_xhighpass(), &gen::make_xhighpass },
-        { "xlowpass", "XLowpass", "XYZ Filters", "XLowpass is a distorted digital EQ, inspired by retro sampler DSP.", 1, "1.0.0", 0.0, false, false, false, gen::params_xlowpass(), &gen::make_xlowpass },
-        { "xnotch", "XNotch", "XYZ Filters", "XNotch is a distorted digital EQ, not as glitchy as the others.", 1, "1.0.0", 0.0, false, false, false, gen::params_xnotch(), &gen::make_xnotch },
-        { "xregion", "XRegion", "XYZ Filters", "XRegion is distorted staggered bandpasses, for extreme soundmangling.", 1, "1.0.0", 0.0, false, false, false, gen::params_xregion(), &gen::make_xregion },
-        { "ybandpass", "YBandpass", "XYZ Filters", "YBandpass is soft and smooth to nasty, edgy texture-varying filtering.", 1, "1.0.0", 0.0, false, false, false, gen::params_ybandpass(), &gen::make_ybandpass },
-        { "yhighpass", "YHighpass", "XYZ Filters", "YHighpass is soft and smooth to nasty, edgy texture-varying filtering.", 1, "1.0.0", 0.0, false, false, false, gen::params_yhighpass(), &gen::make_yhighpass },
-        { "ylowpass", "YLowpass", "XYZ Filters", "YLowpass is soft and smooth to nasty, edgy texture-varying filtering.", 1, "1.0.0", 0.0, false, false, false, gen::params_ylowpass(), &gen::make_ylowpass },
-        { "ynotch", "YNotch", "XYZ Filters", "YNotch is soft and smooth to nasty, edgy texture-varying filtering.", 1, "1.0.0", 0.0, false, false, false, gen::params_ynotch(), &gen::make_ynotch },
-        { "zbandpass2", "ZBandpass2", "XYZ Filters", "ZBandpass2 acts more like the Emu e6400 Ultra bandpass in motion, with control smoothing.", 1, "1.0.0", 0.0, false, false, false, gen::params_zbandpass2(), &gen::make_zbandpass2 },
-        { "zhighpass2", "ZHighpass2", "XYZ Filters", "ZHighpass2 acts more like the Emu e6400 Ultra highpass in motion, with control smoothing.", 1, "1.0.0", 0.0, false, false, false, gen::params_zhighpass2(), &gen::make_zhighpass2 },
-        { "zlowpass2", "ZLowpass2", "XYZ Filters", "ZLowpass2 acts more like the Emu e6400 Ultra lowpass in motion, with control smoothing.", 1, "1.0.0", 0.0, false, false, false, gen::params_zlowpass2(), &gen::make_zlowpass2 },
-        { "znotch2", "ZNotch2", "XYZ Filters", "ZNotch2 acts more like the Emu e6400 Ultra phaser in motion, with control smoothing.", 1, "1.0.0", 0.0, false, false, false, gen::params_znotch2(), &gen::make_znotch2 },
-        { "zregion2", "ZRegion2", "XYZ Filters", "ZRegion2 is an Emu e6400 style Airwindows Region filter, with control smoothing.", 1, "1.0.0", 0.0, false, false, false, gen::params_zregion2(), &gen::make_zregion2 },
+        { "acceleration", "Acceleration", "Brightness", "Acceleration is an acceleration limiter that tames edge, leaves brightness.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_acceleration(), &gen::make_acceleration },
+        { "acceleration2", "Acceleration2", "Brightness", "Acceleration2 is Acceleration, better! Updated for high sample rate and more extreme effect.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_acceleration2(), &gen::make_acceleration2 },
+        { "adclip7", "ADClip7", "Clipping", "ADClip7 is the original Airwindows loudness maximizer/ peak control.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_adclip7(), &gen::make_adclip7 },
+        { "adclip8", "ADClip8", "Clipping", "ADClip8 is a stacked-up Airwindows loudenator based on ClipOnly2.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_adclip8(), &gen::make_adclip8 },
+        { "adclip9", "ADClip9", "Clipping", "ADClip9 is the ClipOnly3 version of a loudenator/biggenator.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_adclip9(), &gen::make_adclip9 },
+        { "adt", "ADT", "Ambience", "ADT is a double short delay tap with saturation.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_adt(), &gen::make_adt },
+        { "air", "Air", "Brightness", "Air is a different bright EQ from any other. Requires 44.1K.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_air(), &gen::make_air },
+        { "air2", "Air2", "Brightness", "Air2 is a different bright EQ with silk tone and high sample rate support.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_air2(), &gen::make_air2 },
+        { "air3", "Air3", "Brightness", "Air3 creates a new form of air-band EQ based on Kalman filtering.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_air3(), &gen::make_air3 },
+        { "air4", "Air4", "Brightness", "Air4 extends Air3 with controllable high frequency limiting.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_air4(), &gen::make_air4 },
+        { "angleeq", "AngleEQ", "Filter", "AngleEQ is a strange and colorful EQ.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_angleeq(), &gen::make_angleeq },
+        { "anglefilter", "AngleFilter", "Filter", "AngleFilter is the synth-style extension of AngleEQ.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_anglefilter(), &gen::make_anglefilter },
+        { "apicolypse", "Apicolypse", "Tone Color", "Apicolypse is a re-release of my old API-style color adder, exacly as it was.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_apicolypse(), &gen::make_apicolypse },
+        { "aquickvoiceclip", "AQuickVoiceClip", "Clipping", "AQuickVoiceClip softens headset mic recordings that have been super hard clipped on capture.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_aquickvoiceclip(), &gen::make_aquickvoiceclip },
+        { "atmospherebuss", "AtmosphereBuss", "Consoles", "AtmosphereBuss is Console5 processing with powerful new acoustic distance effects.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_atmospherebuss(), &gen::make_atmospherebuss },
+        { "atmospherechannel", "AtmosphereChannel", "Consoles", "AtmosphereChannel is Console5 processing with powerful new acoustic distance effects.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_atmospherechannel(), &gen::make_atmospherechannel },
+        { "aura", "Aura", "Effects", "Aura is a new kind of resonant lowpass EQ.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_aura(), &gen::make_aura },
+        { "autopan", "AutoPan", "Stereo", "AutoPan is for getting some organic stereo movement into your mix.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_autopan(), &gen::make_autopan },
+        { "average", "Average", "Filter", "Average is a distinctive sort of lowpass filter.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_average(), &gen::make_average },
+        { "avermatrix", "AverMatrix", "Filter", "AverMatrix turns averaging into a full-featured EQ.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_avermatrix(), &gen::make_avermatrix },
+        { "balanced", "Balanced", "Utility", "Balanced lets you run an XLR input into a stereo input, sum it to mono, and use it.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_balanced(), &gen::make_balanced },
+        { "bassamp", "BassAmp", "Amp Sims", "BassAmp is an old plugin with new tweaks, that gives some bass guitar tones.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_bassamp(), &gen::make_bassamp },
+        { "bassdrive", "BassDrive", "Amp Sims", "BassDrive is an old secret weapon, like a kind of bass amp.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_bassdrive(), &gen::make_bassdrive },
+        { "basskit", "BassKit", "Bass", "BassKit is centered bass reinforcement with subs fill. Clean and controllable.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_basskit(), &gen::make_basskit },
+        { "baxandall", "Baxandall", "Filter", "Baxandall is a killer general-purpose EQ.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_baxandall(), &gen::make_baxandall },
+        { "baxandall2", "Baxandall2", "Filter", "Baxandall2 is Baxandall, extended and made more powerful.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_baxandall2(), &gen::make_baxandall2 },
+        { "baxandall3", "Baxandall3", "Filter", "Baxandall3 is for new tone colors.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_baxandall3(), &gen::make_baxandall3 },
+        { "beam", "Beam", "Dithers", "Beam is a wordlength reducer that tries to heighten sonority.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_beam(), &gen::make_beam },
+        { "bezeq", "BezEQ", "Filter", "BezEQ is a strange, alien three-band shelving EQ.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_bezeq(), &gen::make_bezeq },
+        { "bezeq2", "BezEQ2", "Filter", "BezEQ2 is a unique, subtle three-band shelving EQ.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_bezeq2(), &gen::make_bezeq2 },
+        { "bezeq3", "BezEQ3", "Filter", "BezEQ3 refines the concept into four vivid, unified bands.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_bezeq3(), &gen::make_bezeq3 },
+        { "bezeq4", "BezEQ4", "Unclassified", "", 1, "1.0.0", 0.0, false, false, false, false, gen::params_bezeq4(), &gen::make_bezeq4 },
+        { "bezicomp", "BeziComp", "Dynamics", "BeziComp is a radical compressor that eliminates aliasing!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_bezicomp(), &gen::make_bezicomp },
+        { "bigamp", "BigAmp", "Amp Sims", "BigAmp is a very flexible amplike thing with a taste for the bizarre.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_bigamp(), &gen::make_bigamp },
+        { "biquad", "Biquad", "Biquads", "Biquad is the Airwindows implementation of a biquad filter.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_biquad(), &gen::make_biquad },
+        { "biquad2", "Biquad2", "Biquads", "Biquad2 is the Airwindows biquad filter that's more sweepable and synthy.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_biquad2(), &gen::make_biquad2 },
+        { "biquaddouble", "BiquadDouble", "Biquads", "BiquadDouble is a handy Airwindows cascaded biquad filter: steeper roll-off before resonance.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_biquaddouble(), &gen::make_biquaddouble },
+        { "biquadhilo", "BiquadHiLo", "Biquads", "BiquadHiLo is the highpass and lowpass filter in ConsoleX.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_biquadhilo(), &gen::make_biquadhilo },
+        { "biquadnonlin", "BiquadNonLin", "Biquads", "BiquadNonLin is Capacitor2, but for biquad filtering.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_biquadnonlin(), &gen::make_biquadnonlin },
+        { "biquadonehalf", "BiquadOneHalf", "Biquads", "BiquadOneHalf is an interleaved biquad filter like Biquad.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_biquadonehalf(), &gen::make_biquadonehalf },
+        { "biquadplus", "BiquadPlus", "Biquads", "BiquadPlus is Biquad plus zipper noise suppression! For twiddling the controls.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_biquadplus(), &gen::make_biquadplus },
+        { "biquadstack", "BiquadStack", "Biquads", "BiquadStack is a way of making a parametric EQ out of stacked biquad filters.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_biquadstack(), &gen::make_biquadstack },
+        { "biquadtriple", "BiquadTriple", "Biquads", "BiquadTriple is a handy Airwindows cascaded biquad filter: steeper roll-off before resonance.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_biquadtriple(), &gen::make_biquadtriple },
+        { "bitdualpan", "BitDualPan", "Utility", "BitDualPan is dual pan that's almost BitShiftGain.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_bitdualpan(), &gen::make_bitdualpan },
+        { "bite", "Bite", "Lo-Fi", "Bite is an unusual edge-maker.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_bite(), &gen::make_bite },
+        { "bitglitter", "BitGlitter", "Lo-Fi", "BitGlitter is an old-sampler style digital lo-fi plugin.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_bitglitter(), &gen::make_bitglitter },
+        { "bitshiftgain", "BitShiftGain", "Utility", "BitShiftGain is the âOne Weird Trickâ perfect boost/pad, but in 6db increments ONLY.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_bitshiftgain(), &gen::make_bitshiftgain },
+        { "bitshiftpan", "BitShiftPan", "Utility", "BitShiftPan gives you a gain and a pan control that are ONLY done using bit shifts.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_bitshiftpan(), &gen::make_bitshiftpan },
+        { "blockparty", "BlockParty", "Dynamics", "BlockParty is like a moderately saturated analog limiter.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_blockparty(), &gen::make_blockparty },
+        { "brassrider", "BrassRider", "Dynamics", "BrassRider is One Weird Trick for drum overheads in metal!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_brassrider(), &gen::make_brassrider },
+        { "brightambience", "BrightAmbience", "Ambience", "BrightAmbience is a plugin for very bright gated reverbs.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_brightambience(), &gen::make_brightambience },
+        { "brightambience2", "BrightAmbience2", "Ambience", "BrightAmbience2 is more BrightAmbience with better tone and more slapbacky effects.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_brightambience2(), &gen::make_brightambience2 },
+        { "brightambience3", "BrightAmbience3", "Ambience", "BrightAmbience3 adds undersampling for high sample rates, and better feedback.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_brightambience3(), &gen::make_brightambience3 },
+        { "buildatpdf", "BuildATPDF", "Dithers", "BuildATPDF is a dither-making toolkit.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_buildatpdf(), &gen::make_buildatpdf },
+        { "busscolors4", "BussColors4", "Tone Color", "BussColors4 is the Airwindows console emulations, now working up to 192K correctly.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_busscolors4(), &gen::make_busscolors4 },
+        { "buttercomp", "ButterComp", "Dynamics", "ButterComp is my softest, smoothest compressor.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_buttercomp(), &gen::make_buttercomp },
+        { "buttercomp2", "ButterComp2", "Dynamics", "ButterComp2 is improved ButterComp with an output control and sound upgrades.", 1, "1.0.0", 0.0, false, true, false, false, gen::params_buttercomp2(), &gen::make_buttercomp2 },
+        { "c5rawbuss", "C5RawBuss", "Consoles", "C5RawBuss is the original Console5 algorithm, with optional very gentle DC suppression.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_c5rawbuss(), &gen::make_c5rawbuss },
+        { "c5rawchannel", "C5RawChannel", "Consoles", "C5RawChannel is the original Console5 algorithm, with optional very gentle DC suppression.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_c5rawchannel(), &gen::make_c5rawchannel },
+        { "cabs", "Cabs", "Amp Sims", "Cabs is an Airwindows guitar speaker cabinet simulator.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_cabs(), &gen::make_cabs },
+        { "cabs2", "Cabs2", "Amp Sims", "Cabs2 uses really phasey filters to be a speaker cabinet simulator.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_cabs2(), &gen::make_cabs2 },
+        { "calibre", "Calibre", "Tone Color", "Calibre is a re-release of another old Character plugin.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_calibre(), &gen::make_calibre },
+        { "cans", "Cans", "Utility", "Cans is a room simulator for headphone mixers.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_cans(), &gen::make_cans },
+        { "cansaw", "CansAW", "Utility", "CansAW is Chris's Airwindows room, in a plugin, for headphone mixers.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_cansaw(), &gen::make_cansaw },
+        { "capacitor", "Capacitor", "Filter", "Capacitor is a lowpass/highpass filter of a new type.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_capacitor(), &gen::make_capacitor },
+        { "capacitor2", "Capacitor2", "Filter", "Capacitor2 is Capacitor with extra analog modeling and mojo.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_capacitor2(), &gen::make_capacitor2 },
+        { "chamber", "Chamber", "Reverb", "Chamber is a feedforward reverb based on the golden ratio.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_chamber(), &gen::make_chamber },
+        { "chamber2", "Chamber2", "Reverb", "Chamber2 is a feedforward reverb, a blur delay, and a glitch topping!", 1, "1.0.0", 10.0, false, false, false, false, gen::params_chamber2(), &gen::make_chamber2 },
+        { "channel4", "Channel4", "Tone Color", "Channel4 is a tone coloring plugin that gives more of an analog feel.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_channel4(), &gen::make_channel4 },
+        { "channel5", "Channel5", "Tone Color", "Channel5 is Channel for 2018, with new subtleties.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_channel5(), &gen::make_channel5 },
+        { "channel6", "Channel6", "Tone Color", "Channel6 uses the Spiral algorithm.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_channel6(), &gen::make_channel6 },
+        { "channel7", "Channel7", "Tone Color", "Channel7 improves slew clipping and lets you blend Channel 6 and 5.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_channel7(), &gen::make_channel7 },
+        { "channel8", "Channel8", "Tone Color", "Channel8 is Channel7 with updates from Capacitor2 and Slew3. More and better of what Channel is.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_channel8(), &gen::make_channel8 },
+        { "channel9", "Channel9", "Tone Color", "Channel9 is Channel8 with ultrasonic filtering, and new Teac and Mackie 'low end' settings.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_channel9(), &gen::make_channel9 },
+        { "channelx", "ChannelX", "Tone Color", "ChannelX translates Channel9 into a profusion of wild experiments.", 2, "1.0.0", 0.0, false, false, true, false, gen::params_channelx(), &gen::make_channelx },
+        { "chimeydeluxe", "ChimeyDeluxe", "Amp Sims", "ChimeyDeluxe is a very flexible compressed DI conditioner.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_chimeydeluxe(), &gen::make_chimeydeluxe },
+        { "chimeyguitar", "ChimeyGuitar", "Amp Sims", "ChimeyGuitar is a supremely compressible instrument amp.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_chimeyguitar(), &gen::make_chimeyguitar },
+        { "chimeyguitar2", "ChimeyGuitar2", "Amp Sims", "ChimeyGuitar2 is a wilder ChimeyGuitar.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_chimeyguitar2(), &gen::make_chimeyguitar2 },
+        { "chorus", "Chorus", "Ambience", "Chorus is a mono chorus, also works as a vibrato.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_chorus(), &gen::make_chorus },
+        { "chorusensemble", "ChorusEnsemble", "Ambience", "ChorusEnsemble is a more complex, multi-tap mono chorus.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_chorusensemble(), &gen::make_chorusensemble },
+        { "chromeoxide", "ChromeOxide", "Lo-Fi", "ChromeOxide is an alternate path to vibey old tape sonics.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_chromeoxide(), &gen::make_chromeoxide },
+        { "cider", "Cider", "Tone Color", "Cider is a re-release of another old Character plugin.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_cider(), &gen::make_cider },
+        { "clearcoat", "ClearCoat", "Ambience", "ClearCoat is an array of bright ambience reverbs.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_clearcoat(), &gen::make_clearcoat },
+        { "cliponly2", "ClipOnly2", "Clipping", "ClipOnly2 suppresses the brightness of digital clipping without affecting unclipped samples, at any sample rate.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_cliponly2(), &gen::make_cliponly2 },
+        { "cliponly3", "ClipOnly3", "Clipping", "ClipOnly3 is just plain stinkin' loud.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_cliponly3(), &gen::make_cliponly3 },
+        { "clipsoftly", "ClipSoftly", "Clipping", "ClipSoftly is ClipOnly2 but as a softclipper: a very handy building block.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_clipsoftly(), &gen::make_clipsoftly },
+        { "cloudcoat", "CloudCoat", "Effects", "CloudCoat is an array of blur effects with a taste for evil.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_cloudcoat(), &gen::make_cloudcoat },
+        { "coils", "Coils", "Subtlety", "Coils models the types of distortion you'll find in transformers.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_coils(), &gen::make_coils },
+        { "coils2", "Coils2", "Subtlety", "Coils2 is a transformer overdrive emulator.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_coils2(), &gen::make_coils2 },
+        { "cojones", "Cojones", "Lo-Fi", "Cojones is a new kind of distorty.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_cojones(), &gen::make_cojones },
+        { "compresaturator", "Compresaturator", "Dynamics", "Compresaturator fades between compressing and soft clipping.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_compresaturator(), &gen::make_compresaturator },
+        { "console0buss", "Console0Buss", "Consoles", "Console0Buss is a radical, minimalist Console system.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console0buss(), &gen::make_console0buss },
+        { "console0channel", "Console0Channel", "Consoles", "Console0Channel is a radical, minimalist Console system.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console0channel(), &gen::make_console0channel },
+        { "console4buss", "Console4Buss", "Consoles", "Console4Buss is the original Airwindows ITB mixing system, a two-plugin mix buss replacement for DAWs.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console4buss(), &gen::make_console4buss },
+        { "console4channel", "Console4Channel", "Consoles", "Console4Channel is the original Airwindows ITB mixing system, a two-plugin mix buss replacement for DAWs.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console4channel(), &gen::make_console4channel },
+        { "console5buss", "Console5Buss", "Consoles", "Console5Buss is a richer, warmer Console system.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console5buss(), &gen::make_console5buss },
+        { "console5channel", "Console5Channel", "Consoles", "Console5Channel is a richer, warmer Console system.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console5channel(), &gen::make_console5channel },
+        { "console5darkch", "Console5DarkCh", "Consoles", "Console5DarkCh is a richer, warmer Console system.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console5darkch(), &gen::make_console5darkch },
+        { "console6buss", "Console6Buss", "Consoles", "Console6Buss is a new more intense Console that peaks at lower dB.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console6buss(), &gen::make_console6buss },
+        { "console6channel", "Console6Channel", "Consoles", "Console6Channel is a new more intense Console that peaks at lower dB.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console6channel(), &gen::make_console6channel },
+        { "console7buss", "Console7Buss", "Consoles", "Console7Buss adds anti-alias filtering and special saturation curves.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console7buss(), &gen::make_console7buss },
+        { "console7cascade", "Console7Cascade", "Consoles", "Console7Cascade is a drop-in replacement for Console7Channel that allows for MUCH higher gain.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console7cascade(), &gen::make_console7cascade },
+        { "console7channel", "Console7Channel", "Consoles", "Console7Channel adds anti-alias filtering and special saturation curves.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console7channel(), &gen::make_console7channel },
+        { "console7crunch", "Console7Crunch", "Consoles", "Console7Crunch shows you Cascade but with its EQ weighted for more edge and grit.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console7crunch(), &gen::make_console7crunch },
+        { "console8busshype", "Console8BussHype", "Consoles", "Console8BussHype swaps out just the In section of Console8BussIn, for a brighter sparklier circuit.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console8busshype(), &gen::make_console8busshype },
+        { "console8bussin", "Console8BussIn", "Consoles", "Console8BussIn moves to a channel/submix/buss topology and adds analog simulation.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console8bussin(), &gen::make_console8bussin },
+        { "console8bussout", "Console8BussOut", "Consoles", "Console8BussOut moves to a channel/submix/buss topology and adds analog simulation.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console8bussout(), &gen::make_console8bussout },
+        { "console8channelhype", "Console8ChannelHype", "Consoles", "Console8ChannelHype swaps out just the In section of Console8ChannelIn, for a brighter sparklier circuit.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console8channelhype(), &gen::make_console8channelhype },
+        { "console8channelin", "Console8ChannelIn", "Consoles", "Console8ChannelIn moves to a channel/submix/buss topology and adds analog simulation.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console8channelin(), &gen::make_console8channelin },
+        { "console8channelout", "Console8ChannelOut", "Consoles", "Console8ChannelOut moves to a channel/submix/buss topology and adds analog simulation.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console8channelout(), &gen::make_console8channelout },
+        { "console8litebuss", "Console8LiteBuss", "Consoles", "Console8LiteBuss is simplified Console8, working with just a single mix buss.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console8litebuss(), &gen::make_console8litebuss },
+        { "console8litechannel", "Console8LiteChannel", "Consoles", "Console8LiteChannel is simplified Console8, working with just a single mix buss.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console8litechannel(), &gen::make_console8litechannel },
+        { "console8subhype", "Console8SubHype", "Consoles", "Console8SubHype swaps out just the In section of Console8SubIn, for a brighter sparklier circuit.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console8subhype(), &gen::make_console8subhype },
+        { "console8subin", "Console8SubIn", "Consoles", "Console8SubIn moves to a channel/submix/buss topology and adds analog simulation.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console8subin(), &gen::make_console8subin },
+        { "console8subout", "Console8SubOut", "Consoles", "Console8SubOut moves to a channel/submix/buss topology and adds analog simulation.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console8subout(), &gen::make_console8subout },
+        { "console9buss", "Console9Buss", "Consoles", "Console9Buss is just the summing from ConsoleX.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console9buss(), &gen::make_console9buss },
+        { "console9channel", "Console9Channel", "Consoles", "Console9Channel is just the summing from ConsoleX.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_console9channel(), &gen::make_console9channel },
+        { "consolehbuss", "ConsoleHBuss", "Unclassified", "", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolehbuss(), &gen::make_consolehbuss },
+        { "consolehchannel", "ConsoleHChannel", "Unclassified", "", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolehchannel(), &gen::make_consolehchannel },
+        { "consolehpre", "ConsoleHPre", "Unclassified", "", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolehpre(), &gen::make_consolehpre },
+        { "consolelabuss", "ConsoleLABuss", "Consoles", "ConsoleLABuss is the Airwindows take on the Quad Eight console.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolelabuss(), &gen::make_consolelabuss },
+        { "consolelachannel", "ConsoleLAChannel", "Consoles", "ConsoleLAChannel is the Airwindows take on the Quad Eight console.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolelachannel(), &gen::make_consolelachannel },
+        { "consolemcbuss", "ConsoleMCBuss", "Consoles", "ConsoleMCBuss is the initial, bright take on the MCI console.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolemcbuss(), &gen::make_consolemcbuss },
+        { "consolemcchannel", "ConsoleMCChannel", "Consoles", "ConsoleMCChannel is the initial, bright take on the MCI console.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolemcchannel(), &gen::make_consolemcchannel },
+        { "consolemdbuss", "ConsoleMDBuss", "Consoles", "ConsoleMDBuss goes for the tone shaping of the classic MCI console!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolemdbuss(), &gen::make_consolemdbuss },
+        { "consolemdchannel", "ConsoleMDChannel", "Consoles", "ConsoleMDChannel goes for the tone shaping of the classic MCI console!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolemdchannel(), &gen::make_consolemdchannel },
+        { "consolex2buss", "ConsoleX2Buss", "Unclassified", "", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolex2buss(), &gen::make_consolex2buss },
+        { "consolex2channel", "ConsoleX2Channel", "Unclassified", "", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolex2channel(), &gen::make_consolex2channel },
+        { "consolex2pre", "ConsoleX2Pre", "Unclassified", "", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolex2pre(), &gen::make_consolex2pre },
+        { "consolex3", "ConsoleX3", "Unclassified", "", 1, "1.0.0", 0.0, false, false, true, false, gen::params_consolex3(), &gen::make_consolex3 },
+        { "consolexbuss", "ConsoleXBuss", "Unclassified", "", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolexbuss(), &gen::make_consolexbuss },
+        { "consolexchannel", "ConsoleXChannel", "Unclassified", "", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolexchannel(), &gen::make_consolexchannel },
+        { "consolexpre", "ConsoleXPre", "Unclassified", "", 1, "1.0.0", 0.0, false, false, false, false, gen::params_consolexpre(), &gen::make_consolexpre },
+        { "contenthided", "ContentHideD", "Utility", "ContentHideD mutes audio except for brief glimpses.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_contenthided(), &gen::make_contenthided },
+        { "creamcoat", "CreamCoat", "Reverb", "CreamCoat is a swiss army knife reverb with soft undersampling.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_creamcoat(), &gen::make_creamcoat },
+        { "creature", "Creature", "Saturation", "Creature is a soft slew saturator, a new class of noisechanger.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_creature(), &gen::make_creature },
+        { "crickbass", "CrickBass", "Amp Sims", "CrickBass is a flexible but aggressive bass tone for dual pickups.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_crickbass(), &gen::make_crickbass },
+        { "crunchcoat", "CrunchCoat", "Reverb", "CrunchCoat is a cursed retro digital reverb!", 1, "1.0.0", 10.0, false, false, false, false, gen::params_crunchcoat(), &gen::make_crunchcoat },
+        { "crunchygroovewear", "CrunchyGrooveWear", "Lo-Fi", "CrunchyGrooveWear is a version of GrooveWear for more edge and distortion.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_crunchygroovewear(), &gen::make_crunchygroovewear },
+        { "crystal", "Crystal", "Tone Color", "Crystal is a tone shaper and buss soft-clipper.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_crystal(), &gen::make_crystal },
+        { "cstrip", "CStrip", "Unclassified", "CStrip is an Airwindows channel strip.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_cstrip(), &gen::make_cstrip },
+        { "cstrip2", "CStrip2", "Filter", "CStrip2 refines and optimizes CStrip, by request!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_cstrip2(), &gen::make_cstrip2 },
+        { "curve", "curve", "Dynamics", "curve is the simplest, purest form of Recurve with no extra boosts.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_curve(), &gen::make_curve },
+        { "dark", "Dark", "Dithers", "Dark is a wordlength reducer that gives your music a blacker backdrop.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_dark(), &gen::make_dark },
+        { "darknoise", "DarkNoise", "Noise", "DarkNoise is an alternative method for producing bassier noise directly. Sound design stuff.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_darknoise(), &gen::make_darknoise },
+        { "dattorro", "Dattorro", "Filter", "Dattorro is the resonant lowpass filter out of Donut.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dattorro(), &gen::make_dattorro },
+        { "dcvoltage", "DCVoltage", "Utility", "DCVoltage is literally a DC control voltage, in a plugin.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dcvoltage(), &gen::make_dcvoltage },
+        { "debess", "DeBess", "Brightness", "DeBess is an improved DeEss, with perfect rejection of non-ess audio.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_debess(), &gen::make_debess },
+        { "debez", "DeBez", "Lo-Fi", "DeBez gives you retro sampley textures!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_debez(), &gen::make_debez },
+        { "deckwrecka", "Deckwrecka", "Lo-Fi", "Deckwrecka fattens and dirties up beats.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_deckwrecka(), &gen::make_deckwrecka },
+        { "decrackle", "DeCrackle", "Utility", "DeCrackle isolates clicks and vinyl crackles to remove them.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_decrackle(), &gen::make_decrackle },
+        { "deess", "DeEss", "Brightness", "DeEss is the best de-essing solution there is. A go-to utility plugin.", 1, "1.0.0", 0.0, false, true, false, false, gen::params_deess(), &gen::make_deess },
+        { "dehiss", "DeHiss", "Brightness", "DeHiss tries to suppress background hiss, like a hiss gate.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dehiss(), &gen::make_dehiss },
+        { "denoise", "DeNoise", "Noise", "DeNoise can work as a multiband gate and as a wild effect.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_denoise(), &gen::make_denoise },
+        { "density", "Density", "Distortion", "Density is a Swiss Army Knife of saturation/antisaturation.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_density(), &gen::make_density },
+        { "density2", "Density2", "Distortion", "Density2 is a different color for Density, some old code I had that people wanted.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_density2(), &gen::make_density2 },
+        { "density3", "Density3", "Distortion", "Density3 refines Density to keep up with recent developments.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_density3(), &gen::make_density3 },
+        { "derez", "DeRez", "Lo-Fi", "DeRez is an analog-style bit and sample rate crusher with continuous adjustments.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_derez(), &gen::make_derez },
+        { "derez2", "DeRez2", "Lo-Fi", "DeRez2 brings more authentic retro-digital hardware tones.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_derez2(), &gen::make_derez2 },
+        { "derez3", "DeRez3", "Lo-Fi", "DeRez3 reinvents retro digital tones.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_derez3(), &gen::make_derez3 },
+        { "derez4", "DeRez4", "Lo-Fi", "DeRez4 perfects retro digital tones.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_derez4(), &gen::make_derez4 },
+        { "derez5", "DeRez5", "Lo-Fi", "DeRez5 adds new forms of derezzing.", 1, "1.0.0", 0.0, false, false, true, false, gen::params_derez5(), &gen::make_derez5 },
+        { "desk", "Desk", "Subtlety", "Desk is classic Airwindows subtle analog modeling.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_desk(), &gen::make_desk },
+        { "desk4", "Desk4", "Saturation", "Desk4 is distinctive analog coloration (a tuneable version of the control-less Desk plugins)", 1, "1.0.0", 0.0, false, false, false, false, gen::params_desk4(), &gen::make_desk4 },
+        { "digitalblack", "DigitalBlack", "Dynamics", "DigitalBlack is a quick, staccato gate.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_digitalblack(), &gen::make_digitalblack },
+        { "dirt", "Dirt", "Distortion", "Dirt is a soft-clip distortion in the spirit of Edge.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dirt(), &gen::make_dirt },
+        { "discontapeity", "Discontapeity", "Subtlety", "Discontapeity combines air modeling with tape-style overdrive.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_discontapeity(), &gen::make_discontapeity },
+        { "discontinuity", "Discontinuity", "Subtlety", "Discontinuity models air under intense loudness.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_discontinuity(), &gen::make_discontinuity },
+        { "disintegrate", "Disintegrate", "Effects", "Disintegrate is Discontinuity on steroids.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_disintegrate(), &gen::make_disintegrate },
+        { "distance", "Distance", "Filter", "Distance is a sound design or reverb far-away-izer.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_distance(), &gen::make_distance },
+        { "distance2", "Distance2", "Filter", "Distance2 is a versatile space shaper for creating depth.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_distance2(), &gen::make_distance2 },
+        { "distance3", "Distance3", "Filter", "Distance3 combines the best parts of Distance and Discontinuity.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_distance3(), &gen::make_distance3 },
+        { "distortion", "Distortion", "Distortion", "Distortion is a slightly dark analog-style distortion with several presets, like Focus.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_distortion(), &gen::make_distortion },
+        { "ditherbox", "Ditherbox", "Dithers", "Ditherbox is a switchable selection of dithers in 16 and 24 bit, plus monitoring tools.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_ditherbox(), &gen::make_ditherbox },
+        { "ditherfloat", "DitherFloat", "Dithers", "DitherFloat is a demo of floating point truncation: can also dither to 32 bit float output.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_ditherfloat(), &gen::make_ditherfloat },
+        { "dithermediskers", "DitherMeDiskers", "Dithers", "DitherMeDiskers is dark deep 'dither' in a 16 bit version.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_dithermediskers(), &gen::make_dithermediskers },
+        { "dithermetimbers", "DitherMeTimbers", "Dithers", "DitherMeTimbers is dark deep 'dither' in a 24 bit version.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_dithermetimbers(), &gen::make_dithermetimbers },
+        { "donut", "Donut", "Filter", "Donut is in memory of Dilla.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_donut(), &gen::make_donut },
+        { "doublelay", "Doublelay", "Ambience", "Doublelay is StereoDoubler with independent delays and feedback.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_doublelay(), &gen::make_doublelay },
+        { "doublepaul", "DoublePaul", "Dithers", "DoublePaul is like PaulDither but more so.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_doublepaul(), &gen::make_doublepaul },
+        { "drive", "Drive", "Distortion", "Drive is the angry distortion!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_drive(), &gen::make_drive },
+        { "drumslam", "DrumSlam", "Dynamics", "DrumSlam is a heavy-processing tape modeler.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_drumslam(), &gen::make_drumslam },
+        { "dubcenter", "DubCenter", "Bass", "DubCenter is a version of DubSub where the bass reinforcement is purely mono.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dubcenter(), &gen::make_dubcenter },
+        { "dubly", "Dubly", "Effects", "Dubly is a retro vibe and atmosphere maker.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dubly(), &gen::make_dubly },
+        { "dubly2", "Dubly2", "Effects", "Dubly2 is a key part of seventies sonics!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dubly2(), &gen::make_dubly2 },
+        { "dubly3", "Dubly3", "Effects", "Dubly3 refines and transforms the Dubly sound.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dubly3(), &gen::make_dubly3 },
+        { "dubplate", "DubPlate", "Utility", "DubPlate is ruthless dubplate mastering for electronic music.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dubplate(), &gen::make_dubplate },
+        { "dubplate2", "DubPlate2", "Utility", "DubPlate2 is like an ITB mastering house for electronic music.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dubplate2(), &gen::make_dubplate2 },
+        { "dubsub", "DubSub", "Bass", "DubSub is a fully featured bass doctor.", 1, "1.0.0", 0.0, false, true, false, false, gen::params_dubsub(), &gen::make_dubsub },
+        { "dubsub2", "DubSub2", "Bass", "DubSub2 is the essence of the Airwindows head bump.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dubsub2(), &gen::make_dubsub2 },
+        { "dustbunny", "DustBunny", "Lo-Fi", "DustBunny is unpredictable distorty noise, like dust wedged under your turntable needle.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dustbunny(), &gen::make_dustbunny },
+        { "dynamics", "Dynamics", "Dynamics", "Dynamics is a combination compressor gate.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dynamics(), &gen::make_dynamics },
+        { "dynamics2", "Dynamics2", "Dynamics", "Dynamics2 is the compressor gate for new Console plugins!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dynamics2(), &gen::make_dynamics2 },
+        { "dynamics3", "Dynamics3", "Dynamics", "Dynamics3 morphs between vari-mu and expander!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dynamics3(), &gen::make_dynamics3 },
+        { "dyno", "Dyno", "Saturation", "Dyno is a lot like Mojo, but for intensity instead of loudness.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_dyno(), &gen::make_dyno },
+        { "echojam", "Echojam", "Ambience", "Echojam is an echo effect that is secretly a reverb.", 1, "1.0.0", 10.0, false, false, true, false, gen::params_echojam(), &gen::make_echojam },
+        { "edge", "Edge", "Distortion", "Edge is a seven-stage distortion with Hypersonic filtering and tone shaping controls.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_edge(), &gen::make_edge },
+        { "edisdim", "EdIsDim", "Utility", "EdIsDim is mid/side conversion utility plugins.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_edisdim(), &gen::make_edisdim },
+        { "elation", "Elation", "Tone Color", "Elation is a re-release of another old Character plugin.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_elation(), &gen::make_elation },
+        { "electrohat", "ElectroHat", "Noise", "ElectroHat is a hi-hat tone generator that uses the original sound as a control voltage.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_electrohat(), &gen::make_electrohat },
+        { "elliptical", "Elliptical", "Bass", "Elliptical highpasses the side channel.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_elliptical(), &gen::make_elliptical },
+        { "energy", "Energy", "Effects", "Energy is electrifying fixed-frequency treble boosts.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_energy(), &gen::make_energy },
+        { "energy2", "Energy2", "Effects", "Energy2 is electrifying fixed-frequency treble boosts for high sample rate.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_energy2(), &gen::make_energy2 },
+        { "ensemble", "Ensemble", "Ambience", "Ensemble is a weird flangey little modulation effect.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_ensemble(), &gen::make_ensemble },
+        { "eq", "EQ", "Filter", "EQ is just the EQ parts of CStrip.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_eq(), &gen::make_eq },
+        { "everyconsole", "EveryConsole", "Consoles", "EveryConsole is mix-and-match Airwindows Console.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_everyconsole(), &gen::make_everyconsole },
+        { "everyslew", "EverySlew", "Brightness", "EverySlew is a wide variety of unique sound processing tools.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_everyslew(), &gen::make_everyslew },
+        { "everytrim", "EveryTrim", "Utility", "EveryTrim is Left/Right, Mid/Side, and Master in one plugin.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_everytrim(), &gen::make_everytrim },
+        { "exciter", "Exciter", "Effects", "Exciter is an Aural Exciter plugin that can be both subtle and extreme.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_exciter(), &gen::make_exciter },
+        { "facet", "Facet", "Effects", "Facet is a new kind of hard clip that adds two sharp corners into the wave.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_facet(), &gen::make_facet },
+        { "fastdistance", "FastDistance", "Filter", "FastDistance is a sort of ultra-efficient lowpass filter.", 1, "1.0.0", 0.0, false, false, true, false, gen::params_fastdistance(), &gen::make_fastdistance },
+        { "fastdistance2", "FastDistance2", "Unclassified", "", 1, "1.0.0", 0.0, false, false, true, false, gen::params_fastdistance2(), &gen::make_fastdistance2 },
+        { "fateq", "FatEQ", "Filter", "FatEQ balances bands only with density.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_fateq(), &gen::make_fateq },
+        { "fathomfive", "FathomFive", "Bass", "FathomFive is a way of supplementing extreme bass thatâs not just EQ.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_fathomfive(), &gen::make_fathomfive },
+        { "finalclip", "FinalClip", "Clipping", "FinalClip is one stage of ADClip8 set up to clip +6dB for Final Cut Pro.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_finalclip(), &gen::make_finalclip },
+        { "fireamp", "FireAmp", "Amp Sims", "FireAmp is a bright, loud, tubey amp sim for leads and dirt guitar.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_fireamp(), &gen::make_fireamp },
+        { "flipity", "Flipity", "Utility", "Flipity is a channel phase flipper/swapper utility.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_flipity(), &gen::make_flipity },
+        { "floor", "Floor", "Bass", "Floor is fake bottom octave for fun and profit!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_floor(), &gen::make_floor },
+        { "flutter", "Flutter", "Lo-Fi", "Flutter is the flutter from ToTape6, standalone.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_flutter(), &gen::make_flutter },
+        { "flutter2", "Flutter2", "Lo-Fi", "Flutter2 is the flutter from ToTape7, standalone.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_flutter2(), &gen::make_flutter2 },
+        { "focus", "Focus", "Saturation", "Focus brings out clarity by distorting. Aggressive, subtle, flexible.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_focus(), &gen::make_focus },
+        { "fracture", "Fracture", "Effects", "Fracture is a frequency multiplier/waveshaper with a soft disruption to the sound.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_fracture(), &gen::make_fracture },
+        { "fracture2", "Fracture2", "Effects", "Fracture2 is a wavefolder that allows more extreme disruption.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_fracture2(), &gen::make_fracture2 },
+        { "fromtape", "FromTape", "Tape", "FromTape is a minimalist, cleaner analog tape emulation.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_fromtape(), &gen::make_fromtape },
+        { "galactic", "Galactic", "Reverb", "Galactic is a super-reverb designed specially for pads and space ambient.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_galactic(), &gen::make_galactic },
+        { "galactic2", "Galactic2", "Reverb", "Galactic2 is a super-reverb REdesigned specially for pads and space ambient.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_galactic2(), &gen::make_galactic2 },
+        { "galactic3", "Galactic3", "Reverb", "Galactic3 is exactly Galactic again, but with better undersampling.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_galactic3(), &gen::make_galactic3 },
+        { "galacticvibe", "GalacticVibe", "Effects", "GalacticVibe is the stereo vibrato from the original Galactic reverb.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_galacticvibe(), &gen::make_galacticvibe },
+        { "gatelope", "Gatelope", "Dynamics", "Gatelope is a special gate that applies filters.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_gatelope(), &gen::make_gatelope },
+        { "glitchshifter", "GlitchShifter", "Effects", "GlitchShifter is a really gnarly, raw-sounding pitch shifter with a dose of insanity!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_glitchshifter(), &gen::make_glitchshifter },
+        { "goldenslew", "GoldenSlew", "Brightness", "GoldenSlew is a multistage slew clipper based on the Golden Ratio.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_goldenslew(), &gen::make_goldenslew },
+        { "golem", "Golem", "Utility", "Golem lets you blend a stereo track of two mics on an amp.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_golem(), &gen::make_golem },
+        { "grindamp", "GrindAmp", "Amp Sims", "GrindAmp is a heavier amp sim for many purposes.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_grindamp(), &gen::make_grindamp },
+        { "gringer", "Gringer", "Effects", "Gringer is a full-wave rectifier plugin, like a Green Ringer guitar effect.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_gringer(), &gen::make_gringer },
+        { "groovewear", "GrooveWear", "Lo-Fi", "GrooveWear is for scrubbing highs off mechanically like a stylus would.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_groovewear(), &gen::make_groovewear },
+        { "guitarconditioner", "GuitarConditioner", "Effects", "GuitarConditioner is like a Tube Screamer voicing without the squishiness and indistinctness.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_guitarconditioner(), &gen::make_guitarconditioner },
+        { "hardvacuum", "HardVacuum", "Distortion", "HardVacuum is tube style saturation effects.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_hardvacuum(), &gen::make_hardvacuum },
+        { "hermepass", "Hermepass", "Bass", "Hermepass is a mastering highpass to set by ear only.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_hermepass(), &gen::make_hermepass },
+        { "hermetrim", "HermeTrim", "Utility", "HermeTrim is Very Fine Adjustments, otherwise just like EveryTrim.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_hermetrim(), &gen::make_hermetrim },
+        { "highglossdither", "HighGlossDither", "Dithers", "HighGlossDither is a hybrid between shiny dither and truncation! Unnatural science experiment.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_highglossdither(), &gen::make_highglossdither },
+        { "highimpact", "HighImpact", "Distortion", "HighImpact is distorted grit and punch without fatness.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_highimpact(), &gen::make_highimpact },
+        { "highpass", "Highpass", "Filter", "Highpass is a time warp, for retro midrangey sounds.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_highpass(), &gen::make_highpass },
+        { "highpass2", "Highpass2", "Filter", "Highpass2 is an unusual-sounding variable-slope highpass filter.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_highpass2(), &gen::make_highpass2 },
+        { "hipcrush", "HipCrush", "Lo-Fi", "HipCrush is the de-rez section for ConsoleH.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_hipcrush(), &gen::make_hipcrush },
+        { "holt", "Holt", "Filter", "Holt is a synth-like resonant lowpass filter focussed on bass frequencies.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_holt(), &gen::make_holt },
+        { "holt2", "Holt2", "Filter", "Holt2 is a bass-cab-like resonant lowpass filter.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_holt2(), &gen::make_holt2 },
+        { "hombre", "Hombre", "Ambience", "Hombre is atmosphere and texture (through very short delays).", 1, "1.0.0", 10.0, false, false, false, false, gen::params_hombre(), &gen::make_hombre },
+        { "huge", "Huge", "Saturation", "Huge is a dirty, dirty loudenator.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_huge(), &gen::make_huge },
+        { "hull", "Hull", "Filter", "Hull is an alternate form of highpass/lowpass filter.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_hull(), &gen::make_hull },
+        { "hull2", "Hull2", "Filter", "Hull2 is a very clear three-band EQ.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_hull2(), &gen::make_hull2 },
+        { "hype", "Hype", "Subtlety", "Hype is a treble softening experiment gone strangely awry :)", 1, "1.0.0", 0.0, false, false, false, false, gen::params_hype(), &gen::make_hype },
+        { "hypersoft", "Hypersoft", "Saturation", "Hypersoft is a more extreme form of soft-clipper.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_hypersoft(), &gen::make_hypersoft },
+        { "hypersonic", "Hypersonic", "Brightness", "Hypersonic is Ultrasonic, but steeper and higher cutoff.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_hypersonic(), &gen::make_hypersonic },
+        { "hypersonx", "HypersonX", "Brightness", "HypersonX is like UltrasonX but with seven stages instead of five.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_hypersonx(), &gen::make_hypersonx },
+        { "infinity", "Infinity", "Reverb", "Infinity is a MatrixVerb specifically designed to sustain and layer sounds forever.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_infinity(), &gen::make_infinity },
+        { "infinity2", "Infinity2", "Reverb", "Infinity2 expands Infinity with more tone shaping and a much-requested kill-switch!", 1, "1.0.0", 10.0, false, false, false, false, gen::params_infinity2(), &gen::make_infinity2 },
+        { "inflamer", "Inflamer", "Subtlety", "Inflamer is an Airwindowsized take on the waveshapers in Oxford Inflator.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_inflamer(), &gen::make_inflamer },
+        { "infrasonic", "Infrasonic", "Bass", "Infrasonic is a very steep subsonic filter, built like Ultrasonic.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_infrasonic(), &gen::make_infrasonic },
+        { "interstage", "Interstage", "Subtlety", "Interstage is a subtle and sophisticated analogifier.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_interstage(), &gen::make_interstage },
+        { "ironoxide5", "IronOxide5", "Tape", "IronOxide5 is the old school, heavily colored Airwindows tape emulation.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ironoxide5(), &gen::make_ironoxide5 },
+        { "ironoxideclassic", "IronOxideClassic", "Tape", "IronOxideClassic is the purer, simpler, early form of Iron Oxide before all the features.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ironoxideclassic(), &gen::make_ironoxideclassic },
+        { "ironoxideclassic2", "IronOxideClassic2", "Tape", "IronOxideClassic2 is my bandpassy tape sim, updated for high sample rate and aliasing control.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ironoxideclassic2(), &gen::make_ironoxideclassic2 },
+        { "isolator", "Isolator", "Filter", "Isolator is a steep highpass or lowpass filter, like you might find in a speaker crossover.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_isolator(), &gen::make_isolator },
+        { "isolator2", "Isolator2", "Filter", "Isolator2 is Isolator, but with control smoothing and a new resonance booster.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_isolator2(), &gen::make_isolator2 },
+        { "isolator3", "Isolator3", "Filter", "Isolator3 is Isolator2, but on one slider, with a band-narrower control.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_isolator3(), &gen::make_isolator3 },
+        { "kalienspaceship", "kAlienSpaceship", "Reverb", "kAlienSpaceship is an unreal realistic reverb.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kalienspaceship(), &gen::make_kalienspaceship },
+        { "kalman", "Kalman", "Filter", "Kalman is not a real filter!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_kalman(), &gen::make_kalman },
+        { "kbeyond", "kBeyond", "Reverb", "kBeyond is a recital hall.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kbeyond(), &gen::make_kbeyond },
+        { "kcathedral", "kCathedral", "Reverb", "kCathedral is a giant reverby space.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kcathedral(), &gen::make_kcathedral },
+        { "kcathedral2", "kCathedral2", "Reverb", "kCathedral2 is a giant reverby space modeled after the Bricasti Cathedral.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kcathedral2(), &gen::make_kcathedral2 },
+        { "kcathedral3", "kCathedral3", "Reverb", "kCathedral3 is a giant cathedral-like space using Bezier undersampling.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kcathedral3(), &gen::make_kcathedral3 },
+        { "kcathedral4", "kCathedral4", "Reverb", "kCathedral4 is the Cathedral sound expressed as distant space.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kcathedral4(), &gen::make_kcathedral4 },
+        { "kcathedral5", "kCathedral5", "Reverb", "kCathedral5 lets you place yourself anywhere you like in the space.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kcathedral5(), &gen::make_kcathedral5 },
+        { "kchamberar", "kChamberAR", "Ambience", "kChamberAR is a take on tape echo into chamber echo.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kchamberar(), &gen::make_kchamberar },
+        { "kcosmos", "kCosmos", "Reverb", "kCosmos is infinite space ambient, or titanic hall.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kcosmos(), &gen::make_kcosmos },
+        { "kcybercity", "kCyberCity", "Reverb", "kCyberCity brings live atmosphere to deep reverb.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kcybercity(), &gen::make_kcybercity },
+        { "kguitarhall", "kGuitarHall", "Reverb", "kGuitarHall accentuates loud midrange skronk!", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kguitarhall(), &gen::make_kguitarhall },
+        { "kguitarhall2", "kGuitarHall2", "Reverb", "kGuitarHall2 puts things in a Loud Room.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kguitarhall2(), &gen::make_kguitarhall2 },
+        { "kplate140", "kPlate140", "Reverb", "kPlate140 is a next-generation Airwindows plate reverb.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kplate140(), &gen::make_kplate140 },
+        { "kplate240", "kPlate240", "Reverb", "kPlate240 is for the texture of smaller, gold foil reverb.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kplate240(), &gen::make_kplate240 },
+        { "kplatea", "kPlateA", "Reverb", "kPlateA is a plate reverb, not unlike its namesake atop Abbey Road.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kplatea(), &gen::make_kplatea },
+        { "kplateb", "kPlateB", "Reverb", "kPlateB is a plate reverb, not unlike its namesake atop Abbey Road.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kplateb(), &gen::make_kplateb },
+        { "kplatec", "kPlateC", "Reverb", "kPlateC is a plate reverb, not unlike its namesake atop Abbey Road.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kplatec(), &gen::make_kplatec },
+        { "kplated", "kPlateD", "Reverb", "kPlateD is a plate reverb, not unlike its namesake atop Abbey Road.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kplated(), &gen::make_kplated },
+        { "krockstar", "kRockstar", "Reverb", "kRockstar is a realistic hall reverb that blends very well.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_krockstar(), &gen::make_krockstar },
+        { "krockstar2", "kRockstar2", "Reverb", "kRockstar2 is a realistic hall reverb using a new matrix!", 2, "1.0.0", 10.0, false, false, true, false, gen::params_krockstar2(), &gen::make_krockstar2 },
+        { "kstation", "kStation", "Reverb", "kStation is a realistic small room modeled after David Bowie's vocal reverb.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kstation(), &gen::make_kstation },
+        { "kwoodroom", "kWoodRoom", "Reverb", "kWoodRoom is a small wooden performing space.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_kwoodroom(), &gen::make_kwoodroom },
+        { "leadamp", "LeadAmp", "Amp Sims", "LeadAmp is an amp sim with a clear, penetrating, vocal tone.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_leadamp(), &gen::make_leadamp },
+        { "leftomono", "LeftoMono", "Utility", "LeftoMono copies one channel to both, losslessly.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_leftomono(), &gen::make_leftomono },
+        { "lilamp", "LilAmp", "Amp Sims", "LilAmp is a tiny amp sim, like a little bitty practice amp without that much gain.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_lilamp(), &gen::make_lilamp },
+        { "logical4", "Logical4", "Dynamics", "Logical4 is a classic 2-buss compressor.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_logical4(), &gen::make_logical4 },
+        { "longhand", "Longhand", "Saturation", "Longhand is an experiment in softclipping.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_longhand(), &gen::make_longhand },
+        { "loud", "Loud", "Distortion", "Loud is distortion and demolition of air molecules, modeled.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_loud(), &gen::make_loud },
+        { "lowpass", "Lowpass", "Filter", "Lowpass deepens the tone, leaves a gloss and textural modifications.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_lowpass(), &gen::make_lowpass },
+        { "lowpass2", "Lowpass2", "Filter", "Lowpass2 is an unusual-sounding variable-slope lowpass filter.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_lowpass2(), &gen::make_lowpass2 },
+        { "lrconvolve", "LRConvolve", "Utility", "LRConvolve multiplies each channel by the other!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_lrconvolve(), &gen::make_lrconvolve },
+        { "lrconvolve2", "LRConvolve2", "Utility", "LRConvolve2 multiplies each channel by the other, plus Soar!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_lrconvolve2(), &gen::make_lrconvolve2 },
+        { "lrconvolve3", "LRConvolve3", "Utility", "LRConvolve3 gates one channel by the other, roughly or cleanly.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_lrconvolve3(), &gen::make_lrconvolve3 },
+        { "lrfliptimer", "LRFlipTimer", "Stereo", "LRFlipTimer is a utility that swaps Left with Right every few (1-10) minutes.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_lrfliptimer(), &gen::make_lrfliptimer },
+        { "luxor", "Luxor", "Tone Color", "Luxor is a re-release of another old Character plugin.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_luxor(), &gen::make_luxor },
+        { "mackeq", "MackEQ", "Filter", "MackEQ is the Mackie distortion but with treble and bass controls added.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_mackeq(), &gen::make_mackeq },
+        { "mackity", "Mackity", "Distortion", "Mackity is an emulation of the input stage of a vintage Mackie 1202!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_mackity(), &gen::make_mackity },
+        { "mastering", "Mastering", "Subtlety", "Mastering is Airwindows style, and can do things nothing else can!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_mastering(), &gen::make_mastering },
+        { "mastering2", "Mastering2", "Subtlety", "Mastering2 is Airwindows style, and can do elliptical EQ now!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_mastering2(), &gen::make_mastering2 },
+        { "matrixverb", "MatrixVerb", "Reverb", "MatrixVerb is a wildly adjustable, strangely colorful reverb for deep and flexible spaces.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_matrixverb(), &gen::make_matrixverb },
+        { "melt", "Melt", "Ambience", "Melt is a wobbly chorusy weird diffuse effect.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_melt(), &gen::make_melt },
+        { "midamp", "MidAmp", "Amp Sims", "MidAmp is a clean amp sim meant to work like a loud Twin or something of that nature.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_midamp(), &gen::make_midamp },
+        { "midside", "MidSide", "Utility", "MidSide is the other side of the EdIsDim mid/side conversion utility plugin.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_midside(), &gen::make_midside },
+        { "mojo", "Mojo", "Saturation", "Mojo is a biggenator that also works as a loudenator.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_mojo(), &gen::make_mojo },
+        { "monitoring", "Monitoring", "Utility", "Monitoring is your one-stop shop for final 2-buss work!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_monitoring(), &gen::make_monitoring },
+        { "monitoring2", "Monitoring2", "Utility", "Monitoring2 is Monitoring, but with Dark as the wordlength reducer.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_monitoring2(), &gen::make_monitoring2 },
+        { "monitoring3", "Monitoring3", "Utility", "Monitoring3 is Monitoring, but with Ten Nines into Dark as the wordlength reducer.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_monitoring3(), &gen::make_monitoring3 },
+        { "monoam", "MoNoam", "Utility", "MoNoam gives you variations on mono, mid, and side in different channels.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_monoam(), &gen::make_monoam },
+        { "msfliptimer", "MSFlipTimer", "Stereo", "MSFlipTimer is a utility that swaps stereo with mono every few (1-10) minutes.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_msfliptimer(), &gen::make_msfliptimer },
+        { "multibanddistortion", "MultiBandDistortion", "Distortion", "MultiBandDistortion is an old weird gnarly sound wrecker :)", 1, "1.0.0", 0.0, false, false, false, false, gen::params_multibanddistortion(), &gen::make_multibanddistortion },
+        { "mv", "MV", "Ambience", "MV is a dual-mono reverb based on BitShiftGain and the old Midiverbs.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_mv(), &gen::make_mv },
+        { "mv2", "MV2", "Ambience", "MV2 is a dual-mono reverb based on BitShiftGain and the old Midiverbs, adapted to high sample rates.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_mv2(), &gen::make_mv2 },
+        { "naturalizedither", "NaturalizeDither", "Dithers", "NaturalizeDither is deterministic dither that uses Benford Realness calculations for each sample.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_naturalizedither(), &gen::make_naturalizedither },
+        { "ncseventeen", "NCSeventeen", "Saturation", "NCSeventeen is Dirty Loud!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ncseventeen(), &gen::make_ncseventeen },
+        { "neverland", "Neverland", "Tone Color", "Neverland is a re-release of my old Neve-style color adder, exacly as it was.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_neverland(), &gen::make_neverland },
+        { "nikola", "Nikola", "Effects", "Nikola is an Audio Tesla Coil plugin! Note: audio tesla coils don't sound nice.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_nikola(), &gen::make_nikola },
+        { "nodedither", "NodeDither", "Dithers", "NodeDither is adjusta-TPDF-dither, like a dither flanger. Can do Paul and Tape settings.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_nodedither(), &gen::make_nodedither },
+        { "noise", "Noise", "Noise", "Noise is the Airwindows deep noise oscillator, as a sound reinforcer.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_noise(), &gen::make_noise },
+        { "nonlinearspace", "NonlinearSpace", "Reverb", "NonlinearSpace is a flexible reverb plugin.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_nonlinearspace(), &gen::make_nonlinearspace },
+        { "notjustanothercd", "NotJustAnotherCD", "Dithers", "NotJustAnotherCD is a next-gen wordlength reducers for 16 bit with DeRez.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_notjustanothercd(), &gen::make_notjustanothercd },
+        { "notjustanotherdither", "NotJustAnotherDither", "Dithers", "NotJustAnotherDither is a next-gen wordlength reducers for 24 bit with DeRez.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_notjustanotherdither(), &gen::make_notjustanotherdither },
+        { "onecornerclip", "OneCornerClip", "Clipping", "OneCornerClip is an ultimate full-bandwidth clipper.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_onecornerclip(), &gen::make_onecornerclip },
+        { "orbitkick", "OrbitKick", "Bass", "OrbitKick is a bass generator and kick drum reinforcer.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_orbitkick(), &gen::make_orbitkick },
+        { "overheads", "Overheads", "Dynamics", "Overheads is for compressing only part of the sound, strangely!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_overheads(), &gen::make_overheads },
+        { "pafnuty", "Pafnuty", "Unclassified", "Pafnuty is a Chebyshev filter, that adds harmonics.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pafnuty(), &gen::make_pafnuty },
+        { "pafnuty2", "Pafnuty2", "Effects", "Pafnuty2 is a Chebyshev filter, that adds harmonics, and fits in the VCV Rack port.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pafnuty2(), &gen::make_pafnuty2 },
+        { "parametric", "Parametric", "Filter", "Parametric is three bands of ConsoleX EQ in advance.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_parametric(), &gen::make_parametric },
+        { "pauldither", "PaulDither", "Dithers", "PaulDither is a highpassed TPDF dither. (quieter, airier)", 1, "1.0.0", 0.0, true, false, false, false, gen::params_pauldither(), &gen::make_pauldither },
+        { "paulwide", "PaulWide", "Dithers", "PaulWide is a highpassed TPDF wide dither. (quieter, airier AND wider)", 1, "1.0.0", 0.0, true, false, false, false, gen::params_paulwide(), &gen::make_paulwide },
+        { "pdbuss", "PDBuss", "Consoles", "PDBuss is Console5 and PurestDrive, sittinâ in a treeâ¦ (i.e. both at once, on channels and buss)", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pdbuss(), &gen::make_pdbuss },
+        { "pdchannel", "PDChannel", "Consoles", "PDChannel is Console5 and PurestDrive, sittinâ in a treeâ¦ (i.e. both at once, on channels and buss)", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pdchannel(), &gen::make_pdchannel },
+        { "peaksonly", "PeaksOnly", "Utility", "PeaksOnly is a transformative mix check tool.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_peaksonly(), &gen::make_peaksonly },
+        { "pear", "Pear", "Filter", "Pear is the testbed for a new filter, implemented as a highpass/lowpass shelf.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pear(), &gen::make_pear },
+        { "pear2", "Pear2", "Filter", "Pear2 is my Pear filter plus nonlinearity.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pear2(), &gen::make_pear2 },
+        { "peareq", "PearEQ", "Filter", "PearEQ is a six-band Pear-based graphic EQ.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_peareq(), &gen::make_peareq },
+        { "pearliteeq", "PearLiteEQ", "Filter", "PearLiteEQ is a four-band Pear-based graphic EQ.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pearliteeq(), &gen::make_pearliteeq },
+        { "phasenudge", "PhaseNudge", "Subtlety", "PhaseNudge is a phase rotator/allpass filter.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_phasenudge(), &gen::make_phasenudge },
+        { "pitchdelay", "PitchDelay", "Ambience", "PitchDelay is TapeDelay2 but with pitch shift instead of flutter.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_pitchdelay(), &gen::make_pitchdelay },
+        { "pitchnasty", "PitchNasty", "Effects", "PitchNasty is a primitive pitch shifter that also has primitive time-stretch artifacts.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pitchnasty(), &gen::make_pitchnasty },
+        { "platinumslew", "PlatinumSlew", "Brightness", "PlatinumSlew is the best easy-to-use slew clipper.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_platinumslew(), &gen::make_platinumslew },
+        { "pocketverbs", "PocketVerbs", "Reverb", "PocketVerbs is my popular old special effects reverbs plugin!", 1, "1.0.0", 10.0, false, false, false, false, gen::params_pocketverbs(), &gen::make_pocketverbs },
+        { "pockey", "Pockey", "Lo-Fi", "Pockey is 12 bit (and under) lo-fi hiphop in a plugin.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pockey(), &gen::make_pockey },
+        { "pockey2", "Pockey2", "Lo-Fi", "Pockey2 is more efficient, more intense lo-fi hiphop in a plugin.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pockey2(), &gen::make_pockey2 },
+        { "podcast", "Podcast", "Dynamics", "Podcast is a simpler pile of curve-style compressors with hard clipping.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_podcast(), &gen::make_podcast },
+        { "podcastdeluxe", "PodcastDeluxe", "Dynamics", "PodcastDeluxe is a pile of compressors (curve style) and phase rotators.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_podcastdeluxe(), &gen::make_podcastdeluxe },
+        { "point", "Point", "Dynamics", "Point is an explosive transient designer.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_point(), &gen::make_point },
+        { "pointydeluxe", "PointyDeluxe", "Amp Sims", "PointyDeluxe devours all mix space.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pointydeluxe(), &gen::make_pointydeluxe },
+        { "pointyguitar", "PointyGuitar", "Amp Sims", "PointyGuitar is a supremely adaptable instrument amp.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pointyguitar(), &gen::make_pointyguitar },
+        { "pop", "Pop", "Dynamics", "Pop is a crazy overcompressor with a very exaggerated sound.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pop(), &gen::make_pop },
+        { "pop2", "Pop2", "Dynamics", "Pop2 adds control and punch to Pop.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pop2(), &gen::make_pop2 },
+        { "pop3", "Pop3", "Dynamics", "Pop3 is the dynamics from ConsoleX.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pop3(), &gen::make_pop3 },
+        { "powersag", "PowerSag", "Effects", "PowerSag is for emulating power supply limitations in analog modeling.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_powersag(), &gen::make_powersag },
+        { "powersag2", "PowerSag2", "Effects", "PowerSag2 is my improved circuit-starve plugin, now with inverse effect!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_powersag2(), &gen::make_powersag2 },
+        { "precious", "Precious", "Tone Color", "Precious is a re-release of another old Character plugin.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_precious(), &gen::make_precious },
+        { "preponderant", "Preponderant", "Effects", "Preponderant is Airwindows Anti-Soothe, a strange tone intensifier and balancer.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_preponderant(), &gen::make_preponderant },
+        { "pressure4", "Pressure4", "Dynamics", "Pressure4 is a compressor adjustable between vari-mu and ânew yorkâ peak-retaining behaviors.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pressure4(), &gen::make_pressure4 },
+        { "pressure5", "Pressure5", "Dynamics", "Pressure5 expands Pressure4 with after-boost and built-in ClipOnly2.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pressure5(), &gen::make_pressure5 },
+        { "pressure6", "Pressure6", "Dynamics", "Pressure6 refines the Pressure compressor and how it moves.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pressure6(), &gen::make_pressure6 },
+        { "primefir", "PrimeFIR", "Filter", "PrimeFIR is a mostly linear-phase brickwall with a taste for the bizarre!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_primefir(), &gen::make_primefir },
+        { "punchydeluxe", "PunchyDeluxe", "Amp Sims", "PunchyDeluxe is a smoother form of PointyDeluxe.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_punchydeluxe(), &gen::make_punchydeluxe },
+        { "punchyguitar", "PunchyGuitar", "Unclassified", "", 1, "1.0.0", 0.0, false, false, false, false, gen::params_punchyguitar(), &gen::make_punchyguitar },
+        { "purestair", "PurestAir", "Brightness", "PurestAir is a brightness experiment.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestair(), &gen::make_purestair },
+        { "purestconsole2buss", "PurestConsole2Buss", "Consoles", "PurestConsole2Buss is the distributed filter version of PurestConsole.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestconsole2buss(), &gen::make_purestconsole2buss },
+        { "purestconsole2channel", "PurestConsole2Channel", "Consoles", "PurestConsole2Channel is the distributed filter version of PurestConsole.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestconsole2channel(), &gen::make_purestconsole2channel },
+        { "purestconsole3buss", "PurestConsole3Buss", "Consoles", "PurestConsole3Buss is an alternate algorithm for minimalist Console.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestconsole3buss(), &gen::make_purestconsole3buss },
+        { "purestconsole3channel", "PurestConsole3Channel", "Consoles", "PurestConsole3Channel is an alternate algorithm for minimalist Console.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestconsole3channel(), &gen::make_purestconsole3channel },
+        { "purestconsole4buss", "PurestConsole4Buss", "Unclassified", "", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestconsole4buss(), &gen::make_purestconsole4buss },
+        { "purestconsole4channel", "PurestConsole4Channel", "Unclassified", "", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestconsole4channel(), &gen::make_purestconsole4channel },
+        { "purestconsolebuss", "PurestConsoleBuss", "Consoles", "PurestConsoleBuss is the most free from coloration Console system.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestconsolebuss(), &gen::make_purestconsolebuss },
+        { "purestconsolechannel", "PurestConsoleChannel", "Consoles", "PurestConsoleChannel is the most free from coloration Console system.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestconsolechannel(), &gen::make_purestconsolechannel },
+        { "purestdrive", "PurestDrive", "Saturation", "PurestDrive is the magic saturation plugin of subtlety and French House tone.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestdrive(), &gen::make_purestdrive },
+        { "purestdualpan", "PurestDualPan", "Utility", "PurestDualPan is an updated PurestGain but as a dual pan.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestdualpan(), &gen::make_purestdualpan },
+        { "purestecho", "PurestEcho", "Ambience", "PurestEcho is optimized Airwindows echo with exactly four evenly spaced taps on tap.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_purestecho(), &gen::make_purestecho },
+        { "purestfade", "PurestFade", "Utility", "PurestFade is just like PurestGain, but for LONG fades.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestfade(), &gen::make_purestfade },
+        { "purestgain", "PurestGain", "Utility", "PurestGain is a high-res noise shaped gain, with smoothed fader.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestgain(), &gen::make_purestgain },
+        { "purestsaturation", "PurestSaturation", "Saturation", "PurestSaturation is an experiment in softclipping.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestsaturation(), &gen::make_purestsaturation },
+        { "purestsquish", "PurestSquish", "Dynamics", "PurestSquish is an open-sounding compressor with bass bloom.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestsquish(), &gen::make_purestsquish },
+        { "purestwarm", "PurestWarm", "Subtlety", "PurestWarm is a subtle tone shaper and warmth adder.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestwarm(), &gen::make_purestwarm },
+        { "purestwarm2", "PurestWarm2", "Subtlety", "PurestWarm2 adds dual dry/wet controls for each side of the waveform.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_purestwarm2(), &gen::make_purestwarm2 },
+        { "purestwarm3", "PurestWarm3", "Subtlety", "PurestWarm3 is a subtle tone shaper and warmth adder.", 2, "1.0.0", 0.0, false, false, true, false, gen::params_purestwarm3(), &gen::make_purestwarm3 },
+        { "pyewacket", "Pyewacket", "Dynamics", "Pyewacket is an old school compressor for high definition transients. Adds no fatness, just energy.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_pyewacket(), &gen::make_pyewacket },
+        { "rawglitters", "RawGlitters", "Dithers", "RawGlitters is just the quantization from Dither Me Timbersâ¦ and the opposite, as a brightener.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_rawglitters(), &gen::make_rawglitters },
+        { "rawtimbers", "RawTimbers", "Dithers", "RawTimbers is just the quantization from Dither Me Timbersâ¦ and the opposite, as a brightener.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_rawtimbers(), &gen::make_rawtimbers },
+        { "recurve", "Recurve", "Dynamics", "Recurve is a special buss compressor with no threshold point.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_recurve(), &gen::make_recurve },
+        { "remap", "Remap", "Subtlety", "Remap puts the guts back into overloudenated audio!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_remap(), &gen::make_remap },
+        { "reseq", "ResEQ", "Filter", "ResEQ is a bank of mostly midrange resonances.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_reseq(), &gen::make_reseq },
+        { "reseq2", "ResEQ2", "Filter", "ResEQ2 is a single, sharp, sonorous mid peak.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_reseq2(), &gen::make_reseq2 },
+        { "retrobass", "RetroBass", "Filter", "RetroBass is a special kind of highpass.", 2, "1.0.0", 0.0, false, false, true, false, gen::params_retrobass(), &gen::make_retrobass },
+        { "reverb", "Reverb", "Reverb", "Reverb is simplified and tuned MatrixVerb, adjusting everything for each optimum verb size.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_reverb(), &gen::make_reverb },
+        { "righteous4", "Righteous4", "Saturation", "Righteous4 is a final output stage for targeting dynamic range.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_righteous4(), &gen::make_righteous4 },
+        { "rightomono", "RightoMono", "Utility", "RightoMono copies one channel to both, losslessly.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_rightomono(), &gen::make_rightomono },
+        { "ringmodulator", "RingModulator", "Effects", "RingModulator repitches sounds mathematically, not harmonically.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ringmodulator(), &gen::make_ringmodulator },
+        { "sampledelay", "SampleDelay", "Ambience", "SampleDelay is three delays combined: millisecond, sample and subsample.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_sampledelay(), &gen::make_sampledelay },
+        { "shape", "Shape", "Subtlety", "Shape is an asymmetrical waveshaper for peak manipulating.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_shape(), &gen::make_shape },
+        { "shortbuss", "ShortBuss", "Effects", "ShortBuss chases second harmonic, to add or remove it.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_shortbuss(), &gen::make_shortbuss },
+        { "sidedull", "SideDull", "Stereo", "SideDull is like Sidepass, but a lowpass on the side channel. Treble-centerer.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_sidedull(), &gen::make_sidedull },
+        { "sidepass", "Sidepass", "Stereo", "Sidepass is a simple utility plugin, a highpass on the side channel. Mono-maker.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_sidepass(), &gen::make_sidepass },
+        { "silhouette", "Silhouette", "Noise", "Silhouette replaces the sound with raw noise sculpted to match its dynamics.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_silhouette(), &gen::make_silhouette },
+        { "silken", "Silken", "Filter", "Silken is a high frequency boost that gives ambience and texture.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_silken(), &gen::make_silken },
+        { "sinew", "Sinew", "Brightness", "Sinew combines sines and slew clipping for a tape bias effect!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_sinew(), &gen::make_sinew },
+        { "singleendedtriode", "SingleEndedTriode", "Subtlety", "SingleEndedTriode is unusual analog modeling effects.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_singleendedtriode(), &gen::make_singleendedtriode },
+        { "slew", "Slew", "Brightness", "Slew is a slew clipper, which darkens treble in an unusual way.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_slew(), &gen::make_slew },
+        { "slew2", "Slew2", "Brightness", "Slew2 works like a de-esser or acceleration limiter: controls extreme highs.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_slew2(), &gen::make_slew2 },
+        { "slew3", "Slew3", "Brightness", "Slew3 is a new approach to slew clipping meant for a more analog-like darkening effect.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_slew3(), &gen::make_slew3 },
+        { "slew4", "Slew4", "Brightness", "Slew4 is tape compression without the tape, for brightness control.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_slew4(), &gen::make_slew4 },
+        { "slewonly", "SlewOnly", "Utility", "SlewOnly is a mix check plugin that shows you only the extreme highs.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_slewonly(), &gen::make_slewonly },
+        { "slewsonic", "SlewSonic", "Brightness", "SlewSonic combines SlewOnly with ultrasonic filtering to solo brightness.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_slewsonic(), &gen::make_slewsonic },
+        { "smooth", "Smooth", "Brightness", "Smooth can tame pointy sounds or make drums explode.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_smooth(), &gen::make_smooth },
+        { "smootheq", "SmoothEQ", "Filter", "SmoothEQ is a sharp, accurate, transparent three-band filter.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_smootheq(), &gen::make_smootheq },
+        { "smootheq2", "SmoothEQ2", "Filter", "SmoothEQ2 is a wildly intuitive vibe EQ with clarity and intensity.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_smootheq2(), &gen::make_smootheq2 },
+        { "smootheq3", "SmoothEQ3", "Filter", "SmoothEQ3 is the most approachable EQ.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_smootheq3(), &gen::make_smootheq3 },
+        { "softclock", "SoftClock", "Utility", "SoftClock is a groove-oriented time reference.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_softclock(), &gen::make_softclock },
+        { "softclock2", "SoftClock2", "Utility", "SoftClock2 is a groove-oriented time reference.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_softclock2(), &gen::make_softclock2 },
+        { "softclock3", "SoftClock3", "Utility", "SoftClock3 is a groove-oriented time reference.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_softclock3(), &gen::make_softclock3 },
+        { "softgate", "SoftGate", "Dynamics", "SoftGate is a gate that can mute hiss and smooth sample tails.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_softgate(), &gen::make_softgate },
+        { "spatializedither", "SpatializeDither", "Dithers", "SpatializeDither is a high-performance clarity and accuracy dither.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_spatializedither(), &gen::make_spatializedither },
+        { "spiral", "Spiral", "Saturation", "Spiral is the new best smoothest distortion algorithm.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_spiral(), &gen::make_spiral },
+        { "spiral2", "Spiral2", "Saturation", "Spiral2 is Spiral with controls including Presence.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_spiral2(), &gen::make_spiral2 },
+        { "spiral3", "Spiral3", "Unclassified", "", 1, "1.0.0", 0.0, false, false, true, false, gen::params_spiral3(), &gen::make_spiral3 },
+        { "squareroot", "SquareRoot", "Saturation", "SquareRoot has new discoveries in soft saturation!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_squareroot(), &gen::make_squareroot },
+        { "srsly", "Srsly", "Stereo", "Srsly is a psychoacoustic stereo processor.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_srsly(), &gen::make_srsly },
+        { "srsly2", "Srsly2", "Stereo", "Srsly2 is a revisit of Srsly, to make the stereo widening more extreme.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_srsly2(), &gen::make_srsly2 },
+        { "srsly3", "Srsly3", "Stereo", "Srsly3 is Srsly2, with a Nonlin control to analogify the filters.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_srsly3(), &gen::make_srsly3 },
+        { "starchild", "StarChild", "Ambience", "StarChild is a weird digital ambience/echo plugin.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_starchild(), &gen::make_starchild },
+        { "starchild2", "StarChild2", "Ambience", "StarChild2 is a weird digital ambience/echo plugin adapted to high sample rates.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_starchild2(), &gen::make_starchild2 },
+        { "stereochorus", "StereoChorus", "Ambience", "StereoChorus is a nice basic stereo chorus.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_stereochorus(), &gen::make_stereochorus },
+        { "stereodoubler", "StereoDoubler", "Ambience", "StereoDoubler is like GlitchShifter optimized for pitch shift doubling and tripling.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_stereodoubler(), &gen::make_stereodoubler },
+        { "stereoensemble", "StereoEnsemble", "Ambience", "StereoEnsemble is a sort of hyperchorus blast from the past.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_stereoensemble(), &gen::make_stereoensemble },
+        { "stereofx", "StereoFX", "Stereo", "StereoFX is an aggressive stereo widener.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_stereofx(), &gen::make_stereofx },
+        { "stonefire", "Stonefire", "Filter", "Stonefire is the non-EQ EQ designed for ConsoleX.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_stonefire(), &gen::make_stonefire },
+        { "stonefirecomp", "StoneFireComp", "Dynamics", "StoneFireComp is some of the dynamics for ConsoleX.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_stonefirecomp(), &gen::make_stonefirecomp },
+        { "studiotan", "StudioTan", "Dithers", "StudioTan is all the 'non-dither' dithers, up to date and convenient.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_studiotan(), &gen::make_studiotan },
+        { "subsonly", "SubsOnly", "Utility", "SubsOnly is a mix check plugin that shows you only the extreme lows.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_subsonly(), &gen::make_subsonly },
+        { "subtight", "SubTight", "Filter", "SubTight uses a variation on the Creature algorithm to tighten sub-lows.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_subtight(), &gen::make_subtight },
+        { "surge", "Surge", "Dynamics", "Surge is a compressor for accentuating beats and pulses.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_surge(), &gen::make_surge },
+        { "surgetide", "SurgeTide", "Dynamics", "SurgeTide is a surge and flow dynamics plugin.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_surgetide(), &gen::make_surgetide },
+        { "suzan", "Suzan", "Filter", "Suzan is a new type of ladder filter.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_suzan(), &gen::make_suzan },
+        { "sweeten", "Sweeten", "Subtlety", "Sweeten is where you can find super-clean second harmonic.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_sweeten(), &gen::make_sweeten },
+        { "sweetwide", "SweetWide", "Stereo", "SweetWide is a strange grungy stereo widener.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_sweetwide(), &gen::make_sweetwide },
+        { "swell", "Swell", "Dynamics", "Swell is Dial-an-attack, like sidechaining.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_swell(), &gen::make_swell },
+        { "takecare", "TakeCare", "Effects", "TakeCare is a lush chorus ensemble universe.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_takecare(), &gen::make_takecare },
+        { "tape", "Tape", "Tape", "Tape is simplified, all-purpose tape mojo: my personal jam.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_tape(), &gen::make_tape },
+        { "tapebias", "TapeBias", "Lo-Fi", "TapeBias is a new piece of ToTape allowing you to underbias or overbias.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_tapebias(), &gen::make_tapebias },
+        { "tapedelay", "TapeDelay", "Ambience", "TapeDelay is an old school tape echo with pitch swerve effects.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_tapedelay(), &gen::make_tapedelay },
+        { "tapedelay2", "TapeDelay2", "Ambience", "TapeDelay2 is a new implementation of a flexible tape echo.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_tapedelay2(), &gen::make_tapedelay2 },
+        { "tapedither", "TapeDither", "Dithers", "TapeDither is TPDF dither with noise like reel-to-reel tape.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_tapedither(), &gen::make_tapedither },
+        { "tapedust", "TapeDust", "Noise", "TapeDust is just a special treble-erode noise, a ‘slew noise’ plugin.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_tapedust(), &gen::make_tapedust },
+        { "tapefat", "TapeFat", "Filter", "TapeFat is the tone control from TapeDelay.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_tapefat(), &gen::make_tapefat },
+        { "tapehack", "TapeHack", "Tape", "TapeHack is a new dimension in tape realism, abstracted to software.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_tapehack(), &gen::make_tapehack },
+        { "tapehack2", "TapeHack2", "Tape", "TapeHack2 brings Airwindows tape to a new level.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_tapehack2(), &gen::make_tapehack2 },
+        { "tapehack3", "TapeHack3", "Unclassified", "", 1, "1.0.0", 0.0, false, false, true, false, gen::params_tapehack3(), &gen::make_tapehack3 },
+        { "texturize", "Texturize", "Noise", "Texturize is a hidden-noise plugin for adding sonic texture to things.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_texturize(), &gen::make_texturize },
+        { "texturizems", "TexturizeMS", "Noise", "TexturizeMS is a hidden-noise plugin for adding mid-side sonic texture to things.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_texturizems(), &gen::make_texturizems },
+        { "thunder", "Thunder", "Dynamics", "Thunder is a compressor that retains or exaggerates subsonic bass when you push it.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_thunder(), &gen::make_thunder },
+        { "toneslant", "ToneSlant", "Filter", "ToneSlant is a super-transparent ‘tilt EQ’ with very low Q.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_toneslant(), &gen::make_toneslant },
+        { "totape5", "ToTape5", "Tape", "ToTape5 is Airwindows analog tape emulation.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_totape5(), &gen::make_totape5 },
+        { "totape6", "ToTape6", "Tape", "ToTape6 is Airwindows tape emulation for 2020!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_totape6(), &gen::make_totape6 },
+        { "totape7", "ToTape7", "Tape", "ToTape7 is Airwindows tape emulation with bias and Dubly.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_totape7(), &gen::make_totape7 },
+        { "totape8", "ToTape8", "Tape", "ToTape8 is Airwindows tape emulation with gain staging, bias and optimized Dubly!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_totape8(), &gen::make_totape8 },
+        { "totape9", "ToTape9", "Tape", "ToTape9 is Airwindows tape emulation and brightness compression.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_totape9(), &gen::make_totape9 },
+        { "tovinyl4", "ToVinyl4", "Stereo", "ToVinyl4 is a vinyl-mastering simulator bringing several vinyl-type colors.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_tovinyl4(), &gen::make_tovinyl4 },
+        { "tpdfdither", "TPDFDither", "Dithers", "TPDFDither is TPDF dither. With 16/24 bit output and a DeRez control.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_tpdfdither(), &gen::make_tpdfdither },
+        { "tpdfwide", "TPDFWide", "Dithers", "TPDFWide is still TPDF dither but better and wider. With 16/24 bit output and a DeRez control.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_tpdfwide(), &gen::make_tpdfwide },
+        { "transdesk", "TransDesk", "Subtlety", "TransDesk is more of a transistory, rock desk analog modeling.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_transdesk(), &gen::make_transdesk },
+        { "tremolo", "Tremolo", "Effects", "Tremolo is fluctuating saturation curves for a tubey tremolo.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_tremolo(), &gen::make_tremolo },
+        { "tremosquare", "TremoSquare", "Effects", "TremoSquare is a squarewave tremolo effect that only switches on zero crossings.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_tremosquare(), &gen::make_tremosquare },
+        { "trianglizer", "Trianglizer", "Effects", "Trianglizer is a special waveshaper that can transform sines into triangles.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_trianglizer(), &gen::make_trianglizer },
+        { "triplespread", "TripleSpread", "Ambience", "TripleSpread is a stereo tripler with extra wideness and GlitchShifter processing.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_triplespread(), &gen::make_triplespread },
+        { "tube", "Tube", "Saturation", "Tube is a tube style SoundBetterIzer using a new algorithm for analog modeling!", 1, "1.0.0", 0.0, false, false, false, false, gen::params_tube(), &gen::make_tube },
+        { "tube2", "Tube2", "Saturation", "Tube2 extends Tube, with more sophisticated processing and input trim.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_tube2(), &gen::make_tube2 },
+        { "tubedesk", "TubeDesk", "Subtlety", "TubeDesk is a tube recording console type tone coloring.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_tubedesk(), &gen::make_tubedesk },
+        { "ulawdecode", "uLawDecode", "Utility", "uLawDecode is a Console-like encode/decode pair, but much more extreme.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ulawdecode(), &gen::make_ulawdecode },
+        { "ulawencode", "uLawEncode", "Utility", "uLawEncode is a Console-like encode/decode pair, but much more extreme.", 1, "1.0.0", 0.0, false, true, false, false, gen::params_ulawencode(), &gen::make_ulawencode },
+        { "ultralight", "Ultralight", "Reverb", "Ultralight is the most low-CPU matrix reverb I can make.", 1, "1.0.0", 10.0, false, false, true, false, gen::params_ultralight(), &gen::make_ultralight },
+        { "ultralight2", "Ultralight2", "Reverb", "Ultralight2 is more of the most low-CPU matrix reverb I can make.", 2, "1.0.0", 10.0, false, false, true, false, gen::params_ultralight2(), &gen::make_ultralight2 },
+        { "ultralight3", "Ultralight3", "Unclassified", "", 1, "1.0.0", 0.0, false, false, true, false, gen::params_ultralight3(), &gen::make_ultralight3 },
+        { "ultrasonic", "Ultrasonic", "Brightness", "Ultrasonic is a very clean, plain, high quality supersonic filter, for using inside digital mixes.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ultrasonic(), &gen::make_ultrasonic },
+        { "ultrasoniclite", "UltrasonicLite", "Brightness", "UltrasonicLite is just one stage of supersonic filter, for using inside digital mixes.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ultrasoniclite(), &gen::make_ultrasoniclite },
+        { "ultrasonicmed", "UltrasonicMed", "Brightness", "UltrasonicMed is two stages of supersonic filter, for using inside digital mixes.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ultrasonicmed(), &gen::make_ultrasonicmed },
+        { "ultrasonx", "UltrasonX", "Brightness", "UltrasonX is a method for rolling your own Console-type systems with total control over your ultrasonic filtering.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ultrasonx(), &gen::make_ultrasonx },
+        { "unbox", "UnBox", "Saturation", "UnBox is a distortion where only the harmonics that don't alias are allowed to distort.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_unbox(), &gen::make_unbox },
+        { "varimu", "VariMu", "Dynamics", "VariMu is a more organic variation on Pressure (a compressor)", 1, "1.0.0", 0.0, false, true, false, false, gen::params_varimu(), &gen::make_varimu },
+        { "verbity", "Verbity", "Reverb", "Verbity is a dual-mono reverb, which uses feedforward reverb topology.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_verbity(), &gen::make_verbity },
+        { "verbity2", "Verbity2", "Reverb", "Verbity2 adds stereo crossmodulation and expands Verbity's feedforward reverb topology.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_verbity2(), &gen::make_verbity2 },
+        { "verbsevens", "VerbSevens", "Reverb", "VerbSevens is a calibrated reference reverb plugin for reverb matrices.", 2, "1.0.0", 10.0, false, false, true, false, gen::params_verbsevens(), &gen::make_verbsevens },
+        { "verbsixes", "VerbSixes", "Reverb", "VerbSixes is a calibrated reference reverb plugin for Householder matrices.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_verbsixes(), &gen::make_verbsixes },
+        { "verbthic", "VerbThic", "Reverb", "VerbThic is a classic artificial reverb for being opaque and textured.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_verbthic(), &gen::make_verbthic },
+        { "verbtiny", "VerbTiny", "Reverb", "VerbTiny is a classic artificial reverb that expands reverb shape.", 1, "1.0.0", 10.0, false, false, false, false, gen::params_verbtiny(), &gen::make_verbtiny },
+        { "vibrato", "Vibrato", "Lo-Fi", "Vibrato lets you vibrato, chorus, flange, and make odd FM noises.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_vibrato(), &gen::make_vibrato },
+        { "vinyldither", "VinylDither", "Dithers", "VinylDither is a high-performance dither that converts digital noise to âgroove noiseâ.", 1, "1.0.0", 0.0, true, false, false, false, gen::params_vinyldither(), &gen::make_vinyldither },
+        { "voiceofthestarship", "VoiceOfTheStarship", "Noise", "VoiceOfTheStarship is a deep noise tone source.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_voiceofthestarship(), &gen::make_voiceofthestarship },
+        { "voicetrick", "VoiceTrick", "Utility", "VoiceTrick lets you record vocals while monitoring over speakers.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_voicetrick(), &gen::make_voicetrick },
+        { "weave", "Weave", "Unclassified", "", 1, "1.0.0", 0.0, false, false, true, false, gen::params_weave(), &gen::make_weave },
+        { "weight", "Weight", "Filter", "Weight is a very accurate sub-bass boost based on Holt.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_weight(), &gen::make_weight },
+        { "wider", "Wider", "Stereo", "Wider is Airwindows stereo space shaping.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_wider(), &gen::make_wider },
+        { "wolfbot", "Wolfbot", "Amp Sims", "Wolfbot is an aggressive Kalman bandpass with evil in its heart.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_wolfbot(), &gen::make_wolfbot },
+        { "woodenbox", "WoodenBox", "Tone Color", "WoodenBox is like a miniature reverb for converting DI to acoustic.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_woodenbox(), &gen::make_woodenbox },
+        { "woodenchest", "WoodenChest", "Unclassified", "", 1, "1.0.0", 0.0, false, false, true, false, gen::params_woodenchest(), &gen::make_woodenchest },
+        { "x2buss", "X2Buss", "Dynamics", "X2Buss is an updated version of the buss processing from ConsoleX2.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_x2buss(), &gen::make_x2buss },
+        { "xbandpass", "XBandpass", "XYZ Filters", "XBandpass is a distorted digital EQ, inspired by retro sampler DSP.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_xbandpass(), &gen::make_xbandpass },
+        { "xhighpass", "XHighpass", "XYZ Filters", "XHighpass is a distorted digital EQ, inspired by retro sampler DSP.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_xhighpass(), &gen::make_xhighpass },
+        { "xlowpass", "XLowpass", "XYZ Filters", "XLowpass is a distorted digital EQ, inspired by retro sampler DSP.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_xlowpass(), &gen::make_xlowpass },
+        { "xnotch", "XNotch", "XYZ Filters", "XNotch is a distorted digital EQ, not as glitchy as the others.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_xnotch(), &gen::make_xnotch },
+        { "xregion", "XRegion", "XYZ Filters", "XRegion is distorted staggered bandpasses, for extreme soundmangling.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_xregion(), &gen::make_xregion },
+        { "ybandpass", "YBandpass", "XYZ Filters", "YBandpass is soft and smooth to nasty, edgy texture-varying filtering.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ybandpass(), &gen::make_ybandpass },
+        { "yhighpass", "YHighpass", "XYZ Filters", "YHighpass is soft and smooth to nasty, edgy texture-varying filtering.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_yhighpass(), &gen::make_yhighpass },
+        { "ylowpass", "YLowpass", "XYZ Filters", "YLowpass is soft and smooth to nasty, edgy texture-varying filtering.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ylowpass(), &gen::make_ylowpass },
+        { "ynotbandpass", "YNotBandpass", "XYZ Filters", "YNotBandpass is soft and smooth to nasty, edgy texture-varying filtering, no control smoothing.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ynotbandpass(), &gen::make_ynotbandpass },
+        { "ynotch", "YNotch", "XYZ Filters", "YNotch is soft and smooth to nasty, edgy texture-varying filtering.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ynotch(), &gen::make_ynotch },
+        { "ynothighpass", "YNotHighpass", "XYZ Filters", "YNotHighpass is soft and smooth to nasty, edgy texture-varying filtering, no control smoothing.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ynothighpass(), &gen::make_ynothighpass },
+        { "ynotlowpass", "YNotLowpass", "XYZ Filters", "YNotLowpass is soft and smooth to nasty, edgy texture-varying filtering, no control smoothing.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ynotlowpass(), &gen::make_ynotlowpass },
+        { "ynotnotch", "YNotNotch", "XYZ Filters", "YNotNotch is soft and smooth to nasty, edgy texture-varying filtering, no control smoothing.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_ynotnotch(), &gen::make_ynotnotch },
+        { "zacidlowpass", "ZAcidLowpass", "XYZ Filters", "ZAcidLowpass is like if an e6400 went insane and grew shark teeth.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_zacidlowpass(), &gen::make_zacidlowpass },
+        { "zbandpass", "ZBandpass", "XYZ Filters", "ZBandpass is a bandpass made to sound and act like the Emu e6400 Ultra bandpass.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_zbandpass(), &gen::make_zbandpass },
+        { "zbandpass2", "ZBandpass2", "XYZ Filters", "ZBandpass2 acts more like the Emu e6400 Ultra bandpass in motion, with control smoothing.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_zbandpass2(), &gen::make_zbandpass2 },
+        { "zhighpass", "ZHighpass", "XYZ Filters", "ZHighpass is a highpass made to sound and act like the Emu e6400 Ultra highpass.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_zhighpass(), &gen::make_zhighpass },
+        { "zhighpass2", "ZHighpass2", "XYZ Filters", "ZHighpass2 acts more like the Emu e6400 Ultra highpass in motion, with control smoothing.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_zhighpass2(), &gen::make_zhighpass2 },
+        { "zlowpass", "ZLowpass", "XYZ Filters", "ZLowpass is a lowpass made to sound and act like the Emu e6400 Ultra lowpass.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_zlowpass(), &gen::make_zlowpass },
+        { "zlowpass2", "ZLowpass2", "XYZ Filters", "ZLowpass2 acts more like the Emu e6400 Ultra lowpass in motion, with control smoothing.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_zlowpass2(), &gen::make_zlowpass2 },
+        { "znotch", "ZNotch", "XYZ Filters", "ZNotch is a notch filter made to sound and act like the Emu e6400 Phaser.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_znotch(), &gen::make_znotch },
+        { "znotch2", "ZNotch2", "XYZ Filters", "ZNotch2 acts more like the Emu e6400 Ultra phaser in motion, with control smoothing.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_znotch2(), &gen::make_znotch2 },
+        { "zoom", "Zoom", "Distortion", "Zoom is a bank of Density-like waveshapers for subtly modulating peak energy.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_zoom(), &gen::make_zoom },
+        { "zoutputstage", "ZOutputStage", "Distortion", "ZOutputStage is the output clipping from the Emu e6400 style Z filters.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_zoutputstage(), &gen::make_zoutputstage },
+        { "zregion", "ZRegion", "XYZ Filters", "ZRegion is an Emu e6400 style Airwindows Region filter.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_zregion(), &gen::make_zregion },
+        { "zregion2", "ZRegion2", "XYZ Filters", "ZRegion2 is an Emu e6400 style Airwindows Region filter, with control smoothing.", 1, "1.0.0", 0.0, false, false, false, false, gen::params_zregion2(), &gen::make_zregion2 },
     };
     return list;
 }

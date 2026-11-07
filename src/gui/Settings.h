@@ -45,7 +45,7 @@ private:
 
     juce::File file;
     juce::Time lastModification;
-    ThemeId theme = ThemeId::light;
+    ThemeId theme = ThemeId::def;
     int zoom = 100;
     bool tooltips = false;   // off for new installs; switch on in Settings
     juce::StringArray favourites, recent;

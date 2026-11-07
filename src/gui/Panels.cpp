@@ -166,7 +166,11 @@ SelectorPanel::SelectorPanel (UiContext& c, std::function<void (const EffectInfo
     list.setTitle ("Effects");
     addAndMakeVisible (list);
 
-    addAndMakeVisible (categoryHolder);
+    categoryView.setViewedComponent (&categoryHolder, false);
+    categoryView.setScrollBarsShown (true, false);
+    categoryView.setScrollBarThickness (8);
+    categoryView.setTitle ("Folders");
+    addAndMakeVisible (categoryView);
     rebuildCategories();
     rebuildList();
 }
@@ -181,7 +185,8 @@ void SelectorPanel::rebuildCategories()
     categoryRows.clear();
     categoryRows.add (new CategoryRow (*this, "Favourites", "Favourites"));
     categoryRows.add (new CategoryRow (*this, "Recent", "Recently used"));
-    categoryRows.add (new CategoryRow (*this, "Latest", "Latest"));
+    categoryRows.add (new CategoryRow (*this, "New", "New"));
+    categoryRows.add (new CategoryRow (*this, "LastAdded", "Last added"));
     categoryRows.add (new CategoryRow (*this, "All", "All effects"));
 
     juce::StringArray cats;
@@ -203,11 +208,11 @@ void SelectorPanel::refresh()
         if (r->key == "Favourites")      r->count = ctx.settings.getFavourites().size();
         else if (r->key == "Recent")     r->count = ctx.settings.getRecent().size();
         else if (r->key == "All")        r->count = (int) getAllEffects().size();
-        else if (r->key == "Latest")
+        else if (r->key == "New" || r->key == "LastAdded")
         {
             r->count = 0;
             for (auto& e : getAllEffects())
-                if (e.isLatest)
+                if (r->key == "New" ? e.isNew : e.isLastAdded)
                     ++r->count;
         }
         else
@@ -244,7 +249,8 @@ void SelectorPanel::rebuildList()
     else
     {
         for (auto& e : getAllEffects())
-            if (category == "All" || category == e.category || (category == "Latest" && e.isLatest))
+            if (category == "All" || category == e.category || (category == "New" && e.isNew)
+                || (category == "LastAdded" && e.isLastAdded))
                 items.push_back (&e);
     }
 
@@ -271,7 +277,7 @@ juce::Component* SelectorPanel::refreshComponentForRow (int row, bool, juce::Com
 
     r->info = juce::isPositiveAndBelow (row, (int) items.size()) ? items[(size_t) row] : nullptr;
     r->showCategory = search.getText().isNotEmpty() || category == "Favourites" || category == "Recent"
-                      || category == "All" || category == "Latest";
+                      || category == "All" || category == "New" || category == "LastAdded";
     r->repaint();
     return r;
 }
@@ -300,7 +306,11 @@ void SelectorPanel::resized()
         row->setBounds (0, y, left.getWidth(), 20);
         y += 21;
     }
-    categoryHolder.setBounds (left.withHeight (juce::jmin (left.getHeight(), y)));
+    categoryView.setBounds (left);
+    const bool scrolls = y > left.getHeight();
+    categoryHolder.setSize (left.getWidth() - (scrolls ? 10 : 0), y);
+    for (auto* row : categoryRows)
+        row->setSize (categoryHolder.getWidth(), row->getHeight());
 
     r.removeFromLeft (1);
     r = r.reduced (12, 10);
@@ -327,7 +337,8 @@ void SelectorPanel::paint (juce::Graphics& g)
                        : category == "Favourites" ? juce::String ("FAVOURITES")
                        : category == "Recent" ? juce::String ("RECENTLY USED")
                        : category == "All" ? juce::String ("ALL EFFECTS")
-                       : category == "Latest" ? juce::String ("LATEST AIRWINDOWS RELEASES")
+                       : category == "New" ? juce::String ("NEW AIRWINDOWS RELEASES")
+                       : category == "LastAdded" ? juce::String ("LAST ADDED") + kDot + "NEW IN THIS UPDATE"
                        : category.toUpperCase();
     drawHeading (g, title, heading);
 
@@ -337,7 +348,9 @@ void SelectorPanel::paint (juce::Graphics& g)
         g.setFont (fonts::medium (13.0f));
         const auto msg = (category == "Favourites" && q.isEmpty())
                              ? "No favourites yet - right-click an effect or click its star."
-                             : "Nothing found.";
+                             : (category == "LastAdded" && q.isEmpty())
+                                   ? "Effects added in the next update will appear here."
+                                   : "Nothing found.";
         g.drawFittedText (msg, list.getBounds().reduced (6, 4), juce::Justification::topLeft, 2);
     }
 
@@ -419,18 +432,18 @@ SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed, std::
         ++i;
     }
 
-    const juce::StringArray names { "Light", "Dark", "Original", "User" };
-    const ThemeId ids[] = { ThemeId::light, ThemeId::dark, ThemeId::original, ThemeId::user };
-    for (int k = 0; k < 4; ++k)
+    const juce::StringArray names { "Default", "Light", "Dark", "Original", "User" };
+    const ThemeId ids[] = { ThemeId::def, ThemeId::light, ThemeId::dark, ThemeId::original, ThemeId::user };
+    for (int k = 0; k < 5; ++k)
     {
         auto* b = themeButtons.add (new PillButton (c, names[k]));
         b->joinedLeft = k > 0;
-        b->joinedRight = k < 3;
+        b->joinedRight = k < 4;
         b->fontSize = 11.5f;
         b->onClick = [this, id = ids[k]]
         {
             if (id == ThemeId::user)
-                ensureUserThemeExists (ctx.settings.getTheme() == ThemeId::user ? ThemeId::light : ctx.settings.getTheme());
+                ensureUserThemeExists (ctx.settings.getTheme() == ThemeId::user ? ThemeId::def : ctx.settings.getTheme());
             ctx.settings.setTheme (id);
             if (onChanged) onChanged();
         };
@@ -535,10 +548,11 @@ void SettingsPanel::refresh()
         zoomButtons[i]->setToggleState (GlobalSettings::zoomLevels[i] == ctx.settings.getZoom(), juce::dontSendNotification);
 
     const auto th = ctx.settings.getTheme();
-    themeButtons[0]->setToggleState (th == ThemeId::light, juce::dontSendNotification);
-    themeButtons[1]->setToggleState (th == ThemeId::dark, juce::dontSendNotification);
-    themeButtons[2]->setToggleState (th == ThemeId::original, juce::dontSendNotification);
-    themeButtons[3]->setToggleState (th == ThemeId::user, juce::dontSendNotification);
+    themeButtons[0]->setToggleState (th == ThemeId::def, juce::dontSendNotification);
+    themeButtons[1]->setToggleState (th == ThemeId::light, juce::dontSendNotification);
+    themeButtons[2]->setToggleState (th == ThemeId::dark, juce::dontSendNotification);
+    themeButtons[3]->setToggleState (th == ThemeId::original, juce::dontSendNotification);
+    themeButtons[4]->setToggleState (th == ThemeId::user, juce::dontSendNotification);
     resized();   // trims are knobs or faders depending on the theme
     openThemeFolder.setVisible (th == ThemeId::user);
     tooltipButtons[0]->setToggleState (ctx.settings.getTooltips(), juce::dontSendNotification);
@@ -796,14 +810,18 @@ void SettingsPanel::resized()
         zoomButtons[i]->setBounds (z.getX() + i * zw, z.getY(), i == 3 ? z.getWidth() - 3 * zw : zw, z.getHeight());
 
     auto th = look.withTrimmedTop (86).withHeight (24);
-    // "Original" (3rd) gets a little more room
-    const int tw = (th.getWidth() - 62) / 3;
-    int x = th.getX();
-    for (int i = 0; i < 4; ++i)
+    // widths follow the label lengths ("Default" and "Original" need more room than "Dark")
     {
-        const int w = i == 2 ? th.getWidth() - 3 * tw : tw;
-        themeButtons[i]->setBounds (x, th.getY(), w, th.getHeight());
-        x += w;
+        const float weights[] = { 1.25f, 1.0f, 0.95f, 1.3f, 0.95f };
+        float total = 0.0f;
+        for (auto w : weights) total += w;
+        int x = th.getX();
+        for (int i = 0; i < 5; ++i)
+        {
+            const int w = i == 4 ? th.getRight() - x : juce::roundToInt ((float) th.getWidth() * weights[i] / total);
+            themeButtons[i]->setBounds (x, th.getY(), w, th.getHeight());
+            x += w;
+        }
     }
     openThemeFolder.setBounds (look.withTrimmedTop (116).withHeight (22));
 

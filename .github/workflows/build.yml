@@ -3,6 +3,7 @@
 #   macOS    -> VST3 + AU (universal: Apple silicon + Intel), validated with auval
 #   Linux    -> tests (warnings = errors), GUI snapshots, sanitizers, plus a VST3 built on an
 #               older Ubuntu so it runs on most current distributions (community-tested)
+# Runners checked 2026-11-06: ubuntu-24.04, windows-2022, macos-15 are supported (no end date).
 # Pushing a tag like v0.1.0 also creates a GitHub Release with the zips attached.
 
 name: build
@@ -202,14 +203,18 @@ jobs:
   # ------------------------------------------------------------------------------------------
   linux-package:
     name: Linux VST3 (package)
-    runs-on: ubuntu-22.04   # older base system = runs on more distributions
+    # Built inside an Ubuntu 22.04 container (older base system = runs on more distributions).
+    # The ubuntu-22.04 runner itself is deprecated (removed April 2027), the container image is not.
+    runs-on: ubuntu-24.04
+    container: ubuntu:22.04
     steps:
-      - uses: actions/checkout@v5
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build libx11-dev libxext-dev libxrandr-dev \
-            libxinerama-dev libxcursor-dev libfreetype-dev libfontconfig1-dev libasound2-dev
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y git ca-certificates python3 cmake g++ ninja-build \
+            libx11-dev libxext-dev libxrandr-dev libxinerama-dev libxcursor-dev libfreetype-dev \
+            libfontconfig1-dev libasound2-dev
+      - uses: actions/checkout@v5
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DDAYLIGHT_BUILD_TESTS=OFF
       - name: Build

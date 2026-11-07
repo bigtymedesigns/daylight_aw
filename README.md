@@ -1,16 +1,17 @@
 # Daylight_aw
 
 **Original Airwindows effects in a calm, hand-drawn interface.**
-A free, open-source VST3 / AU plugin by **big_tyme_designs**, with 135 Airwindows effects.
+A free, open-source VST3 / AU plugin by **big_tyme_designs**, with all 531 effects of Airwindows Consolidated.
 Manual: `docs/Daylight_aw_Manual.pdf` (also in every download).
 
 - One Airwindows effect per instance, chosen once from a searchable list (categories, favourites,
-  recently used and the newest Airwindows releases in **Latest**).
+  recently used, **New** (Airwindows releases of the 3 months before the release) and **Last added**
+  (effects that came with the latest update)).
 - The sound is the **original Airwindows code, unchanged**. Automatic tests prove the output is
   bit-identical.
 - Each effect gets its own layout, with related controls grouped. The window is Small or Large,
   with tabs for big effects.
-- Light, Dark, Original (plain DAW-style faders) and a User theme you can edit (`themes/README.md`).
+- Default, Light, Dark, Original (plain DAW-style faders) and a User theme you can edit (`themes/README.md`).
 - A/B compare, input/output trim, zoom 100–200 %, full automation, sessions restore exactly.
 - User presets per effect, the full Airwindopedia text for every effect, and tooltips.
 - Make your own layouts without rebuilding: Settings → Edit layout (`docs/LAYOUTS.md`).
@@ -37,7 +38,7 @@ Tagged versions also appear under **Releases**. Install steps are in the zips (`
 |---|---|
 | `manifest/effects.json` | **The list of effects** (id, Airwindows name, category, description, version) |
 | `layouts/<id>.json` | Optional hand-made layout per effect (groups, labels, control types) |
-| `themes/light`, `themes/dark` | Built-in themes (`theme.json` + `paper.png` + `figure.png`) |
+| `themes/default`, `themes/light`, `themes/dark`, `themes/original` | Built-in themes (`theme.json`, optional `paper.png` + `figure.png`) |
 | `src/dsp` | Effect registry and host wrapper (no GUI code) |
 | `src/PluginProcessor.*` | Parameters, audio path, trims, bypass, A/B, session state |
 | `src/gui` | Window, controls, panels, theme loading, settings |

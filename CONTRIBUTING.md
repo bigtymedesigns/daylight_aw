@@ -37,9 +37,9 @@ Everything happens on GitHub, and GitHub builds the plugins, so you don't need a
    ```
    - `id`: lower-case letters/digits, permanent. Never rename or reuse it.
    - `since`: the Daylight_aw version that first includes it.
-   - `released`: the date Airwindows first published it (YYYY-MM-DD). The **Latest** folder shows the
-     effects released in the months before `"latest": {"until": ...}` at the top of the manifest:
-     set `until` to the release date of each new Daylight_aw version.
+   - `released`: the date Airwindows first published it (YYYY-MM-DD). The **New** folder shows the
+     effects released in the months before `"release": {"date": ...}` at the top of the manifest.
+     Effects whose `since` equals `release.version` appear in **Last added** (see docs/RELEASING.md).
    - Optional `"tail": 10` for reverbs/delays: seconds the effect keeps sounding after the input
      stops, so DAWs don't cut it off when they pause silent plugins or render.
 4. Optional: `layouts/<id>.json` (copy an existing one). Without it the effect gets an automatic layout.
