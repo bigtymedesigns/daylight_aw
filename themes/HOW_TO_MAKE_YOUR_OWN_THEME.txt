@@ -1,0 +1,57 @@
+HOW TO MAKE YOUR OWN THEME (Daylight_aw)
+=======================================
+
+1. In Daylight_aw, click the effect name, set Theme to "User".
+2. Click "Open theme folder..." and open theme.json in any text editor (Notepad, TextEdit).
+3. Change a colour and save. Every open Daylight_aw window updates within about a second.
+
+That's all. theme.json starts as a copy of the Default theme, so you only change what you want.
+
+Colours are written #RRGGBB, or #RRGGBBAA with transparency (00 = invisible, FF = solid).
+Example: "#2FC4A5" is teal, "#FFFFFF24" is white at about 14 %.
+
+Nothing can break: a wrong or missing value just uses the Default value, and the
+presets panel shows what was wrong. To start over, delete theme.json (and choose
+User again), or switch back to Default.
+
+
+WHAT EACH VALUE DOES
+--------------------
+Background
+  background.color         window colour
+  halo1.*  halo2.*         two soft glows: color, opacity (0-1), x and y (centre, 0-1 across the
+                           window), radius (0-2, size); set opacity to 0 to switch one off
+  topBar.line              line under the top bar
+
+Text
+  ink.text                 general text and the effect-name button
+  ink.muted                small labels (IN, OUT, BYPASS) and hints
+  ink.name / ink.value     control names / control values
+  ink.groupTitle           group titles (INPUT, TONE ...)
+  ink.accent               trim value when not 0 dB, links
+
+Groups
+  group.fill / group.border
+
+Knobs
+  knob.style               "ring" (outline only) or "round" (filled disc)
+  knob.fill                inside of the knob (transparent for "ring")
+  knob.ring                knob outline
+  knob.pointer             the pointer line
+  knob.ticks               step marks and end marks
+
+Buttons
+  button.fill / button.border / button.text
+  button.activeFill / button.activeText    the selected A/B slot, bypass on, current page
+
+Panels (effect browser, presets, About, menus)
+  panel.fill / panel.border / panel.text
+  select.fill / select.text                selected rows
+
+Other
+  logo.color               "Daylight_aw" in the top bar
+  style.corner             corner roundness of buttons and panels (0-12)
+
+
+Your theme is stored only on this computer:
+  Documents/big_tyme_designs/Daylight_aw/Themes/User/theme.json

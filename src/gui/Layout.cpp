@@ -1,4 +1,5 @@
 #include "Layout.h"
+#include "BinaryData.h"
 
 namespace dlaw
 {
@@ -213,34 +214,20 @@ EffectLayout buildLayout (const std::vector<ParamFacts>& params, const juce::Str
     if (! rest.empty())
         packGroups (autoGroups (params, rest), {}, layout.pages, layout.warnings);   // on page(s) of their own
 
-    int totalRows = 0;
-    for (auto& p : layout.pages)
-        totalRows += (int) p.rows.size();
-
-    layout.small = layout.pages.size() <= 1 && totalRows <= 1;
+    // Window size from the rows actually needed after packing (groups never split), not from the
+    // number of parameters: 1 row Small, 2 rows Medium, 3 rows (or several pages) Large.
+    if (layout.pages.size() > 1)
+        layout.rows = kRowsPerPage;
+    else if (! layout.pages.empty())
+        layout.rows = juce::jlimit (1, kRowsPerPage, (int) layout.pages[0].rows.size());
     return layout;
 }
-EffectLayout buildListLayout (const std::vector<ParamFacts>& params)
-{
-    EffectLayout layout;
-    const int n = (int) params.size();
-    layout.small = n <= kControlsPerRow;
 
-    for (int start = 0; start < n; start += kListRowsPerPage)
-    {
-        PageSpec page;
-        const int end = juce::jmin (n, start + kListRowsPerPage);
-        page.name = "Parameters " + juce::String (start + 1) + "-" + juce::String (end);
-        for (int i = start; i < end; ++i)
-        {
-            ControlSpec c;
-            c.param = i;
-            c.type = ControlType::knob;   // continuous, like the original host view
-            c.label = params[(size_t) i].name;
-            page.rows.push_back ({ { GroupSpec { {}, { c } } } });
-        }
-        layout.pages.push_back (std::move (page));
-    }
-    return layout;
+juce::String builtInLayoutJson (const juce::String& effectId)
+{
+    int size = 0;
+    if (auto* data = BinaryData::getNamedResource ((effectId + "_json").toRawUTF8(), size))
+        return juce::String::fromUTF8 (data, size);
+    return {};
 }
 } // namespace dlaw

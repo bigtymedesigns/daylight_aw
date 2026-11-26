@@ -8,10 +8,9 @@ Everything happens on GitHub, and GitHub builds the plugins, so you don't need a
 | You want to... | Rebuild needed? | Where |
 |---|---|---|
 | Change colours or the look | **No.** Use the User theme | `Documents/big_tyme_designs/Daylight_aw/Themes/User/` (see `themes/README.md`) |
-| Make your own layout for an effect | **No.** Settings → Edit layout | `Documents/big_tyme_designs/Daylight_aw/Layouts/` (see `docs/LAYOUTS.md`) |
-| Change the built-in layout everyone gets | Yes | `layouts/<id>.json` (same format: copy your file there) |
+| Change the layout of an effect | Yes | `layouts/<id>.json` (see `docs/LAYOUTS.md`) |
 | Add an Airwindows effect | Yes | `manifest/effects.json` + 3 source files |
-| Change the built-in themes | Yes | `themes/<name>/theme.json` + images |
+| Change the Default theme | Yes | `themes/default/theme.json` |
 
 ## The GitHub way (no tools needed)
 
@@ -37,9 +36,12 @@ Everything happens on GitHub, and GitHub builds the plugins, so you don't need a
    ```
    - `id`: lower-case letters/digits, permanent. Never rename or reuse it.
    - `since`: the Daylight_aw version that first includes it.
-   - `released`: the date Airwindows first published it (YYYY-MM-DD). The **New** folder shows the
-     effects released in the months before `"release": {"date": ...}` at the top of the manifest.
-     Effects whose `since` equals `release.version` appear in **Last added** (see docs/RELEASING.md).
+   - `released`: the date Airwindows first published it (YYYY-MM-DD). The **Last 6 months** folder
+     shows the effects released in the 6 months before the newest `released` date in the manifest.
+     Effects whose `since` equals `release.version` appear in **New** (see docs/RELEASING.md).
+   - Versions of one effect (ToTape8, ToTape9) form a **family**: the name without its trailing
+     number. The browser's "Latest versions only" view shows the newest one. If the number is part
+     of the name and not a version (Desk4, kPlate140), add `"family": "<its own name>"`.
    - Optional `"tail": 10` for reverbs/delays: seconds the effect keeps sounding after the input
      stops, so DAWs don't cut it off when they pause silent plugins or render.
 4. Optional: `layouts/<id>.json` (copy an existing one). Without it the effect gets an automatic layout.

@@ -29,12 +29,19 @@ https://juce.com - https://github.com/juce-framework/JUCE
 
 VST is a registered trademark of Steinberg Media Technologies GmbH.
 
-## Shantell Sans (SIL Open Font License 1.1)
+## Inter (SIL Open Font License 1.1)
 
-Typeface by Shantell Martin, Arrow Type. `resources/fonts/OFL.txt`.
-https://github.com/arrowtype/shantell-sans
+Interface font. Copyright 2020 The Inter Project Authors. `resources/fonts/Inter-OFL.txt`.
+https://github.com/rsms/inter - static weights cut from the Google Fonts release by
+`tools/fonts/make_fonts.py`.
+
+## Jost (SIL Open Font License 1.1)
+
+Logo font. Copyright 2020 The Jost Project Authors. `resources/fonts/Jost-OFL.txt`.
+https://github.com/indestructible-type/Jost - static weights cut from the Google Fonts release by
+`tools/fonts/make_fonts.py`.
 
 ## Artwork
 
-The paper texture and cat drawings were made for this project (`tools/art/`) and are covered by
-the project licence.
+The paper texture and cat drawings in `tools/art/` were made for this project (used by the
+themes of versions before 1.1) and are covered by the project licence.

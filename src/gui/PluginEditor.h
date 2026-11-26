@@ -16,10 +16,12 @@ public:
     void paint (juce::Graphics&) override {}
     void resized() override;
 
-    /** Opens the presets + settings panel (used by the snapshot tests). */
+    /** Opens the presets + settings dropdown (snapshot tests, manual pictures). */
     void showSettingsPanel();
-    /** Opens the effect info panel (used by the snapshot tests). */
+    /** Opens the effect info panel (snapshot tests). */
     void showInfoPanel();
+    /** Opens the About popup (snapshot tests). */
+    void showAbout();
 
 private:
     class Content;

@@ -1,20 +1,22 @@
 # Daylight_aw
 
-**Original Airwindows effects in a calm, hand-drawn interface.**
-A free, open-source VST3 / AU plugin by **big_tyme_designs**, with all 531 effects of Airwindows Consolidated.
+**Original Airwindows effects in a calm, dark interface.**
+A free, open-source VST3 / AU plugin by **big_tyme_designs**, with all 533 effects of Airwindows Consolidated.
 Manual: `docs/Daylight_aw_Manual.pdf` (also in every download).
 
-- One Airwindows effect per instance, chosen once from a searchable list (categories, favourites,
-  recently used, **New** (Airwindows releases of the 3 months before the release) and **Last added**
-  (effects that came with the latest update)).
+- One Airwindows effect per instance, chosen from a searchable list (and changeable later): categories, favourites with
+  your own **collections**, recently used, **New** (effects added in this update) and **Last 6 months**
+  (the newest Airwindows releases).
+- **Latest versions only**: the list shows the newest version of each effect (ToTape9, not ToTape5–8).
+  Every older version stays in the plugin, so old projects always open; untick to see them all.
 - The sound is the **original Airwindows code, unchanged**. Automatic tests prove the output is
   bit-identical.
-- Each effect gets its own layout, with related controls grouped. The window is Small or Large,
-  with tabs for big effects.
-- Default, Light, Dark, Original (plain DAW-style faders) and a User theme you can edit (`themes/README.md`).
-- A/B compare, input/output trim, zoom 100–200 %, full automation, sessions restore exactly.
-- User presets per effect, the full Airwindopedia text for every effect, and tooltips.
-- Make your own layouts without rebuilding: Settings → Edit layout (`docs/LAYOUTS.md`).
+- Each effect gets its own layout, with related controls grouped. The window is Small, Medium or
+  Large (1, 2 or 3 rows), with tabs for big effects.
+- Default theme, plus a User theme you can edit without rebuilding (`themes/README.md`).
+- A/B compare, input/output trims, zoom 100–200 %, full automation, sessions restore exactly.
+- Fine adjustment with Shift + drag or right-click + drag.
+- User presets per effect and the full Airwindopedia text for every effect.
 
 See `CHANGELOG.md` for what changed in each version.
 
@@ -38,7 +40,7 @@ Tagged versions also appear under **Releases**. Install steps are in the zips (`
 |---|---|
 | `manifest/effects.json` | **The list of effects** (id, Airwindows name, category, description, version) |
 | `layouts/<id>.json` | Optional hand-made layout per effect (groups, labels, control types) |
-| `themes/default`, `themes/light`, `themes/dark`, `themes/original` | Built-in themes (`theme.json`, optional `paper.png` + `figure.png`) |
+| `themes/default/theme.json` | The Default theme; `themes/HOW_TO_MAKE_YOUR_OWN_THEME.txt` = the User theme guide |
 | `src/dsp` | Effect registry and host wrapper (no GUI code) |
 | `src/PluginProcessor.*` | Parameters, audio path, trims, bypass, A/B, session state |
 | `src/gui` | Window, controls, panels, theme loading, settings |
@@ -72,7 +74,7 @@ file get an automatic one.
 **Change a layout.** Edit `layouts/<id>.json` and push. Missing parameters are added
 automatically, so nothing can disappear. The tests check every layout.
 
-**Change the look.** Edit `themes/*/theme.json`, or the PNGs. Users can do the same in their
+**Change the look.** Edit `themes/default/theme.json`. Users can do the same in their
 User theme folder without rebuilding.
 
 **Airwindows updated upstream.** Run `tools/sync_upstream.py <airwin2rack checkout>`. It reports

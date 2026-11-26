@@ -93,6 +93,19 @@ AC
 AC
 - Right-drag moves at the fine rate; a plain right-click changes nothing and opens nothing.
 
+## 11. "Latest versions only" browser view (added 2026-11-26, instead of a second private build)
+- One build for everyone with **all** effects, forever (no effect is ever removed, so old projects always open).
+- Manifest field `family` per effect (e.g. ToTape5…ToTape9 → `ToTape`); `gen_effects.py` suggests families from the names, then they are checked by hand (Console7Channel/Console7Buss-type names). The newest member of a family = highest version in the family (by `released` date, then name number).
+- Browser switch **Latest versions only / All versions** (global setting, default: Latest versions only). With it on, older family members are hidden from the category folders, All effects, New, Last 6 months and search.
+- **Favourites, collections and Recently used always show what is in them**, older versions included. An older version that is a favourite or in a collection also stays listed in its category and in search: when ToTape10 arrives, a favourited ToTape9 stays visible everywhere; once it is removed from Favourites and every collection, it is hidden in the Latest view.
+- The switch is a small "Latest versions only" check box at the right of the list heading (not in the mockups; easy to move).
+- Existing instances and sessions are never affected; only the list changes.
+
+AC
+- With Latest on, ToTape shows only ToTape9 in its category and in search; with All on, ToTape5–9.
+- A favourited older version stays visible in Favourites / its collections; removed from all of them → hidden in Latest view (test with a fake newer family member).
+- A session using a hidden older effect opens and sounds unchanged (fixture test).
+
 ## 10. Tests, docs, release files
 - Tests: snapshots for Default (all effects) + a User sample (Light/Dark/Original dropped); new tests for the three sizes, New / Last 6 months, collections round trip, settings migration (old themes, `tooltips` key), old User theme move. Null, state and fixture tests stay as they are.
 - Version 1.1.0 in `CMakeLists.txt`; manifest `release`: `{"version": "1.1.0", "date": <release day>, "lastMonths": 6, "previous": "1.0.0"}`.

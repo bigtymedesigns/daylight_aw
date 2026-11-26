@@ -706,6 +706,8 @@ set(DAYLIGHT_EFFECT_SOURCES
     third_party/airwin_consolidated/autogen_airwin/PointProc.cpp
     third_party/airwin_consolidated/autogen_airwin/PointyDeluxe.cpp
     third_party/airwin_consolidated/autogen_airwin/PointyDeluxeProc.cpp
+    third_party/airwin_consolidated/autogen_airwin/PointyDeluxe2.cpp
+    third_party/airwin_consolidated/autogen_airwin/PointyDeluxe2Proc.cpp
     third_party/airwin_consolidated/autogen_airwin/PointyGuitar.cpp
     third_party/airwin_consolidated/autogen_airwin/PointyGuitarProc.cpp
     third_party/airwin_consolidated/autogen_airwin/Pop.cpp
@@ -732,6 +734,8 @@ set(DAYLIGHT_EFFECT_SOURCES
     third_party/airwin_consolidated/autogen_airwin/PrimeFIRProc.cpp
     third_party/airwin_consolidated/autogen_airwin/PunchyDeluxe.cpp
     third_party/airwin_consolidated/autogen_airwin/PunchyDeluxeProc.cpp
+    third_party/airwin_consolidated/autogen_airwin/PunchyDeluxe2.cpp
+    third_party/airwin_consolidated/autogen_airwin/PunchyDeluxe2Proc.cpp
     third_party/airwin_consolidated/autogen_airwin/PunchyGuitar.cpp
     third_party/airwin_consolidated/autogen_airwin/PunchyGuitarProc.cpp
     third_party/airwin_consolidated/autogen_airwin/PurestAir.cpp
@@ -1415,6 +1419,7 @@ set(DAYLIGHT_EFFECT_SOURCES
     src/generated/fx/podcastdeluxe.cpp
     src/generated/fx/point.cpp
     src/generated/fx/pointydeluxe.cpp
+    src/generated/fx/pointydeluxe2.cpp
     src/generated/fx/pointyguitar.cpp
     src/generated/fx/pop.cpp
     src/generated/fx/pop2.cpp
@@ -1428,6 +1433,7 @@ set(DAYLIGHT_EFFECT_SOURCES
     src/generated/fx/pressure6.cpp
     src/generated/fx/primefir.cpp
     src/generated/fx/punchydeluxe.cpp
+    src/generated/fx/punchydeluxe2.cpp
     src/generated/fx/punchyguitar.cpp
     src/generated/fx/purestair.cpp
     src/generated/fx/purestconsole2buss.cpp
@@ -1994,6 +2000,7 @@ set(DAYLIGHT_DOC_FILES
     third_party/airwin_consolidated/awpdoc/Pressure6.txt doc_pressure6.txt
     third_party/airwin_consolidated/awpdoc/PrimeFIR.txt doc_primefir.txt
     third_party/airwin_consolidated/awpdoc/PunchyDeluxe.txt doc_punchydeluxe.txt
+    third_party/airwin_consolidated/awpdoc/PunchyDeluxe2.txt doc_punchydeluxe2.txt
     third_party/airwin_consolidated/awpdoc/PurestAir.txt doc_purestair.txt
     third_party/airwin_consolidated/awpdoc/PurestConsole2Buss.txt doc_purestconsole2buss.txt
     third_party/airwin_consolidated/awpdoc/PurestConsole2Channel.txt doc_purestconsole2channel.txt

@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Components.h"
+#include "../presets/PresetStore.h"
 
 namespace dlaw
 {
-/** Base for the panels that open under the top row: draws the themed panel box. */
+/** Base for the panels: draws the themed panel box (rounded, faint border, soft shadow). */
 class PanelBase : public juce::Component
 {
 public:
@@ -17,7 +18,8 @@ protected:
 };
 
 // =============================================================================================
-/** Effect chooser: categories, search, favourites (right-click or star), recently used, New, Last added, descriptions. */
+/** Effect browser: Favourites + collections, Recently used, New, Last 6 months, All effects,
+    categories, search, "Latest versions only" view, descriptions. */
 class SelectorPanel : public PanelBase,
                       private juce::ListBoxModel,
                       private juce::TextEditor::Listener
@@ -30,28 +32,48 @@ public:
     void resized() override;
     void refresh();
 
+    /** Folder keys (tests): "Favourites", "col:<name>", "Recent", "New", "Last6", "All", or a category. */
+    void showFolder (const juce::String& key);
+    const std::vector<const EffectInfo*>& getItems() const { return items; }
+    juce::StringArray getFolderKeys() const;
+
 private:
     struct Row;
-    struct CategoryRow;
+    struct FolderRow;
 
     int getNumRows() override;
     void paintListBoxItem (int, juce::Graphics&, int, int, bool) override {}
     juce::Component* refreshComponentForRow (int row, bool selected, juce::Component* existing) override;
     void textEditorTextChanged (juce::TextEditor&) override;
 
-    void rebuildCategories();
+    void rebuildFolders();
     void rebuildList();
+    void layoutFolders();
     void setHover (const EffectInfo*);
+    void showEffectMenu (const EffectInfo&);
+    void showCollectionMenu (int index);
+    void startNaming (int renameIndex, const juce::String& effectToAdd);
+    void finishNaming (bool apply);
+    int countFor (const juce::String& key) const;
+    bool inFolder (const EffectInfo&, const juce::String& key) const;
+    juce::Rectangle<int> viewToggleArea() const;
+    void mouseUp (const juce::MouseEvent&) override;
 
     std::function<void (const EffectInfo&)> onChoose;
     juce::TextEditor search;
     juce::ListBox list;
-    juce::OwnedArray<CategoryRow> categoryRows;
-    juce::Component categoryHolder;
-    juce::Viewport categoryView;   // the folder column scrolls when there are more folders than fit
-    juce::String category = "Favourites";
+    juce::OwnedArray<FolderRow> folderRows;
+    juce::Component folderHolder;
+    juce::Viewport folderView;   // the folder column scrolls when there are more folders than fit
+    juce::String folder = "Favourites";
     std::vector<const EffectInfo*> items;
     const EffectInfo* hovered = nullptr;
+    int hiddenMatches = 0;       // search results hidden by "Latest versions only"
+
+    juce::TextEditor nameEditor; // new / renamed collection, inline in the folder column
+    int renamingIndex = -1;      // -1 = new collection
+    juce::String addAfterNaming; // effect to put into a new collection
+    bool naming = false;
 };
 
 // =============================================================================================
@@ -59,7 +81,8 @@ private:
 class ConfirmDialog : public juce::Component
 {
 public:
-    ConfirmDialog (UiContext& c, const EffectInfo& info, std::function<void (bool)> onResult);
+    /** replacing = the effect that is in use now (nullptr when choosing the first effect). */
+    ConfirmDialog (UiContext& c, const EffectInfo& info, const EffectInfo* replacing, std::function<void (bool)> onResult);
     void paint (juce::Graphics&) override;
     void resized() override;
     bool keyPressed (const juce::KeyPress&) override;
@@ -67,27 +90,29 @@ public:
 private:
     UiContext& ctx;
     const EffectInfo& info;
+    const EffectInfo* replacing;
     std::function<void (bool)> onResult;
     PillButton cancel, load;
     juce::Rectangle<int> box;
 };
 
 // =============================================================================================
-/** Presets for this effect (left) + settings: zoom, theme, trims, reset, effect info. */
+/** Dropdown from the effect name: presets for this effect (left); zoom, theme, reset, effect info (right). */
 class SettingsPanel : public PanelBase,
                       private juce::ListBoxModel
 {
 public:
-    SettingsPanel (UiContext& c, std::function<void()> onThemeOrZoomChanged, std::function<void()> onShowInfo);
+    SettingsPanel (UiContext& c, std::function<void()> onShowInfo, std::function<void()> onChangeEffect);
     ~SettingsPanel() override;
     void paint (juce::Graphics&) override;
     void resized() override;
     void refresh();
 
+    static constexpr int kWidth = 460, kHeight = 300, kRightWidth = 180;
+
 private:
     enum class NameMode { none, saving, renaming };
 
-    // presets
     int getNumRows() override { return presetFiles.size(); }
     void paintListBoxItem (int row, juce::Graphics&, int width, int height, bool selected) override;
     void listBoxItemClicked (int row, const juce::MouseEvent&) override;
@@ -97,17 +122,16 @@ private:
     void startNaming (NameMode, const juce::File& file = {});
     void confirmName();
     void stopNaming();
+    void showZoomMenu();
+    void showThemeMenu();
 
-    struct Columns { juce::Rectangle<int> presets, look, trims, effect; };
-    Columns columns() const;
+    juce::Rectangle<int> leftArea() const;
+    juce::Rectangle<int> rightArea() const;
+    bool isCompact() const { return getHeight() < 260; }   // in the Small window
+    static constexpr int kCompactLabelW = 50;
 
-    std::function<void()> onChanged, onShowInfo;
-    juce::OwnedArray<PillButton> zoomButtons, themeButtons, tooltipButtons;
-    PillButton openThemeFolder, resetButton, infoButton, savePreset, nameOk, nameCancel,
-               editLayoutButton, removeLayoutButton;
-    juce::String layoutMessage;
-    TrimKnob inTrim, outTrim;
-    juce::Rectangle<int> left, right;
+    std::function<void()> onShowInfo, onChangeEffect;
+    PillButton zoomButton, themeButton, openThemeFolder, resetButton, infoButton, changeButton, savePreset, nameOk, nameCancel;
 
     PresetStore store { PresetStore::defaultRoot() };
     juce::Array<juce::File> presetFiles;
@@ -140,15 +164,18 @@ private:
 };
 
 // =============================================================================================
+/** Compact About popup under the logo. Closes on a click outside or Esc (handled by the editor). */
 class AboutPanel : public PanelBase
 {
 public:
-    explicit AboutPanel (UiContext& c, std::function<void()> onClose);
+    explicit AboutPanel (UiContext& c);
     void paint (juce::Graphics&) override;
-    void resized() override;
+    int preferredHeight() const;
+
+    static constexpr int kWidth = 180;
 
 private:
-    std::function<void()> onClose;
-    PillButton close;
+    juce::TextLayout paragraph() const;
+    juce::TextLayout licences() const;
 };
 } // namespace dlaw

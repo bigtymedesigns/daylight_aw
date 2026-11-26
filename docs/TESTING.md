@@ -13,8 +13,9 @@ Two kinds of testing:
 | Null tests (all effects, float + double, odd block sizes) | sound is **bit-identical** to the original Airwindows code |
 | Pass-through / bypass / trims / mono | no effect chosen = untouched audio; bypass and trims behave; mono tracks work |
 | Session state | save/load round trip; unknown effects from newer versions are kept; broken data is ignored |
-| Layouts | every parameter of every effect is on screen; group/row/tab limits hold |
-| GUI snapshots | every effect drawn in Default, a sample in Light, Dark and Original (download "gui-snapshots" from the run) |
+| Layouts | every parameter of every effect is on screen; group/row/tab limits hold; window size = packed rows |
+| GUI snapshots | every effect drawn in Default, a sample in User, plus the dropdown, About, Effect info (download "gui-snapshots" from the run) |
+| Browser + settings | New / Last 6 months / families, Latest versions only, collections, 1.0 settings and User theme migration |
 | pluginval (strictness 10) | host-style stress test: threads, automation, editor, state, odd buffer sizes |
 | auval (Mac) | Apple's Audio Unit validation |
 | Sanitizers | no memory errors or undefined behaviour |
@@ -29,118 +30,112 @@ any future effect.
 
 ## 2. REAPER checklist (Windows)
 
-Install: copy `Daylight_aw.vst3` to `C:\Program Files\Common Files\VST3\`, then rescan
+Install: close REAPER fully, copy `Daylight_aw.vst3` to `C:\Program Files\Common Files\VST3\`, then rescan
 (Options > Preferences > Plug-ins > VST > Re-scan).
 
 Tick each line. Write down anything odd, with the effect name and what you did.
 
+### 1.1 checks (new in this version)
+
+**Look and top bar**
+- [ ] New instance: dark "deep space" window with a teal glow top-left and a violet glow bottom-right;
+      top bar reads `Daylight_aw` (thin Jost logo), `Choose effect`, A/B (faded), BYPASS
+- [ ] ToTape9: Medium window (2 rows of groups), group panels with teal titles, ring knobs with violet pointers
+- [ ] Compare with board 8 of the design canvas at 100 % and 200 % zoom
+- [ ] IN / OUT mini knobs next to A/B: drag, Shift-drag (fine), wheel, double-click = 0.0; the value
+      turns teal when not 0 dB; audio level changes as before
+- [ ] BYPASS: clicking the round button toggles bypass (same as REAPER's own bypass)
+- [ ] **Bug fix:** clicking the BYPASS label, empty top-bar space, the logo or the name button never toggles bypass
+
+**About, dropdown**
+- [ ] Logo click: small About popup (name, version, the Airwindows paragraph, licences); closes on a click
+      outside and on Esc; that click doesn't move a knob
+- [ ] Effect name click: dropdown (presets left, Zoom / Theme / Open theme folder / Reset / Effect info right);
+      closes on any click outside
+- [ ] Presets: Save preset, load, right-click Rename / Move to trash / Show in folder all work
+- [ ] Zoom dropdown 100/125/150/200 %: every open instance resizes
+- [ ] Theme dropdown Default / User; "Open theme folder..." opens `Documents\big_tyme_designs\Daylight_aw\Themes\User`
+      with theme.json and "How to make your own theme.txt"
+- [ ] Change `background.color` in the User theme.json, save: the window updates within a second
+- [ ] If you had a 1.0 User theme: it is now in `Themes\User\old_1.0\`
+- [ ] Reset to defaults and Effect info work; no tooltips anywhere; no Edit layout anywhere
+
+**Window sizes**
+- [ ] A 1-row effect (e.g. Pop3 or a 3-knob effect) opens Small; ToTape9 Medium; StoneFireComp Large
+- [ ] ConsoleXChannel: Large with page tabs at the bottom; tabs switch pages
+
+**Effect browser**
+- [ ] Folders: Favourites, + New collection, Recently used, New (2), Last 6 months (newest first), All effects,
+      categories
+- [ ] "Latest versions only" is ticked: the Tape folder shows ToTape9 but not ToTape5-8; untick: all appear
+- [ ] Star ToTape8 (untick, star it, tick again): ToTape8 stays in Tape and Favourites; un-star it: it disappears
+      from Tape (Latest view)
+- [ ] "+ New collection": type "Clippers", Enter; right-click ADClip8 > Add to collection > Clippers; it shows in Clippers
+- [ ] One effect in two collections; rename a collection; Move up / Move down; Delete: the effects and favourites stay
+- [ ] A second Daylight_aw window shows the new collection within a second (open its effect list)
+- [ ] Search finds names and descriptions; with Latest ticked, searching "ToTape8" says an older version matches
+
+**Change effect**
+- [ ] ToTape9 playing: effect name > Change effect... > the browser opens (Large window) > pick Galactic3 >
+      the confirmation names both effects > Change effect: Galactic3 at its defaults, the window resizes,
+      no crash, no lasting noise
+- [ ] REAPER's parameter list (Param button) now shows Galactic3's names; save, close, reopen: Galactic3
+- [ ] Ctrl+Z after the change: back to ToTape9 with its values (or note what REAPER does)
+- [ ] Cancel in the confirmation, or clicking the effect name, returns to the effect unchanged
+- [ ] New folder: PunchyDeluxe2 and PointyDeluxe2; both load and sound fine
+- [ ] Every row in the browser shows a release date ("Nov 2026")
+- [ ] A/B, the current page tab and BYPASS (on) are green; About is small with the short text
+
+**Controls**
+- [ ] Right-click + drag on a knob = fine adjustment (like Shift-drag); right-click without moving changes nothing
+- [ ] Right-drag works on the IN / OUT mini knobs too
+
+**Old projects**
+- [ ] A project saved with 1.0 opens with the same effect, values, A/B, trims and preset name
+- [ ] A 1.0 project that uses an older version (e.g. ToTape8) opens and sounds the same, even though the
+      browser hides ToTape8
+
 ### Loading
 - [ ] Daylight_aw appears under big_tyme_designs in the FX browser
-- [ ] Inserting it opens the window with "Choose effect" and the effect list open
+- [ ] Inserting it opens the window with the effect list open
 - [ ] Before choosing, audio passes through unchanged (toggle the FX on/off: no difference)
 
 ### Choosing an effect
-- [ ] Categories, All effects, Search all work
-- [ ] Star / right-click adds a favourite; it is still there in a new instance and after restarting REAPER
-- [ ] Recently used fills up
 - [ ] Choosing asks "Load X? This can't be changed later"; Cancel does nothing
-- [ ] After loading, the window has the right size (Small for 1–5 controls, Large for more)
+- [ ] Favourites are still there in a new instance and after restarting REAPER
+- [ ] Recently used fills up
 
-### Controls (try on ToTape9, Galactic, ConsoleXChannel, DeEss)
+### Controls (try on ToTape9, Galactic3, ConsoleXChannel, DeEss)
 - [ ] Drag changes the value, Shift-drag is fine, mouse wheel works
 - [ ] Double-click the knob resets it; double-click the value lets you type a value
-- [ ] Hover underlines the name and shows one more decimal
 - [ ] Stepped controls (e.g. PocketVerbs type, ADClip8 mode) snap to their steps
-- [ ] ConsoleXChannel: tabs 1/2/3 at the bottom switch pages
 - [ ] Sound changes as expected; no clicks when moving controls (other than what the effect itself does)
 
 ### Presets
-- [ ] Settings panel (click the effect name): "Save preset" asks for a name; Enter saves, Esc cancels
-- [ ] The menu bar shows "ToTape9 · My preset"; moving a knob adds "*"; loading the preset again removes it
-- [ ] Saving with an existing name asks "Replace it?" first
-- [ ] Right-click a preset: Rename, Move to trash, Show in folder all work
-- [ ] Presets are per effect: a DeEss instance doesn't list ToTape9 presets
-- [ ] A preset saved in one instance shows up in another instance of the same effect (reopen the panel)
+- [ ] "Save preset" asks for a name; Enter saves, Esc cancels; an existing name asks "Replace it?" first
+- [ ] The name button shows "ToTape9 · My preset"; moving a knob adds "*"; loading the preset again removes it
+- [ ] Presets are per effect; a preset saved in one instance shows up in another instance of the same effect
 - [ ] Save the project with a preset loaded and edited, reopen: the name and the "*" are back
-- [ ] Files are in `Documents\big_tyme_designs\Daylight_aw\Presets\<Effect>\` and open in a text editor
-
-### Effect info + tooltips (0.3.0)
-- [ ] Settings → **Effect info** opens the full Airwindopedia text; it scrolls; Close returns
-- [ ] Clicking the effect name while Effect info is open closes it
-- [ ] Hovering a knob for about a second shows a tooltip. Renamed controls show their Airwindows
-      name (e.g. ConsoleXChannel "Thresh" → "FC Thrs")
-- [ ] Tooltips also on A/B, BYPASS, the logo, the menu bar and the tab buttons
-- [ ] Tooltips look right in Light and Dark, and at 150 % / 200 % zoom
-- [ ] REAPER's preset field (top of the FX window) shows "ToTape9 - Warm Tape" after loading a preset
-
-### Final 1.0 checks
-- [ ] Effect list: 531 effects; **New** shows 17, **Last added** shows 0 with a short note; search works
-- [ ] The folder column scrolls (mouse wheel) down to XYZ Filters
-- [ ] Fresh install: the theme is **Default**; buttons read Default, Light, Dark, Original, User; knobs are perfectly round
-- [ ] An existing install keeps the theme it had
-- [ ] A few new effects: PunchyDeluxe, Ultralight3, kCathedral5, ConsoleX2Channel (2 pages), Pafnuty
-- [ ] Try a few from different categories, including VerbSevens, Galactic3, ToTape9, Pop3, StoneFireComp
-- [ ] StoneFireComp: set both Attack knobs differently, save + reopen project: both come back right
-- [ ] Reverbs: render a short clip with a long reverb, the tail is not cut
-- [ ] Original theme with a 10-control effect (ChimeyGuitar2): all faders visible
-- [ ] Open `Daylight_aw_Manual.pdf` from the download zip
-
-### Your own layouts (0.6.0)
-- [ ] ToTape9 → Settings → **Edit layout**: Explorer opens with `totape9.json` selected
-- [ ] Open it in Notepad, change a `"title"` or add `"label"`, save: the window changes within a second
-- [ ] Put a typo in a parameter name: Settings says what was fixed, the control still appears
-- [ ] Break the file (delete a bracket): the built-in layout appears, nothing crashes
-- [ ] **Remove**: back to the built-in layout; the file is in the Recycle Bin
-- [ ] Original theme: Edit layout is hidden (fader list is always original)
-
-### Release candidate checks (0.6.0)
-- [ ] Fresh install (rename `Documents\big_tyme_designs` first): tooltips are off; Settings → Tooltips On works
-- [ ] Theme buttons read Light, Dark, Original, User
-- [ ] A/B: set odd values in A and B, save the project, reopen, switch A/B: both exactly as before
-- [ ] Rename a preset changing only upper/lower case; rename onto an existing name is refused
-- [ ] Opening the window of a big effect (ConsoleXChannel) is quick
-
-### Original theme, New category, trim knobs (0.5.0)
-- [ ] Settings → Theme → **Original**: every open instance switches to the fader view at once, no window size change
-- [ ] Faders show Airwindows' own names and values; drag left/right, Shift = fine, wheel, double-click = default,
-      double-click the value to type one; clicking the track does not jump the value
-- [ ] ConsoleXChannel in Original: 3 pages of 15 with tabs at the bottom
-- [ ] Menus (effect list, presets/settings, Effect info, About) look flat and use the Windows font
-- [ ] Switching back to Light/Dark restores the designed view; presets, A/B and automation unaffected
-- [ ] Effect selector: **New** lists the newest effects (all 21 in this test build)
-- [ ] Trims: knobs in Light/Dark, faders in Original; Shift-drag is fine; double-click = 0 dB
-
-### Knobs + tooltip switch (0.4.0)
-- [ ] Knobs look round with a fine grainy edge in Light and Dark, at 100 % and 200 %
-- [ ] Settings → Tooltips Off: no tooltips appear; On: they're back; the choice survives a REAPER restart
-- [ ] User theme: set `"knob.style": "soft"` (or `"rough"`) in theme.json, save: knobs change live
+- [ ] REAPER's preset field shows "ToTape9 - Warm Tape" after loading a preset
 
 ### Host integration
 - [ ] The REAPER parameter list (the "Param" button) shows the effect's real parameter names
 - [ ] Automation: write automation for 2 controls, play back; the knobs move
 - [ ] REAPER's bypass and the Daylight_aw bypass button are the same thing, with a short smooth fade
-- [ ] In/Out trim (Settings): 0 dB = no change; ±12 dB works; a small indicator shows when not at 0
 - [ ] A/B: change settings, switch A/B, both are remembered
 - [ ] Save the project, close REAPER, reopen: the same effect, values, A/B, tab and trims are back
 - [ ] Copy the FX to another track (drag): an identical copy
 - [ ] Undo / redo of a parameter change works
-- [ ] Mono track (set the track to 1 channel / mono item): works, no error
+- [ ] Mono track: works, no error
 - [ ] Changing sample rate (44.1k / 48k / 96k) and buffer size: no glitches, no silence
-- [ ] Render (offline, faster than real time) matches what you hear
+- [ ] Render (offline, faster than real time) matches what you hear; reverb tails are not cut
 
-### Window
-- [ ] Settings: Zoom 100/125/150/200 % resizes the window correctly
-- [ ] Theme Light / Dark / User switch instantly; your choice is remembered
-- [ ] "Open theme folder" opens `Documents\big_tyme_designs\Daylight_aw\Themes\User`; edit `theme.json`
-      (e.g. change `paper.color`), save, and the window updates within a second
-- [ ] About: name, version, credits are right
+### Window and robustness
 - [ ] Closing/opening the window many times while playing: no crash, no audio drop
 - [ ] 20+ instances on different tracks: CPU stays reasonable (compare with the effect alone)
-
-### Robustness
-- [ ] Open a project saved with this build in the next build: everything still loads
 - [ ] Delete `Documents\big_tyme_designs\Daylight_aw\settings.json`: plugin still opens, defaults return
-- [ ] Put nonsense in the User `theme.json`: the plugin falls back to Light values, no crash
+- [ ] Put nonsense in the User `theme.json`: Default values are used, the dropdown says what was wrong, no crash
+- [ ] Open `Daylight_aw_Manual.pdf` from the download zip
 
 ## Mac (AU) quick checklist
 

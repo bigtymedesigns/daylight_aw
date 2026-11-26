@@ -29,10 +29,11 @@ struct PageSpec { juce::String name; std::vector<RowSpec> rows; };
 struct EffectLayout
 {
     std::vector<PageSpec> pages;
-    bool small = true;            // Small window (1 row) or Large (3 rows + tab strip)
+    int rows = 1;                 // window rows after packing: 1 Small, 2 Medium, 3 Large (pages > 1: always 3 + tabs)
     juce::StringArray warnings;   // problems found in a layout file (never fatal)
 
     int numControls() const;
+    bool hasTabs() const { return pages.size() > 1; }
 };
 
 /** Parameter facts the layout engine needs (from the effect itself). */
@@ -51,11 +52,6 @@ struct ParamFacts
 */
 EffectLayout buildLayout (const std::vector<ParamFacts>& params, const juce::String& layoutJson);
 
-/**
-    List view ("Original" style): one fader per parameter, in the effect's own order and with its
-    own names (layout files are ignored). Up to 15 per page; Small window for up to 5.
-*/
-EffectLayout buildListLayout (const std::vector<ParamFacts>& params);
-
-constexpr int kListRowsPerPage = 15;
+/** Built-in hand-made layout (layouts/<id>.json, embedded) for an effect; empty when it has none. */
+juce::String builtInLayoutJson (const juce::String& effectId);
 } // namespace dlaw

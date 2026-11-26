@@ -17,59 +17,68 @@ struct UiContext
     Theme theme;
 };
 
-/** Theme-aware look for the few stock JUCE widgets we use (sliders, text editors, scrollbars). */
+/** Theme-aware look for the few stock JUCE widgets we use (text editors, scrollbars, menus). */
 class DaylightLookAndFeel : public juce::LookAndFeel_V4
 {
 public:
     explicit DaylightLookAndFeel (UiContext& c) : ctx (c) {}
     void applyTheme();
 
-    void drawLinearSlider (juce::Graphics&, int x, int y, int w, int h, float pos, float minPos, float maxPos,
-                           juce::Slider::SliderStyle, juce::Slider&) override;
     juce::Font getLabelFont (juce::Label&) override;
+    juce::Font getPopupMenuFont() override;
+    void drawPopupMenuBackground (juce::Graphics&, int width, int height) override;
+    int getPopupMenuBorderSize() override { return 5; }
     void fillTextEditorBackground (juce::Graphics&, int w, int h, juce::TextEditor&) override;
     void drawTextEditorOutline (juce::Graphics&, int w, int h, juce::TextEditor&) override;
     void drawScrollbar (juce::Graphics&, juce::ScrollBar&, int x, int y, int w, int h, bool vertical,
                         int thumbStart, int thumbSize, bool over, bool down) override;
-    juce::Rectangle<int> getTooltipBounds (const juce::String& text, juce::Point<int> screenPos, juce::Rectangle<int> parentArea) override;
-    void drawTooltip (juce::Graphics&, const juce::String& text, int width, int height) override;
 
 private:
     UiContext& ctx;
 };
 
-/** Small rounded button used for A/B, segmented choices and dialog buttons. */
+/** Rounded button: A/B, panel buttons, dropdowns, links. */
 class PillButton : public juce::Button
 {
 public:
+    enum class Icon { none, reset, info, change };
+
     PillButton (UiContext& c, const juce::String& text, bool filledWhenOn = true);
     void paintButton (juce::Graphics&, bool highlighted, bool down) override;
     float fontSize = 12.0f;
     bool primary = false;    // always filled (e.g. "Load effect")
     bool joinedLeft = false, joinedRight = false; // segmented groups
+    bool dropdown = false;   // text on the left, chevron on the right
+    bool link = false;       // accent-coloured text, no frame ("Open theme folder...")
+    Icon icon = Icon::none;
 
 private:
     UiContext& ctx;
     bool fillOn;
 };
 
-/** The round BYPASS button (linked to the DAW's own bypass parameter). */
-class BypassButton : public juce::Component,
-                     public juce::SettableTooltipClient
+/** "BYPASS" label + a small round button (the DAW's own bypass parameter).
+    Only the round button reacts to the mouse: clicks on the label or around it do nothing. */
+class BypassButton : public juce::Component
 {
 public:
     explicit BypassButton (UiContext& c);
     void paint (juce::Graphics&) override;
+    bool hitTest (int x, int y) override;
     void mouseUp (const juce::MouseEvent&) override;
+    int preferredWidth() const;
+
+    static constexpr float kButtonSize = 22.0f;
 
 private:
+    juce::Rectangle<float> circle() const;
     UiContext& ctx;
     juce::ParameterAttachment attachment;
 };
 
-/** Small knob for the input/output trims (dB): drag (Shift = fine), wheel, double-click = 0 dB. */
-class TrimKnob : public juce::Component,
-                 public juce::SettableTooltipClient
+/** Input/output trim in the top bar: "IN" + mini knob + value (dB; teal when not 0 dB).
+    Drag (Shift or right-drag = fine), wheel, double-click = 0 dB. */
+class TrimKnob : public juce::Component
 {
 public:
     TrimKnob (UiContext& c, juce::AudioParameterFloat& param, const juce::String& label);
@@ -82,10 +91,10 @@ public:
     void mouseUp (const juce::MouseEvent&) override;
     void mouseDoubleClick (const juce::MouseEvent&) override;
     void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
+    int preferredWidth() const;
 
 private:
     juce::Rectangle<float> knobArea() const;
-    juce::Rectangle<float> trackArea() const;
     void set (float db, bool asGesture);
 
     UiContext& ctx;
@@ -93,13 +102,12 @@ private:
     juce::String label;
     juce::ParameterAttachment attachment;
     float db = 0.0f;
-    bool hover = false, dragging = false, dragFine = false;
+    bool hover = false, dragging = false, gestureOpen = false, dragFine = false, rightDrag = false;
     float dragStartDb = 0.0f, dragAnchorY = 0.0f;
 };
 
 /** One parameter: knob, stepped knob or switch, with its name above and value below. */
 class ParamControl : public juce::Component,
-                     public juce::SettableTooltipClient,
                      private juce::TextEditor::Listener
 {
 public:
@@ -117,8 +125,11 @@ public:
     void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
 
     static constexpr float kDragPixels = 250.0f;   // full range
-    static constexpr float kFineFactor = 10.0f;    // Shift
+    static constexpr float kFineFactor = 10.0f;    // Shift or right-drag
     static constexpr float kWheelStep = 0.01f;     // 1 % per notch
+    static constexpr float kKnobSize = 46.0f;
+    /** Right-button moves smaller than this are a click (left free for a later per-knob menu). */
+    static constexpr float kRightDragThreshold = 3.0f;
 
 private:
     juce::Rectangle<float> controlArea() const;
@@ -137,11 +148,19 @@ private:
     ControlSpec spec;
     juce::ParameterAttachment attachment;
     float value = 0.0f;
-    bool hover = false, dragging = false;
+    bool hover = false, dragging = false, gestureOpen = false, rightDrag = false, dragFine = false;
     float dragStartValue = 0.0f, dragAnchorY = 0.0f;
-    bool dragFine = false;
-    juce::Path edge;  // hand-drawn knob outline (deterministic)
-    juce::String edgeStyle;
     std::unique_ptr<juce::TextEditor> editor;
 };
+
+namespace draw
+{
+/** Ring knob (Default look): outline ring + pointer; "round" style fills the disc. */
+void knob (juce::Graphics&, const Theme&, juce::Point<float> centre, float diameter, float value01,
+           float ringWidth, float pointerWidth);
+/** Down/up chevron centred at (x, y). */
+void chevron (juce::Graphics&, float x, float y, bool up, juce::Colour, float size = 3.5f);
+/** Filled or outlined five-point star. */
+void star (juce::Graphics&, juce::Point<float> centre, float radius, bool filled, juce::Colour);
+} // namespace draw
 } // namespace dlaw

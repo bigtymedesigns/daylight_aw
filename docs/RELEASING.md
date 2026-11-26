@@ -10,10 +10,11 @@ Actions *Artifacts* are only for testing: they need a login and are deleted afte
 1. Set the version in `CMakeLists.txt` (`project(Daylight_aw VERSION 1.1.0 ...)`).
 2. In `manifest/effects.json` update `"release"` at the top:
    - `"version"`: the same version as in CMakeLists.txt (the build checks this).
-   - `"date"`: the release date. The **New** folder shows Airwindows releases from the `newMonths` (3)
-     months before it.
-   - `"previous"`: the version before this one (e.g. `"1.0.0"`). The **Last added** folder then shows
-     the effects whose `"since"` is this version, i.e. the ones added in this update.
+   - `"date"`: the release date.
+   - `"lastMonths"` (6): the **Last 6 months** folder shows Airwindows releases from the 6 months
+     before the newest `"released"` date in the manifest.
+   - `"previous"`: the version before this one (e.g. `"1.0.0"`). The **New** folder then shows
+     the effects whose `"since"` is this version, i.e. the ones added in this update (hidden when none).
    New effects get `"since": "<this version>"` (see CONTRIBUTING.md).
 3. Rebuild the manual (`tools/manual/build_manual.py`, see its header) and add a section to
    `CHANGELOG.md`. Commit and push, then wait for a green Actions run.

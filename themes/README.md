@@ -1,49 +1,22 @@
 # Daylight_aw themes
 
-A theme is one folder:
+Since 1.1 there are two themes: the built-in **Default** ("deep space": near-black, two soft corner
+halos, ring knobs) and **User**, a theme anyone can edit without rebuilding the plugin.
 
-```
-theme.json   colours and strengths ("tokens")
-paper.png    seamless paper texture, 512 x 512 px recommended (drawn at 2x: one tile = 256 px on screen)   - optional
-figure.png   the picture in the bottom-right corner, transparent PNG, about 320 x 317 px              - optional
-```
+- `themes/default/theme.json`: the Default theme (embedded in the plugin).
+- `themes/HOW_TO_MAKE_YOUR_OWN_THEME.txt`: the user guide, with every token explained. The plugin
+  copies it into the user's theme folder as "How to make your own theme.txt".
 
-The built-in **Default**, **Light** and **Dark** themes use exactly this format (`themes/default`, `themes/light`, `themes/dark` in the
-source code). Your own theme lives in `Documents/big_tyme_designs/Daylight_aw/Themes/User/`.
-Choose **Theme -> User** in the plugin's settings: the folder is created as a copy of the current theme.
-While the plugin window is open, changes you save are shown within about a second.
+## The User theme
 
-Themes change colours and pictures only - never sizes, positions or fonts.
-Anything missing or invalid falls back to the Light theme's value, so a theme can never break the plugin.
+Choose **Theme → User** in the presets + settings dropdown (click the effect name). The folder
+`Documents/big_tyme_designs/Daylight_aw/Themes/User/` then holds `theme.json` (a copy of Default)
+and the guide. Saved changes show up in every open window within about a second.
 
-## Colours
-`#RRGGBB` or `#RRGGBBAA` (AA = opacity, 00-FF).
+Themes change colours only - never sizes, positions or fonts. Anything missing or invalid uses the
+Default value and the dropdown lists what was wrong, so a theme can never break the plugin.
+Colours are `#RRGGBB` or `#RRGGBBAA` (AA = opacity, 00-FF). Aim for at least 4.5:1 contrast between
+text and background; the dropdown warns when a theme is below that.
 
-## Tokens
-
-| Token | Meaning |
-|---|---|
-| `paper.color` | background colour (shown under/instead of the paper texture) |
-| `paper.textureStrength` | 0-1, how strongly paper.png is shown |
-| `horizon.color`, `horizon.opacity` | the faint horizon line behind the figure |
-| `ink.text` | parameter names, values, logo row text |
-| `ink.muted` | secondary text (descriptions, tab names) |
-| `ink.groupTitle` | group titles (INPUT, TONE ...) |
-| `frame.color`, `frame.opacity` | group frame outline |
-| `frame.glowColor`, `frame.glowRadius` (px), `frame.glowStrength` (0-1) | soft glow around frames (0 = off) |
-| `knob.fill`, `knob.edge`, `knob.pointer`, `knob.shadow`, `knob.ticks` | knobs, stepped knobs, switches |
-| `knob.style` | knob outline: `"round"` (exact circle, used by Default), `"rough"` (hand-cut edge), `"soft"` (round pencil circle with a light second stroke) or `"grain"` (round with a fine charcoal edge) |
-| `bar.fill`, `bar.border`, `bar.glow` | the menu bar, BYPASS and tab buttons background |
-| `panel.fill`, `panel.border`, `panel.text`, `panel.glow` | dropdowns, About window, Effect info, dialogs, tooltips |
-| `button.outline`, `button.activeFill`, `button.activeText` | A/B, segmented buttons, BYPASS, tabs |
-| `logo.color`, `logo.glow` | the "Daylight_aw" logo |
-| `value.text` | value text next to faders (list view) |
-| `select.fill`, `select.text` | selected / hovered rows in lists (effects, categories, presets) |
-| `slider.track`, `slider.handle`, `slider.handleBorder`, `slider.centre` | faders (list view, and the trims in list view) |
-| `style.view` | `"designed"` (groups, knobs, the cat) or `"list"` (one fader per parameter, in the effect's own order and names, like a DAW's own plugin view) |
-| `style.font` | `"shantell"` (embedded hand-drawn font) or `"system"` (the computer's own UI font: Segoe UI on Windows) |
-| `style.corner` | corner radius of bars, panels and buttons, 0-12 px |
-| `style.topBar` | colour of a band behind the top row (`#00000000` = none) |
-
-Keep text readable: aim for at least 4.5:1 contrast between text and background. The plugin shows a
-warning in its settings if your theme is below that.
+A User theme from Daylight_aw 1.0 (made for the old Light/Dark look, `"formatVersion": 1`) is moved,
+untouched, into `Themes/User/old_1.0/` the first time 1.1 uses the User theme; nothing is deleted.

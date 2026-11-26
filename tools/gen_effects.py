@@ -72,11 +72,35 @@ def main():
 
     included = [e for e in effects if e["included"]]
 
-    # Release info: drives the "New" and "Last added" folders of the effect selector.
+    # Families: versions of one effect (ToTape5 ... ToTape9 -> "ToTape"). By default the family is the
+    # Airwindows name without its trailing number, and the number is the version (none = 1). An effect
+    # whose number is part of its name (Desk4, kPlate140) sets "family" to its own name in the manifest.
+    # The browser's "Latest versions only" view shows the newest member of each family.
+    def family_of(e):
+        return e.get("family") or re.sub(r"[0-9]+$", "", e["upstream"]) or e["upstream"]
+
+    def rank_of(e):
+        if e.get("family") == e["upstream"]:
+            return 1
+        m = re.search(r"([0-9]+)$", e["upstream"])
+        return int(m.group(1)) if m else 1
+
+    families = {}
+    for e in included:
+        families.setdefault(family_of(e), []).append(e)
+    latest_ids = set()
+    for fam, members in families.items():
+        ranks = [rank_of(m) for m in members]
+        if len(set(ranks)) != len(ranks):
+            fail(f"family '{fam}' has two effects with the same version number: "
+                 + ", ".join(m["upstream"] for m in members) + " (set 'family' in the manifest)")
+        latest_ids.add(max(members, key=rank_of)["id"])
+
+    # Release info: drives the "New" and "Last 6 months" folders of the effect browser.
     release = data.get("release")
     if not release:
         fail("manifest is missing 'release'")
-    for key in ("version", "date", "newMonths", "previous"):
+    for key in ("version", "date", "lastMonths", "previous"):
         if key not in release:
             fail(f"'release' is missing '{key}'")
     if not SEMVER_RE.match(release["version"]):
@@ -88,15 +112,17 @@ def main():
     cmake_version = re.search(r"project\(Daylight_aw VERSION ([0-9.]+)", (ROOT / "CMakeLists.txt").read_text(encoding="utf-8"))
     if not cmake_version or cmake_version.group(1) != release["version"]:
         fail(f"'release.version' ({release['version']}) must match the version in CMakeLists.txt")
-    until = datetime.date.fromisoformat(release["date"])
-    start = until - datetime.timedelta(days=round(int(release["newMonths"]) * 30.44))
+    # "Last 6 months": Airwindows releases in the 'lastMonths' months before the newest release date in
+    # the manifest (not the Daylight_aw release date, so the folder is never empty after a quiet spell).
+    until = max(datetime.date.fromisoformat(e["released"]) for e in included)
+    start = until - datetime.timedelta(days=round(int(release["lastMonths"]) * 30.44))
 
-    def is_new(e):
-        """New folder: Airwindows releases from the months before this Daylight_aw release."""
+    def is_recent(e):
+        """Last 6 months folder."""
         return start < datetime.date.fromisoformat(e["released"]) <= until
 
-    def is_last_added(e):
-        """Last added folder: effects that came with this update (empty in the first release)."""
+    def is_new(e):
+        """New folder: effects that came with this Daylight_aw update (hidden when empty)."""
         return bool(release["previous"]) and e["since"] == release["version"]
 
     for e in effects:
@@ -159,10 +185,12 @@ def main():
     for e in included:
         n, eid = e["upstream"], e["id"]
         shared = bool(SHARED_STATE_RE.search((ROOT / AW_DIR / f"{n}Proc.cpp").read_text(encoding="utf-8", errors="replace")))
+        b = lambda v: "true" if v else "false"
         cpp.append(
             f"        {{ {c_str(eid)}, {c_str(n)}, {c_str(e['category'])}, {c_str(e['description'])}, "
-            f"{int(e['version'])}, {c_str(e['since'])}, {float(e.get('tail', 0)):.1f}, {'true' if e.get('dither') else 'false'}, "
-            f"{'true' if shared else 'false'}, {'true' if is_new(e) else 'false'}, {'true' if is_last_added(e) else 'false'}, gen::params_{eid}(), &gen::make_{eid} }},")
+            f"{int(e['version'])}, {c_str(e['since'])}, {c_str(e['released'])}, {c_str(family_of(e))}, "
+            f"{float(e.get('tail', 0)):.1f}, {b(e.get('dither'))}, {b(shared)}, {b(is_new(e))}, {b(is_recent(e))}, "
+            f"{b(eid in latest_ids)}, gen::params_{eid}(), &gen::make_{eid} }},")
     cpp += ["    };", "    return list;", "}", "} // namespace dlaw", ""]
     cpp_text = "\n".join(cpp)
 
@@ -186,7 +214,8 @@ def main():
         p.unlink()
         changed = True
     print(f"gen_effects: {'wrote' if changed else 'up to date:'} {len(included)} effects, {len(layouts)} layouts, "
-          f"{sum(map(is_new, included))} new, {sum(map(is_last_added, included))} last added")
+          f"{sum(map(is_new, included))} new, {sum(map(is_recent, included))} in the last {release['lastMonths']} months "
+          f"(since {start.isoformat()}), {len(latest_ids)} latest versions in {len(families)} families")
 
 
 if __name__ == "__main__":

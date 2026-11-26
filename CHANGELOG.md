@@ -3,6 +3,37 @@
 All notable changes to Daylight_aw. Versions follow semantic versioning.
 Sessions and presets from every earlier version keep loading (tested with fixtures in `tests/fixtures`).
 
+## 1.1.0
+- **Change effect**: click the effect name > *Change effect...* to pick another effect in the same
+  instance (after a confirmation: the new effect starts at its defaults; automation on the track moves
+  the new effect's controls). Undo in the DAW and reopening a session bring back the effect it saved.
+- **Two new effects**: PunchyDeluxe2 and PointyDeluxe2 (Airwindows, Nov 2026), in the **New** folder.
+  Airwindows Consolidated pin updated to 91b3343 (no changes to any other effect).
+- Effect browser rows show each effect's Airwindows release date.
+- **New look** ("deep space"): near-black background with two soft corner halos, group panels with
+  a faint outline, ring knobs with a violet pointer, teal group titles. Interface font **Inter**,
+  logo in **Jost Light** (Shantell Sans removed).
+- **Top bar**: logo (click: compact About), effect-name button (presets + settings), A/B (green), the
+  **IN / OUT trims as mini knobs** (value turns teal when not 0 dB) and a small **BYPASS** button.
+  Fixed: bypass now toggles only from its own button, not from clicks elsewhere in the top bar.
+- **Presets + settings dropdown** (460 px, closes on any click outside): presets on the left;
+  Zoom, Theme, Open theme folder, Reset to defaults, Effect info and Change effect on the right.
+  A/B, the current page tab and BYPASS when on are green.
+- **Three window sizes**, chosen by the rows an effect really needs: Small (1 row), **Medium
+  (2 rows, new)**, Large (3 rows; page tabs only in Large).
+- **Effect browser**: **Favourites collections** (Clippers, Mix bus...: right-click an effect >
+  Add to collection; one effect can be in several), **New** = effects added in this update (hidden
+  when empty), **Last 6 months** = newest Airwindows releases, newest first.
+- **"Latest versions only"** (on by default): the browser lists only the newest version of each
+  effect (ToTape9, not ToTape5-8). Older versions stay in the plugin, so every project keeps
+  working, and stay listed while they are a favourite or in a collection. Untick to see all versions.
+- **Right-click + drag** = fine adjustment (like Shift + drag), on knobs and trims.
+- Themes: **Default** and **User** only. The User theme starts as a copy of Default and comes with a
+  short "How to make your own theme" guide; a 1.0 User theme is kept in `Themes/User/old_1.0/`.
+  Light, Dark and Original were removed (a saved choice of them opens as Default).
+- Removed: tooltips, user layout files (Edit layout), the Light/Dark/Original themes.
+- Sessions and presets from 1.0 load unchanged; the sound of every effect is unchanged.
+
 ## 1.0.0
 - **All 531 Airwindows effects** from the current Airwindows Consolidated (old versions included).
   Effects without an Airwindows category are in their own **Unclassified** folder. Every effect is

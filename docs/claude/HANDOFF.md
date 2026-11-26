@@ -1,26 +1,30 @@
-# Daylight_aw – HANDOFF (2026-11-26, stage start 1.1)
+# Daylight_aw – HANDOFF (2026-11-26, 1.1 built, waiting for REAPER test)
 
 Holds only "now"; overwritten each checkpoint/stage close, older versions live in git history.
-Decisions for 1.1: `Daylight_1.1_Plan.md` (+ `Stage_1.1_DecisionLog.md` for anything decided during the build). History up to 1.0.0: `Daylight_Coding_Progress.md`. Public per-version history: `CHANGELOG.md`. Working rules: `CLAUDE.md` (repo root).
+Decisions for 1.1: `Daylight_1.1_Plan.md` + `Stage_1.1_DecisionLog.md`. Build list + acceptance criteria: `Daylight_1.1_ChangeList.md`. History up to 1.0.0: `Daylight_Coding_Progress.md`. Public per-version history: `CHANGELOG.md`. Working rules: `CLAUDE.md` (repo root).
 
 ## Status
-- **1.0.0 released**: tag `v1.0.0` (0cfe8b4) is on GitHub; CI run #16 all green.
-- **1.1 design done**, all mockups approved (canvas "Daylight_aw 1.1 mockups", board 8 FINAL: https://claude.ai/artifact/S4d9MawtdxQzM8HTZCL697).
-- Work moved to **Claude Code** on Johan's PC (2026-11-26). Toolchain checked: VS Build Tools 2022 17.14 (MSVC 14.44, SDK 10.0.26100), CMake 3.31 + Ninja bundled, Python 3.15, Git. Commands in `CLAUDE.md`. No local build run yet.
+- **1.0.0 released** (tag `v1.0.0`, 0cfe8b4).
+- **1.1 approved by Johan (2026-11-26) and coded**: all change-list items 1–11, incl. "Latest versions only" (one build for everyone, manifest families) instead of a second private build. Version 1.1.0 set (CMakeLists + manifest `release`, previous 1.0.0, date 2026-11-26 placeholder).
+- Docs updated: CHANGELOG 1.1.0, README, BUILD_SPEC, TESTING ("1.1 checks"), RELEASING, CONTRIBUTING, LAYOUTS, themes/README + user guide, THIRD_PARTY_NOTICES, manual source text.
+- Manual PDF rebuilt for 1.1 (4 pages, new pictures; Playwright + Chromium installed in a scratch venv, not in the repo).
+- Fonts: Inter + Jost (OFL) cut by `tools/fonts/make_fonts.py`; Shantell, Light/Dark/Original themes and user layouts removed.
+- Round 2 (Johan's Yes, 2026-11-26): Change effect (dropdown → browser → confirmation; DAW undo/session restore switch back), release date on every row, green A/B / page tab / bypass-on, smaller About, PunchyDeluxe2 + PointyDeluxe2 added (533 effects, pin 91b3343).
+- **Local Windows build OK; DaylightTests 7119 checks, 0 failed** (null tests bit-identical for all 533 effects; change effect while audio runs: 30 changes, no crash/NaN); `gen_effects --check` OK. Snapshots checked. Window sizes: 438 Small, 79 Medium, 16 Large (8 with tabs). pluginval/auval/sanitizers: CI only (not run locally).
+- Test plugin: `build\Daylight_aw_artefacts\Release\VST3\Daylight_aw.vst3`.
 
 ## Next step
-Johan answers Yes/No on `Daylight_1.1_ChangeList.md` (plus the open questions in it) → build 1.1 in the repo in the order given there.
+Build + tests green locally → Johan tests in REAPER (docs/TESTING.md "1.1 checks") → commit → CI green → release.
 
 ## Open items
-- Open questions Q1–Q5 in `Daylight_1.1_ChangeList.md` (Inter as UI font, theme images, old User theme, upstream check, release date).
-- Manual rebuild needs Python `playwright` + Chromium (not installed on this PC); ask before installing.
-- pluginval not installed locally; it runs in CI.
-- Mac signing/notarisation (friend) – still open, not part of 1.1.
+- Change effect: REAPER's own undo / parameter-name refresh only testable by Johan.
+- "Latest versions only" check box placement is not from a mockup (right of the list heading).
+- `tools/art/` (old paper/cat art) is unused since 1.1; kept.
+- Mac signing (friend) – not part of 1.1.
 
 ## Johan's to-dos
-- Yes/No on the 1.1 change list.
-- Commit: `CLAUDE.md` + `docs/claude/` (new). Note: the repo is public, so `docs/claude/` will be visible on GitHub.
-- Optional: delete the stray local tag `1.0.0` (no v; not on GitHub any more): `git tag -d 1.0.0`.
+- REAPER "1.1 checks", then commit (CLAUDE.md, docs/claude/, all 1.1 changes).
+- Optional: `git tag -d 1.0.0` (stray local tag).
 
 ## Starter line
-*"stage start: Daylight_aw 1.1 build. Read CLAUDE.md, docs/claude/HANDOFF.md and docs/claude/Daylight_1.1_ChangeList.md; confirm status and next step in 2–3 lines before you start."*
+*"stage start: Daylight_aw 1.1 finish. Read CLAUDE.md and docs/claude/HANDOFF.md; confirm status and next step in 2–3 lines before you start."*

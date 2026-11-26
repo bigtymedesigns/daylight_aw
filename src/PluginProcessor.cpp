@@ -112,8 +112,13 @@ void DaylightProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     bypassMix.reset (currentSampleRate, kBypassFadeSeconds);
     bypassMix.setCurrentAndTargetValue (bypassParam->get() ? 1.0f : 0.0f);
 
-    if (effectHost != nullptr)
-        effectHost->setSampleRate (currentSampleRate);
+    std::shared_ptr<EffectHost> fx;
+    {
+        const juce::ScopedLock sl (stateLock);
+        fx = effectHost;
+    }
+    if (fx != nullptr)
+        fx->setSampleRate (currentSampleRate);
 
     setLatencySamples (0);
 }
@@ -142,7 +147,7 @@ void DaylightProcessor::processAudio (juce::AudioBuffer<T>& buffer)
     outGain.setTargetValue (juce::exactlyEqual (outDb, 0.0f) ? 1.0f : juce::Decibels::decibelsToGain (outDb));
     bypassMix.setTargetValue (bypassParam->get() ? 1.0f : 0.0f);
 
-    if (fx != nullptr)
+    if (fx != nullptr && paramsReady.load (std::memory_order_acquire))
         for (int i = 0; i < fx->getNumParams(); ++i)
             fx->setParameter (i, slots[(size_t) i]->get());
 
@@ -262,9 +267,7 @@ void DaylightProcessor::setSlotNamesFromEffect()
 
 double DaylightProcessor::getTailLengthSeconds() const
 {
-    if (auto* fx = activeHost.load (std::memory_order_acquire))
-        return fx->getInfo().tailSeconds;
-    return 0.0;
+    return tailSeconds.load();
 }
 
 const juce::String DaylightProcessor::getProgramName (int)
@@ -282,6 +285,12 @@ const juce::String DaylightProcessor::getProgramName (int)
     return "Choose effect";
 }
 
+std::shared_ptr<EffectHost> DaylightProcessor::makeHost (const std::string& effectId) const
+{
+    auto* info = findEffect (effectId);
+    return info != nullptr ? std::make_shared<EffectHost> (*info, currentSampleRate) : nullptr;
+}
+
 bool DaylightProcessor::selectEffect (const std::string& effectId)
 {
     // The GUI and the host (restoring a session) could try this at the same time: only one wins.
@@ -291,39 +300,84 @@ bool DaylightProcessor::selectEffect (const std::string& effectId)
     const struct Done { std::atomic<bool>& f; ~Done() { f = false; } } done { selecting };
 
     if (effectHost != nullptr || hasUnknownEffect())
-        return false; // locked: one effect per instance
+        return false; // already chosen: use changeEffect
 
-    auto* info = findEffect (effectId);
-    if (info == nullptr)
+    auto host = makeHost (effectId);
+    if (host == nullptr)
         return false;
-
-    auto host = std::make_unique<EffectHost> (*info, currentSampleRate);
 
     for (int i = 0; i < host->getNumParams(); ++i)
         slots[(size_t) i]->setValueNotifyingHost (host->getDefault (i));
 
+    installHost (std::move (host));
+    return true;
+}
+
+bool DaylightProcessor::changeEffect (const std::string& effectId)
+{
+    if (effectHost == nullptr)
+        return selectEffect (effectId);
+
+    bool expected = false;
+    if (! selecting.compare_exchange_strong (expected, true))
+        return false;
+    const struct Done { std::atomic<bool>& f; ~Done() { f = false; } } done { selecting };
+
+    auto host = makeHost (effectId);
+    if (host == nullptr)
+        return false;
+
+    // 1. Swap while no audio block runs. Until step 2 is done the audio thread doesn't push slot
+    //    values (they still belong to the old effect): the new effect runs at its own defaults.
+    std::shared_ptr<EffectHost> old;
+    {
+        const juce::ScopedLock cb (getCallbackLock());
+        paramsReady.store (false, std::memory_order_release);
+        old = effectHost;
+        tailSeconds = host->getInfo().tailSeconds;
+        {
+            const juce::ScopedLock sl (stateLock);
+            effectHost = host;
+        }
+        activeHost.store (host.get(), std::memory_order_release);
+    }
+    // 2. Slots to the new defaults (this notifies the host, so it happens outside the audio lock).
+    for (int i = 0; i < host->getNumParams(); ++i)
+        slots[(size_t) i]->setValueNotifyingHost (host->getDefault (i));
+    paramsReady.store (true, std::memory_order_release);
+    lastTab = 0;
+
+    installHost (std::move (host));   // A/B, preset name, host display, GUI
+    presetNameChanged();
+    return true;   // 'old' is freed here, or later by a thread that is still saving the session
+}
+
+void DaylightProcessor::installHost (std::shared_ptr<EffectHost> host)
+{
     std::vector<float> defaults;
     for (int i = 0; i < host->getNumParams(); ++i)
         defaults.push_back (host->getDefault (i));
 
+    tailSeconds = host->getInfo().tailSeconds;
     {
         const juce::ScopedLock sl (stateLock);
-        effectHost = std::move (host);
+        effectHost = host;
         abValues = { defaults, defaults };
         activeAB = 0;
+        presetName = {};
+        presetSnapshot.clear();
     }
-    activeHost.store (effectHost.get(), std::memory_order_release);
+    activeHost.store (host.get(), std::memory_order_release);
 
     setSlotNamesFromEffect();
     sendChangeMessage();
-    return true;
 }
 
-std::vector<float> DaylightProcessor::captureEffectValues() const
+std::vector<float> DaylightProcessor::captureEffectValues (const EffectHost* fx) const
 {
     std::vector<float> v;
-    if (effectHost != nullptr)
-        for (int i = 0; i < effectHost->getNumParams(); ++i)
+    if (fx != nullptr)
+        for (int i = 0; i < fx->getNumParams(); ++i)
             v.push_back (slots[(size_t) i]->get());
     return v;
 }
@@ -384,7 +438,7 @@ bool DaylightProcessor::applyPreset (const PresetData& preset)
     {
         const juce::ScopedLock sl (stateLock);
         presetName = preset.name;
-        presetSnapshot = captureEffectValues();
+        presetSnapshot = captureEffectValues (effectHost.get());
     }
     presetNameChanged();
     return true;
@@ -395,7 +449,7 @@ void DaylightProcessor::markPresetSaved (const juce::String& name)
     {
         const juce::ScopedLock sl (stateLock);
         presetName = name;
-        presetSnapshot = captureEffectValues();
+        presetSnapshot = captureEffectValues (effectHost.get());
     }
     presetNameChanged();
 }
@@ -432,7 +486,7 @@ bool DaylightProcessor::isPresetModified() const
         snapshot = presetSnapshot;
     }
 
-    const auto now = captureEffectValues();
+    const auto now = captureEffectValues (effectHost.get());
     if (now.size() != snapshot.size())
         return true;
 
@@ -459,7 +513,7 @@ void DaylightProcessor::switchAB (int which)
         const juce::ScopedLock sl (stateLock);
         if (which == activeAB)
             return;
-        abValues[(size_t) activeAB] = captureEffectValues();
+        abValues[(size_t) activeAB] = captureEffectValues (effectHost.get());
         activeAB = which;
         target = abValues[(size_t) activeAB];
     }
@@ -478,11 +532,11 @@ void DaylightProcessor::getStateInformation (juce::MemoryBlock& destData)
     std::array<std::vector<float>, 2> ab;
     std::vector<float> snapshot;
     int active = 0;
-    EffectHost* fx = nullptr;
+    std::shared_ptr<EffectHost> fx;
     {
         const juce::ScopedLock sl (stateLock);
         unknownXml = unknownStateXml;
-        fx = effectHost.get();
+        fx = effectHost;
         ab = abValues;
         active = activeAB;
         preset = presetName;
@@ -505,7 +559,7 @@ void DaylightProcessor::getStateInformation (juce::MemoryBlock& destData)
         root.setAttribute ("effectId", fx->getInfo().id);
         root.setAttribute ("effectVersion", fx->getInfo().version);
 
-        const auto now = captureEffectValues();
+        const auto now = captureEffectValues (fx.get());
         for (int i = 0; i < fx->getNumParams(); ++i)
         {
             auto* p = root.createNewChildElement ("Param");
@@ -573,6 +627,12 @@ void DaylightProcessor::setStateInformation (const void* data, int sizeInBytes)
             unknownStateXml = {};
         }
         selectEffect (effectId.toStdString());
+    }
+    else if (effectId.isNotEmpty() && effectHost != nullptr && effectId != effectHost->getInfo().id
+             && findEffect (effectId.toStdString()) != nullptr)
+    {
+        // a session / undo state for another effect (it was changed in the GUI): switch to that effect
+        changeEffect (effectId.toStdString());
     }
 
     auto* fx = effectHost.get();

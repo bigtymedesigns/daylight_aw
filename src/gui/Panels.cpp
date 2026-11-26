@@ -1,27 +1,45 @@
 #include "Panels.h"
-#include "UserLayouts.h"
 #include "BinaryData.h"
 #include "Fonts.h"
+
+#include <algorithm>
 
 namespace dlaw
 {
 namespace
 {
 const juce::String kDot = juce::String::fromUTF8 (" \xc2\xb7 ");
+const juce::String kEllipsis = juce::String::fromUTF8 ("\xe2\x80\xa6");
+constexpr int kFolderRowH = 26, kEffectRowH = 28, kFolderColumnW = 180;
+
+juce::String monthYear (const char* isoDate)
+{
+    static const char* months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+    const juce::String d (isoDate);
+    const int m = d.substring (5, 7).getIntValue();
+    return juce::isPositiveAndBelow (m - 1, 12) ? juce::String (months[m - 1]) + " " + d.substring (0, 4) : d;
 }
+
+void showMenu (juce::PopupMenu& m, juce::Component& owner, std::function<void (int)> done)
+{
+    m.showMenuAsync (juce::PopupMenu::Options().withParentComponent (owner.getTopLevelComponent()).withMousePosition(),
+                     [safe = juce::Component::SafePointer<juce::Component> (&owner), done = std::move (done)] (int choice)
+                     {
+                         if (safe != nullptr && choice != 0)
+                             done (choice);
+                     });
+}
+} // namespace
 
 // =============================================================================================
 void PanelBase::paint (juce::Graphics& g)
 {
     const auto& t = ctx.theme;
-    auto r = getLocalBounds().toFloat().reduced (1.0f);
+    auto r = getLocalBounds().toFloat().reduced (0.5f);
 
     juce::Path box;
-    box.addRoundedRectangle (r, ctx.theme.corner);
-    if (t.panelGlow > 0.0f)
-        juce::DropShadow (t.frameGlowColor.withAlpha (t.panelGlow), 16, {}).drawForPath (g, box);
-    else
-        juce::DropShadow (juce::Colours::black.withAlpha (0.14f), 16, { 0, 5 }).drawForPath (g, box);
+    box.addRoundedRectangle (r, t.corner + 2.0f);
+    juce::DropShadow (juce::Colours::black.withAlpha (0.55f), 24, { 0, 10 }).drawForPath (g, box);
 
     g.setColour (t.panelFill);
     g.fillPath (box);
@@ -31,56 +49,83 @@ void PanelBase::paint (juce::Graphics& g)
 
 void PanelBase::drawHeading (juce::Graphics& g, const juce::String& text, juce::Rectangle<int> area)
 {
-    g.setColour (ctx.theme.panelText.withAlpha (0.75f));
-    g.setFont (fonts::extraBold (11.5f).withExtraKerningFactor (0.1f));
+    g.setColour (ctx.theme.muted);
+    g.setFont (fonts::caps (11.0f));
     g.drawText (text, area, juce::Justification::centredLeft, true);
 }
 
 // =============================================================================================
-struct SelectorPanel::CategoryRow : public juce::Component
+struct SelectorPanel::FolderRow : public juce::Component
 {
-    CategoryRow (SelectorPanel& o, juce::String k, juce::String l) : owner (o), key (std::move (k)), label (std::move (l))
+    FolderRow (SelectorPanel& o, juce::String k, juce::String l, int ind = 0)
+        : owner (o), key (std::move (k)), label (std::move (l)), indent (ind)
     {
-        setMouseCursor (juce::MouseCursor::PointingHandCursor);
+        if (key != "-")
+            setMouseCursor (juce::MouseCursor::PointingHandCursor);
     }
 
     void paint (juce::Graphics& g) override
     {
         const auto& t = owner.ctx.theme;
-        const bool on = owner.category == key && owner.search.isEmpty();
+        if (key == "-")
+        {
+            g.setColour (t.panelText.withAlpha (0.08f));
+            g.fillRect (4, getHeight() / 2, getWidth() - 8, 1);
+            return;
+        }
+
+        const bool on = owner.folder == key && owner.search.isEmpty();
+        auto r = getLocalBounds().withTrimmedLeft (indent);
         if (on || isMouseOver())
         {
-            g.setColour (on ? t.selectFill : t.panelText.withAlpha (0.06f));
-            g.fillRoundedRectangle (getLocalBounds().toFloat(), t.corner * 0.67f);
+            g.setColour (on ? t.selectFill : t.panelText.withAlpha (0.05f));
+            g.fillRoundedRectangle (r.toFloat(), t.corner - 1.0f);
         }
-        g.setColour (on ? t.selectText : t.panelText);
-        auto textArea = getLocalBounds().reduced (8, 0);
+
+        auto text = r.reduced (10, 0);
+        if (key == "+new")
+        {
+            g.setColour (t.accent);
+            g.setFont (fonts::regular (12.5f));
+            g.drawText ("+ New collection", text, juce::Justification::centredLeft, true);
+            return;
+        }
+
+        g.setColour (on ? t.selectText : t.panelText.withAlpha (0.82f));
         if (key == "Favourites")
         {
-            // drawn star: the same on every system (the font has no star glyph)
-            juce::Path star;
-            star.addStar ({ (float) textArea.getX() + 5.0f, (float) getHeight() * 0.5f }, 5, 2.4f, 5.6f);
-            g.fillPath (star);
-            textArea.removeFromLeft (15);
+            draw::star (g, { (float) text.getX() + 5.0f, (float) getHeight() * 0.5f }, 5.6f, true, on ? t.selectText : t.panelText.withAlpha (0.82f));
+            text.removeFromLeft (16);
         }
-        g.setFont (on ? fonts::extraBold (13.0f) : fonts::medium (13.0f));
-        g.drawText (label, textArea, juce::Justification::centredLeft, true);
-        g.setColour (t.panelText.withAlpha (0.7f));
-        g.setFont (fonts::medium (11.0f));
-        g.drawText (juce::String (count), getLocalBounds().reduced (8, 0), juce::Justification::centredRight, false);
+        g.setFont (on ? fonts::semiBold (12.5f) : fonts::regular (12.5f));
+        g.drawText (label, text.withTrimmedRight (26), juce::Justification::centredLeft, true);
+        g.setColour (on ? t.selectText : t.muted);
+        g.setFont (fonts::regular (11.0f));
+        g.drawText (juce::String (count), text, juce::Justification::centredRight, false);
     }
 
     void mouseEnter (const juce::MouseEvent&) override { repaint(); }
     void mouseExit (const juce::MouseEvent&) override  { repaint(); }
-    void mouseUp (const juce::MouseEvent&) override
+    void mouseUp (const juce::MouseEvent& e) override
     {
-        owner.category = key;
-        owner.search.clear();
-        owner.rebuildList();
+        if (key == "-" || ! getLocalBounds().contains (e.getPosition()))
+            return;
+        if (key == "+new")
+        {
+            owner.startNaming (-1, {});
+            return;
+        }
+        if (e.mods.isPopupMenu() && key.startsWith ("col:"))
+        {
+            owner.showCollectionMenu (owner.ctx.settings.findCollection (key.substring (4)));
+            return;
+        }
+        owner.showFolder (key);
     }
 
     SelectorPanel& owner;
     juce::String key, label;
+    int indent = 0;
     int count = 0;
 };
 
@@ -99,35 +144,42 @@ struct SelectorPanel::Row : public juce::Component
 
         if (hov)
         {
-            g.setColour (t.selectFill);
-            g.fillRoundedRectangle (getLocalBounds().toFloat(), t.corner * 0.67f);
+            g.setColour (t.panelText.withAlpha (0.04f));
+            g.fillRect (getLocalBounds());
+        }
+        g.setColour (t.panelText.withAlpha (0.06f));
+        g.fillRect (0, getHeight() - 1, getWidth(), 1);
+
+        auto r = getLocalBounds().reduced (10, 0);
+        auto starArea = r.removeFromRight (18);
+
+        const auto nameFont = fonts::regular (12.5f);
+        g.setColour (t.panelText);
+        g.setFont (nameFont);
+        const juce::String name (info->name);
+        g.drawText (name, r, juce::Justification::centredLeft, true);
+
+        if (! info->isLatest)
+        {
+            // older version of an effect (there is a newer one in its family)
+            const float x = (float) r.getX() + fonts::width (nameFont, name) + 7.0f;
+            g.setColour (t.muted);
+            g.setFont (fonts::regular (11.0f));
+            g.drawText ("older version", juce::Rectangle<float> (x, 0.0f, 90.0f, (float) getHeight()), juce::Justification::centredLeft, false);
         }
 
-        auto r = getLocalBounds().reduced (8, 0);
-        auto starArea = r.removeFromRight (22);
-
-        g.setColour (t.panelText);
-        g.setFont (fonts::semiBold (13.0f));
-        g.drawText (info->name, r, juce::Justification::centredLeft, true);
-
-        if (showCategory)
+        if (detail.isNotEmpty())
         {
-            g.setColour (t.panelText.withAlpha (0.7f));
-            g.setFont (fonts::medium (11.0f));
-            g.drawText (info->category, r, juce::Justification::centredRight, true);
+            g.setColour (t.muted);
+            g.setFont (fonts::regular (11.0f));
+            g.drawText (detail, r.withTrimmedRight (8), juce::Justification::centredRight, true);
         }
 
         if (fav || hov)
-        {
-            juce::Path star;
-            star.addStar (starArea.toFloat().getCentre(), 5, 3.0f, 7.0f);
-            g.setColour (t.panelText);
-            if (fav) g.fillPath (star);
-            else     g.strokePath (star, juce::PathStrokeType (1.1f));
-        }
+            draw::star (g, starArea.toFloat().getCentre(), 6.0f, fav, fav ? t.panelText.withAlpha (0.75f) : t.muted);
     }
 
-    bool onStar (juce::Point<int> p) const { return p.x > getWidth() - 34; }
+    bool onStar (juce::Point<int> p) const { return p.x > getWidth() - 32; }
 
     void mouseEnter (const juce::MouseEvent&) override { owner.setHover (info); }
     void mouseUp (const juce::MouseEvent& e) override
@@ -135,7 +187,12 @@ struct SelectorPanel::Row : public juce::Component
         if (info == nullptr || ! getLocalBounds().contains (e.getPosition()))
             return;
 
-        if (e.mods.isPopupMenu() || onStar (e.getPosition()))
+        if (e.mods.isPopupMenu())
+        {
+            owner.showEffectMenu (*info);
+            return;
+        }
+        if (onStar (e.getPosition()))
         {
             owner.ctx.settings.toggleFavourite (info->id);
             owner.refresh();
@@ -147,32 +204,44 @@ struct SelectorPanel::Row : public juce::Component
 
     SelectorPanel& owner;
     const EffectInfo* info = nullptr;
-    bool showCategory = false;
+    juce::String detail;   // category or release month, right-aligned
 };
 
 SelectorPanel::SelectorPanel (UiContext& c, std::function<void (const EffectInfo&)> choose)
     : PanelBase (c), onChoose (std::move (choose))
 {
-    search.setTextToShowWhenEmpty ("Search " + juce::String ((int) getAllEffects().size()) + " effects...", c.theme.panelText.withAlpha (0.55f));
-    search.setFont (fonts::medium (13.0f));
-    search.setIndents (8, 5);
+    search.setTextToShowWhenEmpty ("Search names and descriptions", c.theme.muted);
+    search.setFont (fonts::regular (12.5f));
+    search.setIndents (10, 6);
     search.addListener (this);
     search.setTitle ("Search effects");
     addAndMakeVisible (search);
 
     list.setModel (this);
-    list.setRowHeight (26);
+    list.setRowHeight (kEffectRowH);
     list.setOutlineThickness (0);
     list.setTitle ("Effects");
     addAndMakeVisible (list);
 
-    categoryView.setViewedComponent (&categoryHolder, false);
-    categoryView.setScrollBarsShown (true, false);
-    categoryView.setScrollBarThickness (8);
-    categoryView.setTitle ("Folders");
-    addAndMakeVisible (categoryView);
-    rebuildCategories();
-    rebuildList();
+    folderView.setViewedComponent (&folderHolder, false);
+    folderView.setScrollBarsShown (true, false);
+    folderView.setScrollBarThickness (8);
+    folderView.setTitle ("Folders");
+    addAndMakeVisible (folderView);
+
+    nameEditor.setFont (fonts::regular (12.5f));
+    nameEditor.setIndents (8, 4);
+    nameEditor.setInputRestrictions (40);
+    nameEditor.setTitle ("Collection name");
+    nameEditor.onReturnKey = [this] { finishNaming (true); };
+    nameEditor.onEscapeKey = [this] { finishNaming (false); };
+    nameEditor.onFocusLost = [this] { finishNaming (true); };
+    folderHolder.addChildComponent (nameEditor);
+
+    // Start in Favourites when there are any, else in All effects.
+    if (ctx.settings.getFavourites().isEmpty() && ctx.settings.getCollections().empty())
+        folder = "All";
+    rebuildFolders();
 }
 
 SelectorPanel::~SelectorPanel()
@@ -180,56 +249,105 @@ SelectorPanel::~SelectorPanel()
     list.setModel (nullptr);
 }
 
-void SelectorPanel::rebuildCategories()
+juce::StringArray SelectorPanel::getFolderKeys() const
 {
-    categoryRows.clear();
-    categoryRows.add (new CategoryRow (*this, "Favourites", "Favourites"));
-    categoryRows.add (new CategoryRow (*this, "Recent", "Recently used"));
-    categoryRows.add (new CategoryRow (*this, "New", "New"));
-    categoryRows.add (new CategoryRow (*this, "LastAdded", "Last added"));
-    categoryRows.add (new CategoryRow (*this, "All", "All effects"));
+    juce::StringArray keys;
+    for (auto* r : folderRows)
+        if (r->key != "-" && r->key != "+new")
+            keys.add (r->key);
+    return keys;
+}
+
+void SelectorPanel::rebuildFolders()
+{
+    folderRows.clear();
+    folderRows.add (new FolderRow (*this, "Favourites", "Favourites"));
+    for (auto& col : ctx.settings.getCollections())
+        folderRows.add (new FolderRow (*this, "col:" + col.name, col.name, 14));
+    folderRows.add (new FolderRow (*this, "+new", {}, 14));
+    folderRows.add (new FolderRow (*this, "Recent", "Recently used"));
+    if (countFor ("New") > 0 || folder == "New")
+        folderRows.add (new FolderRow (*this, "New", "New"));
+    folderRows.add (new FolderRow (*this, "Last6", "Last 6 months"));
+    folderRows.add (new FolderRow (*this, "All", "All effects"));
+    folderRows.add (new FolderRow (*this, "-", {}));
 
     juce::StringArray cats;
     for (auto& e : getAllEffects())
         cats.addIfNotAlreadyThere (e.category);
     cats.sortNatural();
     for (auto& cat : cats)
-        categoryRows.add (new CategoryRow (*this, cat, cat));
+        folderRows.add (new FolderRow (*this, cat, cat));
 
-    for (auto* r : categoryRows)
-        categoryHolder.addAndMakeVisible (r);
+    // a folder that no longer exists (deleted collection, empty New) -> All effects
+    if (! getFolderKeys().contains (folder))
+        folder = "All";
+
+    for (auto* r : folderRows)
+        folderHolder.addAndMakeVisible (r);
+    nameEditor.toFront (false);
+    layoutFolders();
     refresh();
+}
+
+bool SelectorPanel::inFolder (const EffectInfo& e, const juce::String& key) const
+{
+    if (key == "New")   return e.isNew;
+    if (key == "Last6") return e.isRecent;
+    if (key == "All")   return true;
+    return key == e.category;
+}
+
+int SelectorPanel::countFor (const juce::String& key) const
+{
+    auto& s = ctx.settings;
+    if (key == "Favourites") return s.getFavourites().size();
+    if (key == "Recent")     return s.getRecent().size();
+    if (key.startsWith ("col:"))
+    {
+        const int i = s.findCollection (key.substring (4));
+        return i >= 0 ? s.getCollections()[(size_t) i].ids.size() : 0;
+    }
+    int n = 0;
+    for (auto& e : getAllEffects())
+        if (inFolder (e, key) && s.isListed (e))
+            ++n;
+    return n;
 }
 
 void SelectorPanel::refresh()
 {
-    for (auto* r : categoryRows)
+    // Collections may have changed in another instance (settings are shared live): rebuild the folders.
+    juce::StringArray want, have;
+    for (auto& col : ctx.settings.getCollections())
+        want.add ("col:" + col.name);
+    for (auto* r : folderRows)
+        if (r->key.startsWith ("col:"))
+            have.add (r->key);
+    if (want != have)
     {
-        if (r->key == "Favourites")      r->count = ctx.settings.getFavourites().size();
-        else if (r->key == "Recent")     r->count = ctx.settings.getRecent().size();
-        else if (r->key == "All")        r->count = (int) getAllEffects().size();
-        else if (r->key == "New" || r->key == "LastAdded")
-        {
-            r->count = 0;
-            for (auto& e : getAllEffects())
-                if (r->key == "New" ? e.isNew : e.isLastAdded)
-                    ++r->count;
-        }
-        else
-        {
-            r->count = 0;
-            for (auto& e : getAllEffects())
-                if (r->key == e.category)
-                    ++r->count;
-        }
+        rebuildFolders();   // calls refresh() again with matching rows
+        return;
     }
+
+    for (auto* r : folderRows)
+        r->count = countFor (r->key);
+    rebuildList();
+}
+
+void SelectorPanel::showFolder (const juce::String& key)
+{
+    folder = key;
+    search.clear();
     rebuildList();
 }
 
 void SelectorPanel::rebuildList()
 {
     items.clear();
+    hiddenMatches = 0;
     const auto q = search.getText().trim().toLowerCase();
+    auto& s = ctx.settings;
 
     auto fromIds = [this] (const juce::StringArray& ids)
     {
@@ -237,29 +355,45 @@ void SelectorPanel::rebuildList()
             if (auto* e = findEffect (id.toStdString()))
                 items.push_back (e);
     };
+    auto byName = [] (const EffectInfo* a, const EffectInfo* b) { return juce::String (a->name).compareNatural (b->name) < 0; };
 
     if (q.isNotEmpty())
     {
         for (auto& e : getAllEffects())
             if (juce::String (e.name).toLowerCase().contains (q) || juce::String (e.description).toLowerCase().contains (q))
-                items.push_back (&e);
+            {
+                if (s.isListed (e)) items.push_back (&e);
+                else                ++hiddenMatches;
+            }
+        std::sort (items.begin(), items.end(), byName);
     }
-    else if (category == "Favourites") fromIds (ctx.settings.getFavourites());
-    else if (category == "Recent")     fromIds (ctx.settings.getRecent());
+    else if (folder == "Favourites") fromIds (s.getFavourites());
+    else if (folder == "Recent")     fromIds (s.getRecent());
+    else if (folder.startsWith ("col:"))
+    {
+        const int i = s.findCollection (folder.substring (4));
+        if (i >= 0)
+            fromIds (s.getCollections()[(size_t) i].ids);
+    }
     else
     {
         for (auto& e : getAllEffects())
-            if (category == "All" || category == e.category || (category == "New" && e.isNew)
-                || (category == "LastAdded" && e.isLastAdded))
+            if (inFolder (e, folder) && s.isListed (e))
                 items.push_back (&e);
-    }
 
-    if (q.isNotEmpty() || category == "All" || (category != "Favourites" && category != "Recent"))
-        std::sort (items.begin(), items.end(), [] (auto* a, auto* b) { return juce::String (a->name).compareNatural (b->name) < 0; });
+        if (folder == "Last6")
+            std::sort (items.begin(), items.end(), [&] (auto* a, auto* b)
+                       {
+                           const int c = juce::String (a->released).compare (b->released);
+                           return c != 0 ? c > 0 : byName (a, b);   // newest first
+                       });
+        else
+            std::sort (items.begin(), items.end(), byName);
+    }
 
     list.updateContent();
     list.repaint();
-    for (auto* r : categoryRows)
+    for (auto* r : folderRows)
         r->repaint();
     repaint();
 }
@@ -276,8 +410,16 @@ juce::Component* SelectorPanel::refreshComponentForRow (int row, bool, juce::Com
     }
 
     r->info = juce::isPositiveAndBelow (row, (int) items.size()) ? items[(size_t) row] : nullptr;
-    r->showCategory = search.getText().isNotEmpty() || category == "Favourites" || category == "Recent"
-                      || category == "All" || category == "New" || category == "LastAdded";
+    r->detail = {};
+    if (r->info != nullptr)
+    {
+        // every row: the Airwindows release date; in mixed lists the category before it
+        const bool oneCategory = search.isEmpty() && ! (folder == "Favourites" || folder == "Recent" || folder == "All"
+                                                        || folder == "New" || folder == "Last6" || folder.startsWith ("col:"));
+        r->detail = monthYear (r->info->released);
+        if (! oneCategory && ! (search.isEmpty() && folder == "Last6"))
+            r->detail = juce::String (r->info->category) + kDot + r->detail;
+    }
     r->repaint();
     return r;
 }
@@ -290,33 +432,179 @@ void SelectorPanel::setHover (const EffectInfo* e)
     {
         hovered = e;
         list.repaint();
-        repaint (getLocalBounds().removeFromBottom (44));
+        repaint (getLocalBounds().removeFromBottom (46));
     }
+}
+
+// ---- menus + naming ------------------------------------------------------------------------
+void SelectorPanel::showEffectMenu (const EffectInfo& info)
+{
+    auto& s = ctx.settings;
+    const juce::String id (info.id);
+    juce::PopupMenu m;
+    m.addItem (1, s.isFavourite (id) ? "Remove from Favourites" : "Add to Favourites");
+
+    juce::PopupMenu cols;
+    const auto& all = s.getCollections();
+    for (int i = 0; i < (int) all.size(); ++i)
+        cols.addItem (100 + i, all[(size_t) i].name, true, s.isInCollection (i, id));
+    if (! all.empty())
+        cols.addSeparator();
+    cols.addItem (2, "New collection" + kEllipsis);
+    m.addSubMenu ("Add to collection", cols);
+
+    if (folder.startsWith ("col:") && search.isEmpty())
+        m.addItem (3, "Remove from " + folder.substring (4));
+
+    juce::Component::SafePointer<SelectorPanel> safe (this);
+    showMenu (m, *this, [safe, id] (int choice)
+    {
+        if (safe == nullptr) return;
+        auto& self = *safe;
+        auto& st = self.ctx.settings;
+        if (choice == 1) st.toggleFavourite (id);
+        else if (choice == 2) { self.startNaming (-1, id); return; }
+        else if (choice == 3) st.toggleInCollection (st.findCollection (self.folder.substring (4)), id);
+        else if (choice >= 100) st.toggleInCollection (choice - 100, id);
+        self.refresh();
+    });
+}
+
+void SelectorPanel::showCollectionMenu (int index)
+{
+    auto& s = ctx.settings;
+    if (! juce::isPositiveAndBelow (index, (int) s.getCollections().size()))
+        return;
+    juce::PopupMenu m;
+    m.addItem (1, "Rename" + kEllipsis);
+    m.addItem (2, "Move up", index > 0);
+    m.addItem (3, "Move down", index < (int) s.getCollections().size() - 1);
+    m.addSeparator();
+    m.addItem (4, "Delete collection");
+
+    juce::Component::SafePointer<SelectorPanel> safe (this);
+    showMenu (m, *this, [safe, index] (int choice)
+    {
+        if (safe == nullptr) return;
+        auto& self = *safe;
+        auto& st = self.ctx.settings;
+        if (! juce::isPositiveAndBelow (index, (int) st.getCollections().size()))
+            return;   // changed in another window meanwhile
+        const auto key = "col:" + st.getCollections()[(size_t) index].name;
+        if (choice == 1) { self.startNaming (index, {}); return; }
+        if (choice == 2 || choice == 3)
+        {
+            st.moveCollection (index, choice == 2 ? -1 : 1);
+        }
+        else if (choice == 4)
+        {
+            st.removeCollection (index);   // the effects and favourites stay as they are
+            if (self.folder == key)
+                self.folder = "Favourites";
+        }
+        self.rebuildFolders();
+    });
+}
+
+void SelectorPanel::startNaming (int renameIndex, const juce::String& effectToAdd)
+{
+    renamingIndex = renameIndex;
+    addAfterNaming = effectToAdd;
+    naming = true;
+
+    // the editor covers the collection's row, or the "+ New collection" row
+    const juce::String key = renameIndex >= 0 ? "col:" + ctx.settings.getCollections()[(size_t) renameIndex].name : juce::String ("+new");
+    for (auto* r : folderRows)
+        if (r->key == key)
+            nameEditor.setBounds (r->getBounds().withTrimmedLeft (r->indent));
+
+    nameEditor.setText (renameIndex >= 0 ? ctx.settings.getCollections()[(size_t) renameIndex].name : juce::String(), false);
+    nameEditor.setTextToShowWhenEmpty ("Collection name", ctx.theme.muted);
+    nameEditor.applyColourToAllText (ctx.theme.panelText);
+    nameEditor.selectAll();
+    nameEditor.setVisible (true);
+    nameEditor.toFront (true);
+    nameEditor.grabKeyboardFocus();
+}
+
+void SelectorPanel::finishNaming (bool apply)
+{
+    if (! naming)
+        return;
+    naming = false;
+    const auto text = nameEditor.getText().trim();
+    // hide after this callback (we may be inside the editor's own key/focus handling)
+    juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<SelectorPanel> (this)]
+                                     { if (safe != nullptr) safe->nameEditor.setVisible (false); });
+
+    if (! apply || text.isEmpty())
+        return;
+
+    auto& s = ctx.settings;
+    if (renamingIndex >= 0)
+    {
+        const bool wasShown = folder == "col:" + s.getCollections()[(size_t) renamingIndex].name;
+        s.renameCollection (renamingIndex, text);
+        if (wasShown)
+            folder = "col:" + s.getCollections()[(size_t) renamingIndex].name;
+    }
+    else
+    {
+        const int i = s.addCollection (text);
+        if (addAfterNaming.isNotEmpty())
+            s.toggleInCollection (i, addAfterNaming);
+        else
+            folder = "col:" + s.getCollections()[(size_t) i].name;
+    }
+    rebuildFolders();
+}
+
+// ---- layout + drawing -------------------------------------------------------------------------
+void SelectorPanel::layoutFolders()
+{
+    int y = 0;
+    for (auto* row : folderRows)
+    {
+        const int h = row->key == "-" ? 13 : kFolderRowH;
+        row->setBounds (0, y, folderHolder.getWidth(), h);
+        y += h + (row->key == "-" ? 0 : 1);
+    }
+    folderHolder.setSize (folderHolder.getWidth(), y);
+}
+
+juce::Rectangle<int> SelectorPanel::viewToggleArea() const
+{
+    const auto b = list.getBounds();
+    return { b.getRight() - 150, b.getY() - 24, 150, 20 };
 }
 
 void SelectorPanel::resized()
 {
     auto r = getLocalBounds().reduced (1);
-    r.removeFromBottom (42); // description strip
+    r.removeFromBottom (44); // description strip
 
-    auto left = r.removeFromLeft (180).reduced (8, 10);
-    int y = 0;
-    for (auto* row : categoryRows)
-    {
-        row->setBounds (0, y, left.getWidth(), 20);
-        y += 21;
-    }
-    categoryView.setBounds (left);
-    const bool scrolls = y > left.getHeight();
-    categoryHolder.setSize (left.getWidth() - (scrolls ? 10 : 0), y);
-    for (auto* row : categoryRows)
-        row->setSize (categoryHolder.getWidth(), row->getHeight());
+    auto left = r.removeFromLeft (kFolderColumnW).reduced (8, 10);
+    folderView.setBounds (left);
+    folderHolder.setSize (left.getWidth(), 10);
+    layoutFolders();
+    const bool scrolls = folderHolder.getHeight() > left.getHeight();
+    folderHolder.setSize (left.getWidth() - (scrolls ? 10 : 0), folderHolder.getHeight());
+    layoutFolders();
 
     r.removeFromLeft (1);
-    r = r.reduced (12, 10);
+    r = r.reduced (10, 10);
     search.setBounds (r.removeFromTop (28));
-    r.removeFromTop (24);
+    r.removeFromTop (28);   // heading + view switch
     list.setBounds (r);
+}
+
+void SelectorPanel::mouseUp (const juce::MouseEvent& e)
+{
+    if (viewToggleArea().contains (e.getPosition()))
+    {
+        ctx.settings.setLatestOnly (! ctx.settings.getLatestOnly());
+        refresh();
+    }
 }
 
 void SelectorPanel::paint (juce::Graphics& g)
@@ -324,47 +612,75 @@ void SelectorPanel::paint (juce::Graphics& g)
     PanelBase::paint (g);
     const auto& t = ctx.theme;
     auto r = getLocalBounds().reduced (1);
-    auto strip = r.removeFromBottom (42);
+    auto strip = r.removeFromBottom (44);
 
-    g.setColour (t.panelText.withAlpha (0.2f));
-    g.drawHorizontalLine (strip.getY(), (float) strip.getX(), (float) strip.getRight());
-    g.drawVerticalLine (r.getX() + 180, (float) r.getY() + 8.0f, (float) r.getBottom() - 8.0f);
+    g.setColour (t.panelText.withAlpha (0.08f));
+    g.fillRect (strip.getX() + kFolderColumnW + 1, strip.getY(), strip.getWidth() - kFolderColumnW - 1, 1);
+    g.fillRect (r.getX() + kFolderColumnW, r.getY() + 1, 1, r.getHeight() + strip.getHeight() - 2);
 
     // list heading
-    auto heading = r.withTrimmedLeft (193).withTrimmedRight (12).withTrimmedTop (44).withHeight (20);
+    const auto lb = list.getBounds();
+    auto heading = juce::Rectangle<int> (lb.getX(), lb.getY() - 24, lb.getWidth() - 160, 20);
     const auto q = search.getText().trim();
-    juce::String title = q.isNotEmpty() ? juce::String ("SEARCH") + kDot + juce::String ((int) items.size()) + " RESULTS"
-                       : category == "Favourites" ? juce::String ("FAVOURITES")
-                       : category == "Recent" ? juce::String ("RECENTLY USED")
-                       : category == "All" ? juce::String ("ALL EFFECTS")
-                       : category == "New" ? juce::String ("NEW AIRWINDOWS RELEASES")
-                       : category == "LastAdded" ? juce::String ("LAST ADDED") + kDot + "NEW IN THIS UPDATE"
-                       : category.toUpperCase();
-    drawHeading (g, title, heading);
+    juce::String title;
+    if (q.isNotEmpty())                  title = "SEARCH";
+    else if (folder == "Favourites")     title = "FAVOURITES";
+    else if (folder == "Recent")         title = "RECENTLY USED";
+    else if (folder == "All")            title = "ALL EFFECTS";
+    else if (folder == "New")            title = "NEW IN THIS UPDATE";
+    else if (folder == "Last6")          title = "LAST 6 MONTHS";
+    else if (folder.startsWith ("col:")) title = folder.substring (4).toUpperCase();
+    else                                 title = folder.toUpperCase();
+    drawHeading (g, title + kDot + juce::String ((int) items.size()), heading);
+
+    // "Latest versions only" switch (a small check box)
+    {
+        const auto a = viewToggleArea();
+        const bool on = ctx.settings.getLatestOnly();
+        auto box = juce::Rectangle<float> ((float) a.getRight() - 13.0f, (float) a.getCentreY() - 6.5f, 13.0f, 13.0f);
+        g.setColour (on ? t.accent : t.buttonBorder.withMultipliedAlpha (2.0f));
+        g.drawRoundedRectangle (box.reduced (0.5f), 3.0f, 1.2f);
+        if (on)
+        {
+            juce::Path tick;
+            tick.startNewSubPath (box.getX() + 3.0f, box.getCentreY() + 0.2f);
+            tick.lineTo (box.getX() + 5.6f, box.getBottom() - 3.4f);
+            tick.lineTo (box.getRight() - 2.8f, box.getY() + 3.4f);
+            g.strokePath (tick, juce::PathStrokeType (1.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+        }
+        g.setColour (on ? t.panelText : t.muted);
+        g.setFont (fonts::regular (11.5f));
+        g.drawText ("Latest versions only", a.withTrimmedRight (20), juce::Justification::centredRight, false);
+    }
 
     if (items.empty())
     {
-        g.setColour (t.panelText.withAlpha (0.75f));
-        g.setFont (fonts::medium (13.0f));
-        const auto msg = (category == "Favourites" && q.isEmpty())
-                             ? "No favourites yet - right-click an effect or click its star."
-                             : (category == "LastAdded" && q.isEmpty())
-                                   ? "Effects added in the next update will appear here."
-                                   : "Nothing found.";
-        g.drawFittedText (msg, list.getBounds().reduced (6, 4), juce::Justification::topLeft, 2);
+        g.setColour (t.muted);
+        g.setFont (fonts::regular (12.5f));
+        juce::String msg = "Nothing found.";
+        if (q.isEmpty() && folder == "Favourites")
+            msg = "No favourites yet - click an effect's star, or right-click it.";
+        else if (q.isEmpty() && folder.startsWith ("col:"))
+            msg = "Empty collection - right-click an effect > Add to collection.";
+        else if (q.isEmpty() && folder == "Recent")
+            msg = "Effects you load appear here.";
+        if (hiddenMatches > 0)
+            msg = juce::String (hiddenMatches) + (hiddenMatches == 1 ? " older version matches" : " older versions match")
+                  + " - untick \"Latest versions only\" to see " + (hiddenMatches == 1 ? "it." : "them.");
+        g.drawFittedText (msg, lb.reduced (8, 6), juce::Justification::topLeft, 3);
     }
 
-    g.setColour (t.panelText.withAlpha (0.9f));
-    g.setFont (fonts::medium (13.0f));
+    g.setColour (hovered != nullptr ? t.panelText.withAlpha (0.85f) : t.muted);
+    g.setFont (fonts::regular (12.0f));
     const juce::String desc = hovered != nullptr ? juce::String (hovered->description)
-                                                 : "Hover an effect to see what it does. Right-click or click the star to add it to your favourites.";
-    g.drawFittedText (desc, strip.reduced (14, 4), juce::Justification::centredLeft, 2);
+                                                 : "Hover an effect to see what it does. Star it, or right-click it for collections.";
+    g.drawFittedText (desc, strip.withTrimmedLeft (kFolderColumnW + 1).reduced (12, 4), juce::Justification::centredLeft, 2);
 }
 
 // =============================================================================================
-ConfirmDialog::ConfirmDialog (UiContext& c, const EffectInfo& i, std::function<void (bool)> result)
-    : ctx (c), info (i), onResult (std::move (result)),
-      cancel (c, "Cancel"), load (c, "Load effect")
+ConfirmDialog::ConfirmDialog (UiContext& c, const EffectInfo& i, const EffectInfo* rep, std::function<void (bool)> result)
+    : ctx (c), info (i), replacing (rep), onResult (std::move (result)),
+      cancel (c, "Cancel"), load (c, rep != nullptr ? "Change effect" : "Load effect")
 {
     load.primary = true;
     load.fontSize = cancel.fontSize = 13.0f;
@@ -377,9 +693,9 @@ ConfirmDialog::ConfirmDialog (UiContext& c, const EffectInfo& i, std::function<v
 
 void ConfirmDialog::resized()
 {
-    box = juce::Rectangle<int> (0, 0, 340, 150).withCentre (getLocalBounds().getCentre());
-    auto buttons = box.reduced (20, 18).removeFromBottom (28);
-    load.setBounds (buttons.removeFromRight (110));
+    box = juce::Rectangle<int> (0, 0, 360, replacing != nullptr ? 166 : 148).withCentre (getLocalBounds().getCentre());
+    auto buttons = box.reduced (18, 16).removeFromBottom (30);
+    load.setBounds (buttons.removeFromRight (replacing != nullptr ? 124 : 110));
     buttons.removeFromRight (8);
     cancel.setBounds (buttons.removeFromRight (80));
 }
@@ -387,22 +703,29 @@ void ConfirmDialog::resized()
 void ConfirmDialog::paint (juce::Graphics& g)
 {
     const auto& t = ctx.theme;
-    g.fillAll (juce::Colours::black.withAlpha (0.18f));
+    g.fillAll (juce::Colours::black.withAlpha (0.45f));
 
     juce::Path p;
-    p.addRoundedRectangle (box.toFloat(), 10.0f);
-    juce::DropShadow (t.panelGlow > 0.0f ? t.frameGlowColor.withAlpha (t.panelGlow) : juce::Colours::black.withAlpha (0.2f), 22, { 0, 6 }).drawForPath (g, p);
+    p.addRoundedRectangle (box.toFloat(), t.corner + 2.0f);
+    juce::DropShadow (juce::Colours::black.withAlpha (0.6f), 26, { 0, 10 }).drawForPath (g, p);
     g.setColour (t.panelFill.withAlpha (1.0f));
     g.fillPath (p);
-    g.setColour (t.panelText);
-    g.strokePath (p, juce::PathStrokeType (1.6f));
+    g.setColour (t.panelBorder);
+    g.strokePath (p, juce::PathStrokeType (1.0f));
 
-    auto r = box.reduced (20, 16);
-    g.setFont (fonts::extraBold (18.0f));
-    g.drawText ("Load " + juce::String (info.name) + "?", r.removeFromTop (26), juce::Justification::centredLeft, true);
-    g.setFont (fonts::medium (13.0f));
-    g.drawFittedText ("This can't be changed later. To use a different effect, add a new Daylight_aw instance.",
-                      r.removeFromTop (44), juce::Justification::topLeft, 3);
+    auto r = box.reduced (18, 16);
+    g.setColour (t.panelText);
+    g.setFont (fonts::semiBold (15.0f));
+    const juce::String name (info.name);
+    g.drawText ((replacing != nullptr ? "Change to " : "Load ") + name + "?", r.removeFromTop (24), juce::Justification::centredLeft, true);
+    r.removeFromTop (4);
+    g.setColour (t.panelText.withAlpha (0.8f));
+    g.setFont (fonts::regular (12.5f));
+    const auto text = replacing != nullptr
+        ? juce::String (replacing->name) + "'s settings, A/B and preset name are replaced by " + name
+              + "'s defaults. Automation on this track will move " + name + "'s controls instead."
+        : juce::String ("You can change it later: click the effect name > Change effect.");
+    g.drawFittedText (text, r.removeFromTop (replacing != nullptr ? 58 : 40), juce::Justification::topLeft, 4);
 }
 
 bool ConfirmDialog::keyPressed (const juce::KeyPress& k)
@@ -413,96 +736,48 @@ bool ConfirmDialog::keyPressed (const juce::KeyPress& k)
 }
 
 // =============================================================================================
-SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed, std::function<void()> showInfoFn)
-    : PanelBase (c), onChanged (std::move (changed)), onShowInfo (std::move (showInfoFn)),
-      openThemeFolder (c, "Open theme folder"), resetButton (c, "Reset to defaults"),
-      infoButton (c, "Effect info"), savePreset (c, "Save preset"),
-      nameOk (c, "Save"), nameCancel (c, "Cancel"),
-      editLayoutButton (c, "Edit layout"), removeLayoutButton (c, "Remove"),
-      inTrim (c, c.processor.getInputTrim(), "Input"), outTrim (c, c.processor.getOutputTrim(), "Output")
+SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> showInfoFn, std::function<void()> changeFn)
+    : PanelBase (c), onShowInfo (std::move (showInfoFn)), onChangeEffect (std::move (changeFn)),
+      zoomButton (c, {}), themeButton (c, {}), openThemeFolder (c, "Open theme folder" + kEllipsis),
+      resetButton (c, "Reset to defaults"), infoButton (c, "Effect info"), changeButton (c, "Change effect" + kEllipsis),
+      savePreset (c, "Save preset"),
+      nameOk (c, "Save"), nameCancel (c, "Cancel")
 {
-    int i = 0;
-    for (auto level : GlobalSettings::zoomLevels)
+    zoomButton.dropdown = themeButton.dropdown = true;
+    zoomButton.setTitle ("Zoom");
+    themeButton.setTitle ("Theme");
+    zoomButton.onClick = [this] { showZoomMenu(); };
+    themeButton.onClick = [this] { showThemeMenu(); };
+    addAndMakeVisible (zoomButton);
+    addAndMakeVisible (themeButton);
+
+    openThemeFolder.link = true;
+    openThemeFolder.fontSize = 11.5f;
+    openThemeFolder.onClick = []
     {
-        auto* b = zoomButtons.add (new PillButton (c, juce::String (level) + "%"));
-        b->joinedLeft = i > 0;
-        b->joinedRight = i < 3;
-        b->onClick = [this, level] { ctx.settings.setZoom (level); if (onChanged) onChanged(); };
-        addAndMakeVisible (b);
-        ++i;
-    }
+        ensureUserThemeExists();
+        getUserThemeFolder().startAsProcess();
+    };
+    addAndMakeVisible (openThemeFolder);
 
-    const juce::StringArray names { "Default", "Light", "Dark", "Original", "User" };
-    const ThemeId ids[] = { ThemeId::def, ThemeId::light, ThemeId::dark, ThemeId::original, ThemeId::user };
-    for (int k = 0; k < 5; ++k)
-    {
-        auto* b = themeButtons.add (new PillButton (c, names[k]));
-        b->joinedLeft = k > 0;
-        b->joinedRight = k < 4;
-        b->fontSize = 11.5f;
-        b->onClick = [this, id = ids[k]]
-        {
-            if (id == ThemeId::user)
-                ensureUserThemeExists (ctx.settings.getTheme() == ThemeId::user ? ThemeId::def : ctx.settings.getTheme());
-            ctx.settings.setTheme (id);
-            if (onChanged) onChanged();
-        };
-        addAndMakeVisible (b);
-    }
-
-    for (int k = 0; k < 2; ++k)
-    {
-        auto* b = tooltipButtons.add (new PillButton (c, k == 0 ? "On" : "Off"));
-        b->joinedLeft = k == 1;
-        b->joinedRight = k == 0;
-        b->onClick = [this, k] { ctx.settings.setTooltips (k == 0); if (onChanged) onChanged(); };
-        addAndMakeVisible (b);
-    }
-
-    openThemeFolder.onClick = [] { getUserThemeFolder().startAsProcess(); };
-    addChildComponent (openThemeFolder);
-
+    resetButton.icon = PillButton::Icon::reset;
+    infoButton.icon = PillButton::Icon::info;
+    changeButton.icon = PillButton::Icon::change;
     resetButton.onClick = [this] { ctx.processor.resetToDefaults(); };
     infoButton.onClick = [this] { if (onShowInfo) onShowInfo(); };
+    changeButton.onClick = [this] { if (onChangeEffect) onChangeEffect(); };
     addAndMakeVisible (resetButton);
     addAndMakeVisible (infoButton);
-
-    // ---- user layouts (Documents/.../Layouts/<id>.json) ----
-    editLayoutButton.setTooltip ("Make your own layout for this effect: opens its layout file. Save it in any text editor.");
-    editLayoutButton.onClick = [this]
-    {
-        if (auto* fx = ctx.processor.getEffectHost())
-        {
-            if (userlayouts::create (*fx))
-            {
-                userlayouts::fileFor (fx->getInfo().id).revealToUser();
-                layoutMessage = "Edit " + juce::String (fx->getInfo().id) + ".json in a text editor. Changes show up live.";
-            }
-            else
-                layoutMessage = "Couldn't create the layout file. Is the Documents folder writable?";
-            refresh();
-        }
-    };
-    removeLayoutButton.setTooltip ("Remove your layout (to the trash) and use the built-in one again.");
-    removeLayoutButton.onClick = [this]
-    {
-        if (auto* fx = ctx.processor.getEffectHost())
-        {
-            layoutMessage = userlayouts::remove (fx->getInfo().id) ? juce::String ("Back to the built-in layout.")
-                                                                    : juce::String ("Couldn't remove the layout file.");
-            refresh();
-        }
-    };
-    addChildComponent (editLayoutButton);
-    addChildComponent (removeLayoutButton);
+    addAndMakeVisible (changeButton);
 
     // ---- presets ----
     savePreset.onClick = [this] { startNaming (NameMode::saving); };
     savePreset.setEnabled (ctx.processor.hasEffect());
+    savePreset.fontSize = 12.0f;
     addAndMakeVisible (savePreset);
 
-    nameEditor.setFont (fonts::medium (13.0f));
-    nameEditor.setIndents (6, 4);
+    nameEditor.setFont (fonts::regular (12.5f));
+    nameEditor.setIndents (8, 5);
     nameEditor.setTitle ("Preset name");
     nameEditor.setInputRestrictions (64);
     nameEditor.onReturnKey = [this] { confirmName(); };
@@ -524,14 +799,11 @@ SettingsPanel::SettingsPanel (UiContext& c, std::function<void()> changed, std::
     addChildComponent (nameCancel);
 
     presetList.setModel (this);
-    presetList.setRowHeight (24);
+    presetList.setRowHeight (28);
     presetList.setOutlineThickness (0);
     presetList.setTitle ("Presets");
     presetList.setColour (juce::ListBox::backgroundColourId, juce::Colours::transparentBlack);
     addAndMakeVisible (presetList);
-
-    addAndMakeVisible (inTrim);
-    addAndMakeVisible (outTrim);
 
     rescanPresets();
     refresh();
@@ -544,22 +816,38 @@ SettingsPanel::~SettingsPanel()
 
 void SettingsPanel::refresh()
 {
-    for (int i = 0; i < zoomButtons.size(); ++i)
-        zoomButtons[i]->setToggleState (GlobalSettings::zoomLevels[i] == ctx.settings.getZoom(), juce::dontSendNotification);
-
-    const auto th = ctx.settings.getTheme();
-    themeButtons[0]->setToggleState (th == ThemeId::def, juce::dontSendNotification);
-    themeButtons[1]->setToggleState (th == ThemeId::light, juce::dontSendNotification);
-    themeButtons[2]->setToggleState (th == ThemeId::dark, juce::dontSendNotification);
-    themeButtons[3]->setToggleState (th == ThemeId::original, juce::dontSendNotification);
-    themeButtons[4]->setToggleState (th == ThemeId::user, juce::dontSendNotification);
-    resized();   // trims are knobs or faders depending on the theme
-    openThemeFolder.setVisible (th == ThemeId::user);
-    tooltipButtons[0]->setToggleState (ctx.settings.getTooltips(), juce::dontSendNotification);
-    tooltipButtons[1]->setToggleState (! ctx.settings.getTooltips(), juce::dontSendNotification);
+    zoomButton.setButtonText (juce::String (ctx.settings.getZoom()) + " %");
+    themeButton.setButtonText (ctx.settings.getTheme() == ThemeId::user ? "User" : "Default");
     nameEditor.applyColourToAllText (ctx.theme.panelText);
     presetList.repaint();
     repaint();
+}
+
+void SettingsPanel::showZoomMenu()
+{
+    juce::PopupMenu m;
+    for (auto level : GlobalSettings::zoomLevels)
+        m.addItem (level, juce::String (level) + " %", true, level == ctx.settings.getZoom());
+    juce::Component::SafePointer<SettingsPanel> safe (this);
+    m.showMenuAsync (juce::PopupMenu::Options().withParentComponent (getTopLevelComponent()).withTargetComponent (&zoomButton),
+                     [safe] (int choice) { if (safe != nullptr && choice > 0) safe->ctx.settings.setZoom (choice); });
+}
+
+void SettingsPanel::showThemeMenu()
+{
+    juce::PopupMenu m;
+    const bool user = ctx.settings.getTheme() == ThemeId::user;
+    m.addItem (1, "Default", true, ! user);
+    m.addItem (2, "User", true, user);
+    juce::Component::SafePointer<SettingsPanel> safe (this);
+    m.showMenuAsync (juce::PopupMenu::Options().withParentComponent (getTopLevelComponent()).withTargetComponent (&themeButton),
+                     [safe] (int choice)
+                     {
+                         if (safe == nullptr || choice == 0) return;
+                         if (choice == 2)
+                             ensureUserThemeExists();
+                         safe->ctx.settings.setTheme (choice == 2 ? ThemeId::user : ThemeId::def);
+                     });
 }
 
 // ---- presets ------------------------------------------------------------------------------------
@@ -586,12 +874,12 @@ void SettingsPanel::paintListBoxItem (int row, juce::Graphics& g, int width, int
     if (current)
     {
         g.setColour (t.selectFill);
-        g.fillRoundedRectangle (juce::Rectangle<float> (0.0f, 1.0f, (float) width, (float) height - 2.0f), t.corner * 0.67f);
+        g.fillRoundedRectangle (juce::Rectangle<float> (0.0f, 1.0f, (float) width, (float) height - 2.0f), t.corner - 1.0f);
     }
 
     g.setColour (current ? t.selectText : t.panelText);
-    g.setFont (current ? fonts::extraBold (12.5f) : fonts::medium (12.5f));
-    g.drawText (name, juce::Rectangle<int> (6, 0, width - 12, height), juce::Justification::centredLeft, true);
+    g.setFont (current ? fonts::semiBold (12.5f) : fonts::regular (12.5f));
+    g.drawText (name, juce::Rectangle<int> (10, 0, width - 20, height), juce::Justification::centredLeft, true);
 }
 
 void SettingsPanel::listBoxItemClicked (int row, const juce::MouseEvent& e)
@@ -621,37 +909,36 @@ void SettingsPanel::showPresetMenu (const juce::File& file)
 {
     juce::PopupMenu m;
     m.addItem (1, "Load");
-    m.addItem (2, "Rename...");
+    m.addItem (2, "Rename" + kEllipsis);
     m.addItem (3, "Move to trash");
     m.addSeparator();
     m.addItem (4, "Show in folder");
 
     juce::Component::SafePointer<SettingsPanel> safe (this);
-    m.showMenuAsync (juce::PopupMenu::Options().withParentComponent (getTopLevelComponent()).withMousePosition(),
-                     [safe, file] (int choice)
-                     {
-                         if (safe == nullptr)
-                             return;
-                         auto& self = *safe;
-                         switch (choice)
-                         {
-                             case 1: self.loadPreset (file); break;
-                             case 2: self.startNaming (NameMode::renaming, file); break;
-                             case 3:
-                                 if (PresetStore::remove (file))
-                                 {
-                                     if (file.getFileNameWithoutExtension() == self.ctx.processor.getPresetName())
-                                         self.ctx.processor.setPresetName ({});
-                                     self.message = {};
-                                 }
-                                 else
-                                     self.message = "Couldn't remove this preset.";
-                                 self.rescanPresets();
-                                 break;
-                             case 4: file.revealToUser(); break;
-                             default: break;
-                         }
-                     });
+    showMenu (m, *this, [safe, file] (int choice)
+    {
+        if (safe == nullptr)
+            return;
+        auto& self = *safe;
+        switch (choice)
+        {
+            case 1: self.loadPreset (file); break;
+            case 2: self.startNaming (NameMode::renaming, file); break;
+            case 3:
+                if (PresetStore::remove (file))
+                {
+                    if (file.getFileNameWithoutExtension() == self.ctx.processor.getPresetName())
+                        self.ctx.processor.setPresetName ({});
+                    self.message = {};
+                }
+                else
+                    self.message = "Couldn't remove this preset.";
+                self.rescanPresets();
+                break;
+            case 4: file.revealToUser(); break;
+            default: break;
+        }
+    });
 }
 
 void SettingsPanel::startNaming (NameMode mode, const juce::File& file)
@@ -764,166 +1051,125 @@ void SettingsPanel::confirmName()
 }
 
 // ---- layout + drawing -------------------------------------------------------------------------
-SettingsPanel::Columns SettingsPanel::columns() const
+juce::Rectangle<int> SettingsPanel::leftArea() const
 {
-    auto r = getLocalBounds().reduced (14, 12);
-    Columns c;
-    c.presets = r.removeFromLeft (138);
-    r.removeFromLeft (14);
-    c.look = r.removeFromLeft (200);
-    r.removeFromLeft (14);
-    c.trims = r.removeFromLeft (130);
-    r.removeFromLeft (14);
-    c.effect = r;
-    return c;
+    return getLocalBounds().withTrimmedRight (kRightWidth).reduced (14);
+}
+
+juce::Rectangle<int> SettingsPanel::rightArea() const
+{
+    return getLocalBounds().removeFromRight (kRightWidth).reduced (14);
 }
 
 void SettingsPanel::resized()
 {
-    const auto cols = columns();
-    left = cols.presets;
-    auto look = cols.look;
-    auto trims = cols.trims;
-    right = cols.effect;
-
-    // presets column
-    auto pc = left.withTrimmedTop (22);
+    auto l = leftArea();
+    l.removeFromTop (14 + 10);   // heading
     if (nameMode == NameMode::none)
     {
-        savePreset.setBounds (pc.removeFromTop (24).withWidth (juce::jmin (left.getWidth(), 110)));
+        savePreset.setBounds (l.removeFromTop (28));
     }
     else
     {
-        nameEditor.setBounds (pc.removeFromTop (26));
-        pc.removeFromTop (4);
-        auto buttons = pc.removeFromTop (24);
+        nameEditor.setBounds (l.removeFromTop (28));
+        l.removeFromTop (6);
+        auto buttons = l.removeFromTop (26);
         nameOk.setBounds (buttons.removeFromLeft (buttons.getWidth() / 2 - 3));
         buttons.removeFromLeft (6);
         nameCancel.setBounds (buttons);
     }
-    pc.removeFromTop (message.isNotEmpty() ? 32 : 6);
-    presetList.setBounds (pc);
+    l.removeFromTop (message.isNotEmpty() ? 32 : 8);
+    l.removeFromBottom (22);     // footer hint
+    presetList.setBounds (l);
 
-    auto z = look.withTrimmedTop (38).withHeight (24);
-    const int zw = z.getWidth() / 4;
-    for (int i = 0; i < 4; ++i)
-        zoomButtons[i]->setBounds (z.getX() + i * zw, z.getY(), i == 3 ? z.getWidth() - 3 * zw : zw, z.getHeight());
-
-    auto th = look.withTrimmedTop (86).withHeight (24);
-    // widths follow the label lengths ("Default" and "Original" need more room than "Dark")
+    auto r = rightArea();
+    if (isCompact())
     {
-        const float weights[] = { 1.25f, 1.0f, 0.95f, 1.3f, 0.95f };
-        float total = 0.0f;
-        for (auto w : weights) total += w;
-        int x = th.getX();
-        for (int i = 0; i < 5; ++i)
-        {
-            const int w = i == 4 ? th.getRight() - x : juce::roundToInt ((float) th.getWidth() * weights[i] / total);
-            themeButtons[i]->setBounds (x, th.getY(), w, th.getHeight());
-            x += w;
-        }
+        // Small window (1 row): labels next to the dropdowns, Reset + Info side by side
+        auto row = [&] (PillButton& b) { b.setBounds (r.removeFromTop (24).withTrimmedLeft (kCompactLabelW)); };
+        row (zoomButton);
+        r.removeFromTop (6);
+        row (themeButton);
+        r.removeFromTop (2);
+        openThemeFolder.setBounds (r.removeFromTop (18));
+        r.removeFromTop (5 + 1 + 5);
+        auto pair = r.removeFromTop (24);
+        resetButton.setButtonText ("Reset");
+        infoButton.setButtonText ("Info");
+        resetButton.setBounds (pair.removeFromLeft (pair.getWidth() / 2 - 3));
+        pair.removeFromLeft (6);
+        infoButton.setBounds (pair);
+        r.removeFromTop (6);
+        changeButton.setBounds (r.removeFromTop (24));
+        return;
     }
-    openThemeFolder.setBounds (look.withTrimmedTop (116).withHeight (22));
-
-    if (ctx.theme.listView)
-    {
-        // faders, one under the other
-        inTrim.setBounds (trims.withTrimmedTop (22).withHeight (40));
-        outTrim.setBounds (trims.withTrimmedTop (66).withHeight (40));
-    }
-    else
-    {
-        auto knobs = trims.withTrimmedTop (22).withHeight (84);
-        inTrim.setBounds (knobs.removeFromLeft (knobs.getWidth() / 2));
-        outTrim.setBounds (knobs);
-    }
-
-    auto tt = trims.withTrimmedTop (130).withHeight (22).withWidth (juce::jmin (trims.getWidth(), 110));
-    tooltipButtons[0]->setBounds (tt.removeFromLeft (tt.getWidth() / 2));
-    tooltipButtons[1]->setBounds (tt);
-
-    resetButton.setBounds (right.withTrimmedTop (22).withHeight (24));
-    infoButton.setBounds (right.withTrimmedTop (52).withHeight (24));
-
-    auto* fx = ctx.processor.getEffectHost();
-    const bool layouts = fx != nullptr && ! ctx.theme.listView && fx->getNumParams() > 0;
-    const bool custom = layouts && userlayouts::fileFor (fx->getInfo().id).existsAsFile();
-    auto lr = right.withTrimmedTop (82).withHeight (24);
-    removeLayoutButton.setVisible (custom);
-    if (custom)
-        removeLayoutButton.setBounds (lr.removeFromRight (58).withTrimmedLeft (4));
-    editLayoutButton.setVisible (layouts);
-    editLayoutButton.setBounds (lr);
+    resetButton.setButtonText ("Reset to defaults");
+    infoButton.setButtonText ("Effect info");
+    r.removeFromTop (14 + 8);
+    zoomButton.setBounds (r.removeFromTop (28));
+    r.removeFromTop (14 + 14 + 8);
+    themeButton.setBounds (r.removeFromTop (28));
+    r.removeFromTop (6);
+    openThemeFolder.setBounds (r.removeFromTop (18));
+    r.removeFromTop (8 + 1 + 8);
+    resetButton.setBounds (r.removeFromTop (28));
+    r.removeFromTop (8);
+    infoButton.setBounds (r.removeFromTop (28));
+    r.removeFromTop (8);
+    changeButton.setBounds (r.removeFromTop (28));
 }
 
 void SettingsPanel::paint (juce::Graphics& g)
 {
     PanelBase::paint (g);
     const auto& t = ctx.theme;
-    const auto cols = columns();
-    auto look = cols.look;
-    auto trims = cols.trims;
-
-    // Presets column
     auto* fx = ctx.processor.getEffectHost();
-    drawHeading (g, "PRESETS", left.withHeight (16));
+
+    g.setColour (t.panelText.withAlpha (0.08f));
+    g.fillRect (getWidth() - kRightWidth, 1, 1, getHeight() - 2);
+
+    // presets (left)
+    const auto l = leftArea();
+    drawHeading (g, "PRESETS", l.withHeight (14));
 
     if (message.isNotEmpty())
     {
         g.setColour (t.panelText);
-        g.setFont (fonts::semiBold (11.5f));
+        g.setFont (fonts::medium (11.5f));
         g.drawFittedText (message, presetList.getBounds().withY (presetList.getY() - 30).withHeight (28),
                           juce::Justification::centredLeft, 2);
     }
 
     if (presetFiles.isEmpty() && fx != nullptr)
     {
-        g.setColour (t.panelText.withAlpha (0.7f));
-        g.setFont (fonts::medium (12.0f));
+        g.setColour (t.muted);
+        g.setFont (fonts::regular (12.0f));
         g.drawFittedText ("No presets for " + juce::String (fx->getInfo().name) + " yet.",
-                          presetList.getBounds().reduced (6, 4).withHeight (34), juce::Justification::topLeft, 2);
+                          presetList.getBounds().reduced (10, 6).withHeight (34), juce::Justification::topLeft, 2);
     }
 
-    drawHeading (g, "SETTINGS", look.withHeight (16));
-    g.setColour (t.panelText);
-    g.setFont (fonts::semiBold (12.5f));
-    g.drawText ("Zoom", look.withTrimmedTop (20).withHeight (16), juce::Justification::centredLeft);
-    g.drawText ("Theme", look.withTrimmedTop (68).withHeight (16), juce::Justification::centredLeft);
+    g.setColour (t.muted);
+    g.setFont (fonts::regular (11.0f));
+    const bool themeProblem = ctx.settings.getTheme() == ThemeId::user && ! ctx.theme.warnings.isEmpty();
+    g.drawText (themeProblem ? "User theme: " + ctx.theme.warnings[0]
+                             : "Loads into slot " + juce::String (ctx.processor.getActiveAB() == 0 ? "A" : "B") + kDot + "right-click for more",
+                l.withTop (l.getBottom() - 16), juce::Justification::centredLeft, true);
 
-    if (ctx.settings.getTheme() == ThemeId::user && ! ctx.theme.warnings.isEmpty())
+    // settings (right)
+    const auto r = rightArea();
+    if (isCompact())
     {
-        g.setColour (t.panelText.withAlpha (0.8f));
-        g.setFont (fonts::medium (11.0f));
-        g.drawFittedText (ctx.theme.warnings[0], look.withTrimmedTop (140).withHeight (30), juce::Justification::topLeft, 2);
+        drawHeading (g, "ZOOM", zoomButton.getBounds().withX (r.getX()).withWidth (kCompactLabelW));
+        drawHeading (g, "THEME", themeButton.getBounds().withX (r.getX()).withWidth (kCompactLabelW));
+        g.setColour (t.panelText.withAlpha (0.08f));
+        g.fillRect (r.getX(), openThemeFolder.getBottom() + 5, r.getWidth(), 1);
+        return;
     }
+    drawHeading (g, "ZOOM", r.withHeight (14));
+    drawHeading (g, "THEME", juce::Rectangle<int> (r.getX(), zoomButton.getBottom() + 14, r.getWidth(), 14));
+    g.setColour (t.panelText.withAlpha (0.08f));
+    g.fillRect (r.getX(), openThemeFolder.getBottom() + 8, r.getWidth(), 1);
 
-    drawHeading (g, "TRIMS", trims.withHeight (16));
-    g.setColour (t.panelText);
-    g.setFont (fonts::semiBold (12.5f));
-    g.drawText ("Tooltips", trims.withTrimmedTop (112).withHeight (16), juce::Justification::centredLeft);
-
-    drawHeading (g, "EFFECT" + (fx != nullptr ? kDot + juce::String (fx->getInfo().name).toUpperCase() : juce::String()),
-                 right.withHeight (16));
-    if (fx != nullptr)
-    {
-        const auto st = userlayouts::status (fx->getInfo().id);
-        juce::String text;
-        if (layoutMessage.isNotEmpty())
-            text = layoutMessage;
-        else if (st.custom && ! ctx.theme.listView)
-            text = st.warnings.isEmpty() ? juce::String ("Your own layout is in use.")
-                                         : "Your layout: " + juce::String (st.warnings.size()) + " problem(s) fixed: " + st.warnings[0];
-        else
-        {
-            text = fx->getInfo().description;
-            if (fx->getInfo().isDither)
-                text << "\n\nThis is a dither: keep the output trim at 0 dB.";
-        }
-        g.setColour (t.panelText.withAlpha (0.85f));
-        g.setFont (fonts::medium (12.0f));
-        const int top = ctx.theme.listView ? 86 : 114;
-        g.drawFittedText (text, right.withTrimmedTop (top), juce::Justification::topLeft, 8);
-    }
 }
 
 // =============================================================================================
@@ -950,10 +1196,11 @@ InfoPanel::InfoPanel (UiContext& c, std::function<void()> closeFn)
     text.setReadOnly (true);
     text.setCaretVisible (false);
     text.setScrollbarsShown (true);
-    text.setFont (fonts::medium (13.0f));
+    text.setFont (fonts::regular (12.5f));
     text.setIndents (4, 2);
     text.setColour (juce::TextEditor::outlineColourId, juce::Colours::transparentBlack);
     text.setColour (juce::TextEditor::focusedOutlineColourId, juce::Colours::transparentBlack);
+    text.setColour (juce::TextEditor::backgroundColourId, juce::Colours::transparentBlack);
     text.setTitle ("Effect info");
     addAndMakeVisible (text);
     refresh();
@@ -984,7 +1231,7 @@ void InfoPanel::refresh()
         body << "\n\nNote: this is a dither. Keep Daylight_aw's output trim at 0 dB.";
 
     text.setText (body, false);
-    text.applyColourToAllText (ctx.theme.panelText);
+    text.applyColourToAllText (ctx.theme.panelText.withAlpha (0.88f));
     text.moveCaretToTop (false);
     repaint();
 }
@@ -992,8 +1239,8 @@ void InfoPanel::refresh()
 void InfoPanel::resized()
 {
     auto r = getLocalBounds().reduced (14, 12);
-    auto bottom = r.removeFromBottom (24);
-    close.setBounds (bottom.removeFromRight (70));
+    auto bottom = r.removeFromBottom (28);
+    close.setBounds (bottom.removeFromRight (76));
     r.removeFromTop (44);
     r.removeFromBottom (6);
     text.setBounds (r);
@@ -1001,65 +1248,81 @@ void InfoPanel::resized()
 
 void InfoPanel::paint (juce::Graphics& g)
 {
+    // drawn without the base class's own fill: the editor's text editor is transparent
     PanelBase::paint (g);
     const auto& t = ctx.theme;
     auto r = getLocalBounds().reduced (14, 12);
     auto* fx = ctx.processor.getEffectHost();
 
     drawHeading (g, "EFFECT INFO" + (fx != nullptr ? kDot + juce::String (fx->getInfo().name).toUpperCase() : juce::String()),
-                 r.removeFromTop (16));
+                 r.removeFromTop (14));
+    r.removeFromTop (4);
     g.setColour (t.panelText);
-    g.setFont (fonts::extraBold (13.5f));
-    g.drawFittedText (headline, r.removeFromTop (26), juce::Justification::centredLeft, 1);
+    g.setFont (fonts::semiBold (13.0f));
+    g.drawFittedText (headline, r.removeFromTop (24), juce::Justification::centredLeft, 1);
 
-    g.setColour (t.panelText.withAlpha (0.65f));
-    g.setFont (fonts::medium (11.0f));
+    g.setColour (t.muted);
+    g.setFont (fonts::regular (11.0f));
     g.drawText ("Text from the Airwindopedia by Chris Johnson (Airwindows).",
-                r.removeFromBottom (24).withTrimmedRight (80), juce::Justification::centredLeft, true);
+                r.removeFromBottom (28).withTrimmedRight (86), juce::Justification::centredLeft, true);
 }
 
 // =============================================================================================
-AboutPanel::AboutPanel (UiContext& c, std::function<void()> closeFn)
-    : PanelBase (c), onClose (std::move (closeFn)), close (c, "Close")
+AboutPanel::AboutPanel (UiContext& c) : PanelBase (c)
 {
-    close.onClick = [this]
-    {
-        // close after this click has finished (the panel deletes itself)
-        juce::Component::SafePointer<AboutPanel> safe (this);
-        juce::MessageManager::callAsync ([safe] { if (safe != nullptr && safe->onClose) safe->onClose(); });
-    };
-    addAndMakeVisible (close);
+    setWantsKeyboardFocus (true);
+    setTitle ("About Daylight_aw");
 }
 
-void AboutPanel::resized()
+juce::TextLayout AboutPanel::paragraph() const
 {
-    close.setBounds (getLocalBounds().reduced (14).removeFromBottom (24).removeFromRight (70));
+    juce::AttributedString s;
+    s.setLineSpacing (2.0f);
+    s.append ("Airwindows code used under the MIT licence. ", fonts::regular (10.0f), ctx.theme.panelText);
+    s.append ("Not an official Airwindows release.", fonts::semiBold (10.0f), ctx.theme.panelText);
+    juce::TextLayout layout;
+    layout.createLayout (s, (float) (kWidth - 20));
+    return layout;
+}
+
+juce::TextLayout AboutPanel::licences() const
+{
+    juce::AttributedString s;
+    s.setLineSpacing (1.0f);
+    s.append (juce::String::fromUTF8 ("Airwindows (MIT) \xc2\xb7 Airwindows Consolidated (MIT) \xc2\xb7 JUCE (AGPLv3) \xc2\xb7 "
+                                      "Inter, Jost (SIL OFL 1.1) \xc2\xb7 Daylight_aw: AGPLv3"),
+              fonts::regular (9.0f), ctx.theme.muted);
+    juce::TextLayout layout;
+    layout.createLayout (s, (float) (kWidth - 20));
+    return layout;
+}
+
+int AboutPanel::preferredHeight() const
+{
+    return (int) std::ceil (8.0f + 16.0f + 3.0f + paragraph().getHeight() + 4.0f + licences().getHeight() + 9.0f);
 }
 
 void AboutPanel::paint (juce::Graphics& g)
 {
     PanelBase::paint (g);
     const auto& t = ctx.theme;
-    auto r = getLocalBounds().reduced (16, 14);
+    auto r = getLocalBounds().toFloat().reduced (10.0f, 8.0f);
 
+    auto top = r.removeFromTop (16.0f);
+    const auto nameFont = fonts::logoRegular (12.0f).withExtraKerningFactor (0.05f);
     g.setColour (t.panelText);
-    g.setFont (fonts::extraBold (18.0f));
-    g.drawText (kPluginName, r.removeFromTop (24), juce::Justification::centredLeft);
-    g.setFont (fonts::semiBold (13.0f));
-    g.drawText (juce::String ("by ") + kVendorName, r.removeFromTop (20), juce::Justification::centredLeft);
-    g.setColour (t.panelText.withAlpha (0.8f));
-    g.setFont (fonts::medium (12.5f));
-    g.drawText (juce::String ("Version ") + kVersion, r.removeFromTop (20), juce::Justification::centredLeft);
-    r.removeFromTop (4);
-    g.setColour (t.panelText);
-    g.drawFittedText ("Based on the work of Chris Johnson (Airwindows). Airwindows code used under the MIT licence.",
-                      r.removeFromTop (36), juce::Justification::topLeft, 2);
-    g.setFont (fonts::extraBold (12.5f));
-    g.drawText ("Not an official Airwindows release.", r.removeFromTop (20), juce::Justification::centredLeft);
-    g.setFont (fonts::medium (11.0f));
-    g.setColour (t.panelText.withAlpha (0.8f));
-    g.drawFittedText ("Licences: Airwindows (MIT), Airwindows Consolidated (MIT), JUCE (AGPLv3), Shantell Sans (SIL OFL 1.1). "
-                      "Daylight_aw is free software under the AGPLv3.",
-                      r.removeFromTop (44), juce::Justification::topLeft, 3);
+    g.setFont (nameFont);
+    g.drawText (kPluginName, top, juce::Justification::centredLeft, false);
+    g.setColour (t.muted);
+    g.setFont (fonts::regular (9.0f));
+    g.drawText ("v" + juce::String (kVersion), top.withTrimmedLeft (fonts::width (nameFont, kPluginName) + 6.0f),
+                juce::Justification::centredLeft, false);
+
+    r.removeFromTop (3.0f);
+    auto p = paragraph();
+    p.draw (g, r.removeFromTop (p.getHeight()));
+    r.removeFromTop (4.0f);
+    auto l = licences();
+    l.draw (g, r.removeFromTop (l.getHeight()));
 }
 } // namespace dlaw

@@ -1,4 +1,4 @@
-# Daylight_aw build spec (v0.3)
+# Daylight_aw build spec (1.1)
 
 ## Identity
 
@@ -13,11 +13,15 @@
 | macOS minimum | 10.13 |
 | Framework | JUCE 8.0.15 (pinned), C++20, CMake |
 | User folder | `Documents/big_tyme_designs/Daylight_aw/` (Presets, Themes/User, settings.json) |
+| Fonts | Inter 400/500/600/700 (interface), Jost 300/400 (logo), SIL OFL, embedded |
 
 ## Audio engine
 
-- One effect per instance. It is chosen once and then locked; there is silent pass-through
-  until it is chosen.
+- One effect per instance; silent pass-through until it is chosen. It can be changed later
+  (`changeEffect`, message thread): the new effect host is swapped in under the host's callback lock,
+  the audio thread stops pushing slot values until the new defaults are set (`paramsReady`), and the
+  old host is a `shared_ptr` that is freed when no thread uses it any more (never on the audio thread).
+  A saved state of another known effect loaded into an instance switches to that effect (DAW undo).
 - Each effect has two instances:
   - The **audio** instance is used only by the audio thread.
   - The **display** instance is used only by the GUI, for value texts and step detection.
@@ -63,26 +67,59 @@ unchanged. Broken data is ignored.
 
 ## GUI
 
-- **Size and zoom.** Width 700. Small is 240 tall (1–5 controls); Large is 575 tall (3 rows of 5,
-  with pages of 15 shown as tabs at the bottom). Zoom is 100 / 125 / 150 / 200 % and is applied
-  as a transform.
-- **Layouts.** They come from `layouts/<id>.json`, or an automatic layout.
-  - A group holds 1–5 controls and never splits.
-  - Rows are left-aligned.
+- **Top bar** (56 px): logo "Daylight_aw" (Jost Light 20 px; click = compact About popup), effect-name
+  button (~170 px; "Choose effect" before an effect is chosen; opens the presets + settings dropdown),
+  A/B, IN / OUT trims as 22 px mini knobs with value (teal when not 0 dB; hidden before an effect is
+  chosen), BYPASS label + 22 px round button. Only the round button toggles bypass.
+- **Popups**: the presets + settings dropdown (460 x 300; compact layout in the Small window) and About
+  (180 px, 12/10/9 px text) close on any click outside
+  them or Esc; that click does nothing else. Effect info and the effect browser are panels under the
+  top bar.
+- **Size and zoom.** Width 700. The window follows the rows of the packed layout: Small 240 (1 row),
+  Medium 395 (2 rows), Large 575 (3 rows; more than 3 rows = pages of 3 rows with tabs, Large only).
+  Groups never split. Zoom is 100 / 125 / 150 / 200 % and is applied as a transform.
+- **Layouts.** They come from `layouts/<id>.json` (embedded) or an automatic layout.
+  - A group holds 1-5 controls and never splits. Rows are left-aligned on a 5-column grid
+    (124 px columns, 12 px gaps).
   - Any parameter missing from a layout file is appended automatically.
 - **Controls.**
   - Types are knob, stepped and switch. Steps are auto-detected from the effect's display text.
-  - Drag 250 px for the full range; Shift gives fine control.
+  - Ring knobs: 46 px, name 13 px above, value 12 px below.
+  - Drag 250 px for the full range; Shift + drag or right-click + drag gives fine control (10x).
+    A right-click without moving does nothing (kept for a future per-knob menu).
   - Double-click the knob to reset it; double-click the value to type one.
   - The mouse wheel moves 1 % per notch, or 0.1 % with Shift.
-- **Themes.** Themes are data: `theme.json` tokens plus `paper.png` (tileable, drawn at 2×) plus
-  `figure.png`.
-  - Light and Dark are built in.
-  - User lives in a folder, reloads live, and falls back to Light for any missing or invalid
-    value.
-- **Font.** Shantell Sans (OFL), embedded.
-- **Static drawing.** Paper, figure, horizon, frames and titles are cached in one image, so idle
-  CPU is close to zero.
+- **Type scale.** 13 px buttons and names, 12 px values, 11 px caps section titles (Inter).
+- **Themes.** Default ("deep space") and User. A theme is `theme.json` tokens only (colours, halo
+  positions, knob style "ring"/"round", corner radius). The User theme lives in a folder, reloads live,
+  and falls back to Default for any missing or invalid value; it is created as a copy of Default plus
+  "How to make your own theme.txt". A 1.0 User theme (`formatVersion` 1) is moved to `old_1.0/` first.
+  Old saved themes (Light, Dark, Original) open as Default.
+- **Static drawing.** Background, halos, top-bar line, group panels and titles are cached in one image,
+  so idle CPU is close to zero.
+
+## Effect browser
+
+- Folders: Favourites (+ the user's collections under it, "+ New collection"), Recently used, New
+  (effects with `since == release.version`; hidden when empty), Last 6 months (released within
+  `release.lastMonths` before the newest `released` date; newest first), All effects, categories.
+- Collections are tags: one effect can be in several; deleting a collection never removes effects or
+  favourites. Right-click an effect: favourite, Add to collection, New collection. Right-click a
+  collection: Rename, Move up/down, Delete.
+- **Latest versions only** (default on): per family (`EffectInfo::family`; name without its trailing
+  number unless the manifest sets `family`), only the newest version is listed in categories, All,
+  New, Last 6 months and search. Older versions that are a favourite or in a collection stay listed.
+  Favourites, collections and Recently used always list what is in them. Effects are never removed
+  from the plugin, so sessions always load.
+- Search covers names and descriptions. Every row shows the Airwindows release date (category first in
+  mixed lists).
+- *Change effect...* in the dropdown opens the browser in the Large window; choosing asks for confirmation.
+
+## Global settings
+
+`settings.json` (formatVersion 2): theme, zoom, latestOnly, favourites, collections
+(`[{name, effects: [ids]}]`), recent. Shared live between instances (file time checked once a second).
+Unknown keys (e.g. 1.0's `tooltips`) are ignored.
 
 ## User presets
 
@@ -95,12 +132,11 @@ unchanged. Broken data is ignored.
 - The menu bar shows `Effect · Preset`, with `*` when any value differs from the loaded or saved preset.
   The name and the snapshot are saved with the session.
 
-## Effect info and tooltips
+## Effect info
 
 - The Airwindopedia text for each included effect is embedded (`third_party/airwin_consolidated/awpdoc/`,
   from the pinned airwin2rack commit, MIT). It is shown in a scrollable Effect info panel.
-- Tooltips use the panel theme tokens. Controls show their original Airwindows parameter name when the
-  layout renames them.
+- No tooltips (removed in 1.1).
 - Program name reported to the host: `Effect` or `Effect - Preset`.
 
 ## Data-driven pipeline
@@ -115,7 +151,8 @@ CI fails if the generated files are stale (`--check`).
   - pass-through, bypass, trims and mono;
   - state round trip and robustness;
   - layout rules and step detection;
-  - snapshots of every effect in both themes.
+  - window size per effect (rows), browser folders, families, collections, settings and theme migration;
+  - snapshots of every effect (Default) and of the panels.
 - pluginval at strictness 10 (Linux, Windows, macOS). auval strict (macOS).
 - ASan/UBSan build of the tests.
 

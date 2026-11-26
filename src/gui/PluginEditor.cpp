@@ -1,6 +1,4 @@
-#include <algorithm>
 #include "PluginEditor.h"
-#include "UserLayouts.h"
 #include "BinaryData.h"
 #include "Fonts.h"
 
@@ -8,11 +6,10 @@ namespace dlaw
 {
 namespace
 {
-constexpr int kTopRowY = 10, kTopRowH = 40;
-constexpr int kListTop = 82, kListRowH = 26;   // list view (Original): first fader row, row height
-constexpr int kRowsTop = 62, kRowH = 146, kGap = 10, kMargin = 12;
-constexpr float kSlotW = (float) (kWindowWidth - 2 * kMargin - (kControlsPerRow - 1) * kGap) / (float) kControlsPerRow;
-
+// Geometry at 100 % zoom (see the 1.1 design, board 8).
+constexpr int kTopH = 56, kSide = 16, kTopItemH = 30;
+constexpr int kRowsTop = 70, kRowH = 142, kGap = 12;
+constexpr float kColW = (float) (kWindowWidth - 2 * kSide - (kControlsPerRow - 1) * kGap) / (float) kControlsPerRow;   // 124
 
 juce::String menuLabel (const DaylightProcessor& p)
 {
@@ -25,19 +22,6 @@ juce::String menuLabel (const DaylightProcessor& p)
     }
     return p.hasUnknownEffect() ? p.getUnknownEffectId() : juce::String ("Choose effect");
 }
-
-void drawGlowingText (juce::Graphics& g, const juce::String& text, const juce::Font& font, float x, float baseline,
-                      juce::Colour colour, juce::Colour glow, float glowAmount)
-{
-    juce::GlyphArrangement ga;
-    ga.addLineOfText (font, text, x, baseline);
-    juce::Path p;
-    ga.createPath (p);
-    if (glowAmount > 0.0f)
-        juce::DropShadow (glow.withAlpha (glowAmount), 10, {}).drawForPath (g, p);
-    g.setColour (colour);
-    g.fillPath (p);
-}
 } // namespace
 
 // =============================================================================================
@@ -46,26 +30,32 @@ class DaylightEditor::Content : public juce::Component,
 {
 public:
     explicit Content (UiContext& c)
-        : ctx (c), backdrop (*this), menuBar (*this), bypass (c),
-          abA (c, "A"), abB (c, "B")
+        : ctx (c), backdrop (*this), nameButton (*this), bypass (c),
+          abA (c, "A"), abB (c, "B"),
+          inTrim (c, c.processor.getInputTrim(), "IN"), outTrim (c, c.processor.getOutputTrim(), "OUT")
     {
+        setWantsKeyboardFocus (true);
         addAndMakeVisible (backdrop);
         addAndMakeVisible (logo);
-        addAndMakeVisible (menuBar);
+        addAndMakeVisible (nameButton);
+        addAndMakeVisible (abA);
+        addAndMakeVisible (abB);
+        addChildComponent (inTrim);
+        addChildComponent (outTrim);
         addAndMakeVisible (bypass);
 
-        logo.onClick = [this] { toggleAbout(); };
-        logo.setTooltip ("About Daylight_aw");
-        abA.setTooltip ("Setting A. Switch between A and B to compare two settings.");
-        abB.setTooltip ("Setting B. Switch between A and B to compare two settings.");
         logo.ctx = &ctx;
+        logo.onClick = [this] { toggleAbout(); };
 
         abA.joinedRight = true;
         abB.joinedLeft = true;
+        abA.setTitle ("Setting A");
+        abB.setTitle ("Setting B");
         abA.onClick = [this] { ctx.processor.switchAB (0); refreshTopRow(); };
         abB.onClick = [this] { ctx.processor.switchAB (1); refreshTopRow(); };
-        menuBar.addAndMakeVisible (abA);
-        menuBar.addAndMakeVisible (abB);
+
+        dismisser.onClick = [this] { closePopups(); };
+        addChildComponent (dismisser);
 
         rebuild();
 
@@ -73,28 +63,9 @@ public:
             openSelector();
 
         startTimerHz (5);   // keeps the "*" (preset edited) marker current
-        updateTooltips();
     }
 
-    static juce::Time userLayoutTime (const juce::String& id)
-    {
-        const auto f = userlayouts::fileFor (id);
-        return f.existsAsFile() ? f.getLastModificationTime() : juce::Time();
-    }
-
-    /** Called about once a second: picks up a user layout file that was created, edited or removed. */
-    void checkUserLayout()
-    {
-        if (builtListView)
-            return;
-        if (auto* fx = ctx.processor.getEffectHost())
-            if (userLayoutTime (fx->getInfo().id) != userLayoutStamp)
-            {
-                rebuild();
-                if (settingsPanel != nullptr)
-                    settingsPanel->refresh();
-            }
-    }
+    ~Content() override { stopTimer(); }
 
     /** Processor sent a change: rebuild only when the effect itself changed, else just refresh. */
     void processorChanged()
@@ -109,21 +80,20 @@ public:
             settingsPanel->refresh();
     }
 
-    ~Content() override { stopTimer(); }
-
     int contentHeight() const
     {
+        if (selector != nullptr && ! ctx.processor.hasUnknownEffect())
+            return kLargeHeight;   // the effect browser always gets the Large window
         if (! ctx.processor.hasEffect())
-            return ctx.processor.hasUnknownEffect() ? kSmallHeight : kLargeHeight;
-        return layout.small ? kSmallHeight : kLargeHeight;
+            return ctx.processor.hasUnknownEffect() ? kSmallHeight : kLargeHeight;   // the effect browser needs room
+        return windowHeightForRows (layout.rows);
     }
 
-    // Called on effect change, theme change, page change.
+    // Called on effect change and page change.
     void rebuild()
     {
         builtHost = ctx.processor.getEffectHost();
         builtUnknown = ctx.processor.hasUnknownEffect();
-        builtListView = ctx.theme.listView;
         controls.clear();
         tabs.clear();
         frames.clear();
@@ -132,30 +102,18 @@ public:
         {
             std::vector<ParamFacts> facts;
             for (int i = 0; i < fx->getNumParams(); ++i)
-                facts.push_back ({ fx->getParamNames()[i], builtListView ? 0 : fx->detectSteps (i) });
+                facts.push_back ({ fx->getParamNames()[i], fx->detectSteps (i) });
 
-            const juce::String id (fx->getInfo().id);
-            bool custom = false;
-            const auto json = builtListView ? juce::String() : userlayouts::effectiveJson (id, custom);
-            layout = builtListView ? buildListLayout (facts) : buildLayout (facts, json);
-            auto& st = userlayouts::status (id);
-            st.custom = custom;
-            st.warnings = layout.warnings;
-            userLayoutStamp = userLayoutTime (id);
+            layout = buildLayout (facts, builtInLayoutJson (fx->getInfo().id));
             for ([[maybe_unused]] auto& w : layout.warnings)
                 DBG ("Layout warning (" << fx->getInfo().id << "): " << w);
 
             page = juce::jlimit (0, juce::jmax (0, (int) layout.pages.size() - 1), ctx.processor.lastTab.load());
             buildPage();
 
-            if (layout.pages.size() > 1)
+            if (layout.hasTabs())
                 for (int i = 0; i < (int) layout.pages.size(); ++i)
-                {
-                    auto* t = tabs.add (new TabButton (*this, i));
-                    t->setTooltip (layout.pages[(size_t) i].name.isNotEmpty() ? layout.pages[(size_t) i].name
-                                                                              : "Page " + juce::String (i + 1));
-                    addAndMakeVisible (t);
-                }
+                    addAndMakeVisible (tabs.add (new TabButton (*this, i)));
         }
         else
         {
@@ -171,29 +129,24 @@ public:
     void refreshTopRow()
     {
         const bool has = ctx.processor.hasEffect();
-        menuBar.setTooltip (has ? "Presets and settings" : ctx.processor.hasUnknownEffect() ? "" : "Choose an effect");
         abA.setEnabled (has);
         abB.setEnabled (has);
         abA.setToggleState (has && ctx.processor.getActiveAB() == 0, juce::dontSendNotification);
         abB.setToggleState (has && ctx.processor.getActiveAB() == 1, juce::dontSendNotification);
-        menuBar.repaint();
+        inTrim.setVisible (has);
+        outTrim.setVisible (has);
+        nameButton.repaint();
         logo.repaint();
         bypass.repaint();
     }
 
     void themeChanged()
     {
-        if (ctx.theme.listView != builtListView)
-        {
-            // a different kind of view (designed <-> list): build the controls again
-            rebuild();
-        }
-        // Same geometry, new colours: just repaint everything (cached layers are re-rendered).
+        // Same geometry, new colours: repaint everything (the cached backdrop is re-rendered).
         backdrop.repaint();
         if (selector != nullptr) selector->refresh();
         if (settingsPanel != nullptr) settingsPanel->refresh();
         if (info != nullptr) info->refresh();
-        updateTooltips();
         repaintAll (*this);
     }
 
@@ -207,31 +160,46 @@ public:
     void resized() override
     {
         backdrop.setBounds (getLocalBounds());
-        logo.setBounds (kMargin, kTopRowY, 160, kTopRowH);
-        menuBar.setBounds ((getWidth() - 340) / 2, kTopRowY + 5, 340, 30);
-        bypass.setBounds (getWidth() - kMargin - 150, kTopRowY + 5, 150, 30);
+        dismisser.setBounds (getLocalBounds());
 
-        auto ab = menuBar.getLocalBounds().reduced (4, 4).removeFromRight (48);
-        abA.setBounds (ab.removeFromLeft (24));
-        abB.setBounds (ab);
+        const int itemY = (kTopH - kTopItemH) / 2;
+        logo.setBounds (kSide, 0, 124, kTopH);
+        nameButton.setBounds (kSide + 126, itemY, 170, kTopItemH);
+        abA.setBounds (nameButton.getRight() + 10, itemY, 28, kTopItemH);
+        abB.setBounds (abA.getRight(), itemY, 28, kTopItemH);
+        inTrim.setBounds (abB.getRight() + 16, itemY, inTrim.preferredWidth(), kTopItemH);
+        outTrim.setBounds (inTrim.getRight() + 10, itemY, outTrim.preferredWidth(), kTopItemH);
+        const int bw = bypass.preferredWidth();
+        bypass.setBounds (getWidth() - kSide - bw, itemY, bw, kTopItemH);
 
         layoutPage();
 
         const int n = tabs.size();
         for (int i = 0; i < n; ++i)
-            tabs[i]->setBounds (getWidth() / 2 - (n * 24 + (n - 1) * 10) / 2 + i * 34, getHeight() - 47, 24, 24);
+            tabs[i]->setBounds (getWidth() / 2 - (n * 24 + (n - 1) * 10) / 2 + i * 34, getHeight() - 46, 24, 24);
 
-        auto panelArea = juce::Rectangle<int> (kMargin, 56, getWidth() - 2 * kMargin, getHeight() - 56 - 8);
+        const auto panelArea = juce::Rectangle<int> (12, kTopH + 6, getWidth() - 24, getHeight() - kTopH - 6 - 12);
         if (selector != nullptr)
-            selector->setBounds (panelArea.withTrimmedBottom (getHeight() >= kLargeHeight ? 48 : 0));
-        if (settingsPanel != nullptr)
-            settingsPanel->setBounds (panelArea.withHeight (juce::jmin (panelArea.getHeight(), 300)));
-        if (about != nullptr)
-            about->setBounds (kMargin, 50, 300, 230);
+            selector->setBounds (panelArea);
         if (info != nullptr)
-            info->setBounds (panelArea.withTrimmedBottom (getHeight() >= kLargeHeight ? 48 : 0));
+            info->setBounds (panelArea);
+        if (settingsPanel != nullptr)
+            settingsPanel->setBounds (juce::jmax (12, nameButton.getX() - 22), kTopH - 6, SettingsPanel::kWidth,
+                                      juce::jmin (SettingsPanel::kHeight, getHeight() - kTopH - 2));
+        if (about != nullptr)
+            about->setBounds (12, kTopH - 6, AboutPanel::kWidth, about->preferredHeight());
         if (confirm != nullptr)
             confirm->setBounds (getLocalBounds());
+    }
+
+    bool keyPressed (const juce::KeyPress& k) override
+    {
+        if (k == juce::KeyPress::escapeKey && (about != nullptr || settingsPanel != nullptr))
+        {
+            closePopups();
+            return true;
+        }
+        return false;
     }
 
     // ---- overlays -------------------------------------------------------------------------
@@ -248,14 +216,43 @@ public:
             openSelector();
     }
 
-    void closePanels()
+    /** Dropdown + About: they close on any click outside them (the click does nothing else). */
+    void closePopups()
     {
-        selector.reset();
         settingsPanel.reset();
         about.reset();
+        dismisser.setVisible (false);
+        nameButton.repaint();
+    }
+
+    void closePanels()
+    {
+        const bool hadSelector = selector != nullptr;
+        selector.reset();
         info.reset();
-        menuBar.repaint();
+        closePopups();
         backdrop.repaint();
+        if (hadSelector)
+            updateSize();   // back from the browser's Large window to the effect's own size
+    }
+
+    /** Window size follows the content (effect rows, or Large while the browser is open). */
+    void updateSize()
+    {
+        if (getHeight() != contentHeight())
+        {
+            setSize (kWindowWidth, contentHeight());
+            resized();
+            backdrop.repaint();
+            if (onSizeChanged) onSizeChanged();
+        }
+    }
+    std::function<void()> onSizeChanged;
+
+    void showDismisser()
+    {
+        dismisser.setVisible (true);
+        dismisser.toFront (false);
     }
 
     void openSelector()
@@ -263,20 +260,26 @@ public:
         closePanels();
         selector = std::make_unique<SelectorPanel> (ctx, [this] (const EffectInfo& e) { askToLoad (e); });
         addAndMakeVisible (*selector);
+        updateSize();
         resized();
-        menuBar.repaint();
+        nameButton.repaint();
         backdrop.repaint();
     }
 
     void openSettings()
     {
         closePanels();
-        settingsPanel = std::make_unique<SettingsPanel> (ctx, [this] { if (onSettingsChanged) onSettingsChanged(); },
-                                                         [this] { juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<Content> (this)]
-                                                                  { if (safe != nullptr) safe->openInfo(); }); });
+        showDismisser();
+        settingsPanel = std::make_unique<SettingsPanel> (ctx,
+            [this] { juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<Content> (this)]
+                                                      { if (safe != nullptr) safe->openInfo(); }); },
+            [this] { juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<Content> (this)]
+                                                      { if (safe != nullptr) safe->openSelector(); }); });
+        settingsPanel->setWantsKeyboardFocus (true);
         addAndMakeVisible (*settingsPanel);
         resized();
-        menuBar.repaint();
+        settingsPanel->grabKeyboardFocus();
+        nameButton.repaint();
     }
 
     void openInfo()
@@ -284,33 +287,41 @@ public:
         if (! ctx.processor.hasEffect())
             return;
         closePanels();
-        info = std::make_unique<InfoPanel> (ctx, [this] { info.reset(); menuBar.repaint(); });
+        info = std::make_unique<InfoPanel> (ctx, [this] { info.reset(); nameButton.repaint(); });
         addAndMakeVisible (*info);
         resized();
-        menuBar.repaint();
+        nameButton.repaint();
     }
 
     void toggleAbout()
     {
         const bool wasOpen = about != nullptr;
-        closePanels();
+        closePopups();
         if (wasOpen)
             return;
-        about = std::make_unique<AboutPanel> (ctx, [this] { about.reset(); });
+        showDismisser();
+        about = std::make_unique<AboutPanel> (ctx);
         addAndMakeVisible (*about);
         resized();
+        about->grabKeyboardFocus();
     }
 
     void askToLoad (const EffectInfo& e)
     {
-        confirm = std::make_unique<ConfirmDialog> (ctx, e, [this, id = std::string (e.id)] (bool ok)
+        const EffectInfo* current = ctx.processor.hasEffect() ? &ctx.processor.getEffectHost()->getInfo() : nullptr;
+        if (current != nullptr && juce::String (current->id) == e.id)
+        {
+            closePanels();   // the same effect: nothing to change
+            return;
+        }
+        confirm = std::make_unique<ConfirmDialog> (ctx, e, current, [this, id = std::string (e.id)] (bool ok)
         {
             juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<Content> (this), id, ok]
             {
                 if (safe == nullptr) return;
                 safe->confirm.reset();
                 if (! ok) return;
-                if (safe->ctx.processor.selectEffect (id))
+                if (safe->ctx.processor.changeEffect (id))   // first choice or a change
                 {
                     safe->ctx.settings.addRecent (id);
                     safe->closePanels();
@@ -323,131 +334,84 @@ public:
         confirm->grabKeyboardFocus();
     }
 
-    std::function<void()> onSettingsChanged;
-
     // ---- pieces ------------------------------------------------------------------------------
     struct Frame { juce::Rectangle<float> bounds; juce::String title; };
 
+    /** Invisible layer under an open dropdown/About: a click anywhere else closes it. */
+    struct Dismisser : public juce::Component
+    {
+        void mouseDown (const juce::MouseEvent&) override { if (onClick) onClick(); }
+        std::function<void()> onClick;
+    };
+
     struct Logo : public juce::Button
     {
-        Logo() : juce::Button ("Daylight_aw") { setMouseCursor (juce::MouseCursor::PointingHandCursor); setTitle ("About Daylight_aw"); }
-        void paintButton (juce::Graphics& g, bool, bool) override
+        Logo() : juce::Button (kPluginName)
+        {
+            setMouseCursor (juce::MouseCursor::PointingHandCursor);
+            setTitle ("About Daylight_aw");
+        }
+        void paintButton (juce::Graphics& g, bool highlighted, bool) override
         {
             if (ctx == nullptr) return;
-            const auto& t = ctx->theme;
-            if (t.systemFont)
-            {
-                g.setColour (t.logoColor);
-                g.setFont (fonts::extraBold (15.0f));
-                g.drawText (kPluginName, getLocalBounds(), juce::Justification::centredLeft, false);
-                return;
-            }
-            drawGlowingText (g, kPluginName, fonts::extraBold (21.0f), 0.0f, (float) getHeight() * 0.5f + 7.0f,
-                             t.logoColor, t.frameGlowColor, t.logoGlow);
+            g.setColour (highlighted ? ctx->theme.logo : ctx->theme.logo.withMultipliedAlpha (0.94f));
+            g.setFont (fonts::logo (20.0f).withExtraKerningFactor (0.06f));
+            g.drawFittedText (kPluginName, getLocalBounds(), juce::Justification::centredLeft, 1, 0.8f);   // never cut off
         }
         UiContext* ctx = nullptr;
     };
 
-    struct MenuBar : public juce::Component,
-                     public juce::SettableTooltipClient
+    /** The effect-name button: opens the presets + settings dropdown (or the browser before choosing). */
+    struct NameButton : public juce::Component
     {
-        explicit MenuBar (Content& o)
-            : owner (o),
-              inAttach (o.ctx.processor.getInputTrim(), [this] (float) { repaint(); }, nullptr),
-              outAttach (o.ctx.processor.getOutputTrim(), [this] (float) { repaint(); }, nullptr)
+        explicit NameButton (Content& o) : owner (o)
         {
             setMouseCursor (juce::MouseCursor::PointingHandCursor);
-            setTitle ("Menu");
+            setTitle ("Presets and settings");
         }
 
-        juce::String trimText() const
+        bool isOpen() const
         {
-            auto& p = owner.ctx.processor;
-            juce::StringArray parts;
-            auto fmt = [] (float db) { return (db > 0 ? "+" : "-") + juce::String (std::abs (db), 1); };
-            if (! juce::exactlyEqual (p.getInputTrim().get(), 0.0f))  parts.add ("IN " + fmt (p.getInputTrim().get()));
-            if (! juce::exactlyEqual (p.getOutputTrim().get(), 0.0f)) parts.add ("OUT " + fmt (p.getOutputTrim().get()));
-            return parts.joinIntoString (" ");
-        }
-
-        juce::Rectangle<int> triggerArea() const
-        {
-            auto r = getLocalBounds().reduced (4, 3).withTrimmedRight (52);
-            const auto trim = trimText();
-            if (trim.isNotEmpty())
-                r.removeFromRight ((int) fonts::width (fonts::semiBold (11.0f), trim) + 16);
-            return r;
+            return owner.selector != nullptr || owner.settingsPanel != nullptr || owner.info != nullptr;
         }
 
         void paint (juce::Graphics& g) override
         {
             const auto& t = owner.ctx.theme;
             auto b = getLocalBounds().toFloat().reduced (0.5f);
-            juce::Path p;
-            p.addRoundedRectangle (b, t.corner);
-            if (t.barGlow > 0.0f)
-                juce::DropShadow (t.frameGlowColor.withAlpha (t.barGlow), 12, {}).drawForPath (g, p);
-            g.setColour (t.barFill);
-            g.fillPath (p);
-            g.setColour (t.barBorder);
-            g.strokePath (p, juce::PathStrokeType (1.0f));
-
-            auto& proc = owner.ctx.processor;
-            const auto label = menuLabel (proc);
-
-            auto trig = triggerArea();
-            const bool open = owner.selector != nullptr || owner.settingsPanel != nullptr || owner.info != nullptr;
-            if (open)
+            const bool open = isOpen();
+            g.setColour (t.buttonFill);
+            g.fillRoundedRectangle (b, t.corner);
+            if (open || isMouseOver())
             {
-                g.setColour (t.text.withAlpha (0.08f));
-                g.fillRoundedRectangle (trig.toFloat(), t.corner * 0.67f);
-                g.setColour (t.text.withAlpha (0.5f));
-                g.drawRoundedRectangle (trig.toFloat().reduced (0.5f), t.corner * 0.67f, 1.0f);
+                g.setColour (t.buttonText.withAlpha (open ? 0.07f : 0.04f));
+                g.fillRoundedRectangle (b, t.corner);
             }
+            g.setColour (open ? t.buttonText.withAlpha (0.3f) : t.buttonBorder);
+            g.drawRoundedRectangle (b, t.corner, 1.0f);
 
-            const auto font = fonts::semiBold (13.0f);
+            const auto label = menuLabel (owner.ctx.processor);
+            const auto font = fonts::medium (13.0f);
+            const float textW = juce::jmin ((float) getWidth() - 36.0f, fonts::width (font, label));
+            const float startX = (float) getWidth() * 0.5f - (textW + 16.0f) * 0.5f;
+            g.setColour (t.buttonText);
             g.setFont (font);
-            g.setColour (t.text);
-            const float textW = juce::jmin ((float) trig.getWidth() - 20.0f, fonts::width (font, label));
-            const float startX = (float) trig.getCentreX() - (textW + 16.0f) * 0.5f;
-            g.drawText (label, juce::Rectangle<float> (startX, (float) trig.getY(), textW, (float) trig.getHeight()),
-                        juce::Justification::centredLeft, true);
-
-            juce::Path chevron;
-            const float cx = startX + textW + 10.0f, cy = (float) trig.getCentreY();
-            if (open) { chevron.startNewSubPath (cx - 3.5f, cy + 1.5f); chevron.lineTo (cx, cy - 2.0f); chevron.lineTo (cx + 3.5f, cy + 1.5f); }
-            else      { chevron.startNewSubPath (cx - 3.5f, cy - 1.5f); chevron.lineTo (cx, cy + 2.0f); chevron.lineTo (cx + 3.5f, cy - 1.5f); }
-            g.strokePath (chevron, juce::PathStrokeType (1.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-
-            const auto trim = trimText();
-            if (trim.isNotEmpty())
-            {
-                auto tr = juce::Rectangle<int> (trig.getRight() + 4, 6, (int) fonts::width (fonts::semiBold (11.0f), trim) + 10, getHeight() - 12);
-                g.setColour (t.text.withAlpha (0.6f));
-                g.drawRoundedRectangle (tr.toFloat(), 3.0f, 1.0f);
-                g.setFont (fonts::semiBold (11.0f));
-                g.setColour (t.text);
-                g.drawText (trim, tr, juce::Justification::centred);
-            }
+            g.drawText (label, juce::Rectangle<float> (startX, 0.0f, textW, (float) getHeight()), juce::Justification::centredLeft, true);
+            draw::chevron (g, startX + textW + 11.0f, (float) getHeight() * 0.5f, open, t.buttonText, 3.2f);
         }
 
+        void mouseEnter (const juce::MouseEvent&) override { repaint(); }
+        void mouseExit (const juce::MouseEvent&) override  { repaint(); }
         void mouseUp (const juce::MouseEvent& e) override
         {
-            if (! getLocalBounds().contains (e.getPosition()))
-                return;
-            if (triggerArea().contains (e.getPosition()))
+            if (getLocalBounds().contains (e.getPosition()) && ! owner.ctx.processor.hasUnknownEffect())
                 owner.toggleMenu();
-            else if (e.getPosition().x < getWidth() - 52) // trim label: open settings
-                if (owner.ctx.processor.hasEffect() && owner.settingsPanel == nullptr)
-                    owner.openSettings();
         }
 
         Content& owner;
-        juce::ParameterAttachment inAttach, outAttach;
     };
 
-    struct TabButton : public juce::Component,
-                       public juce::SettableTooltipClient
+    struct TabButton : public juce::Component
     {
         TabButton (Content& o, int i) : owner (o), index (i)
         {
@@ -459,21 +423,12 @@ public:
             const auto& t = owner.ctx.theme;
             const bool on = owner.page == index;
             auto r = getLocalBounds().toFloat().reduced (1.0f);
-            g.setColour (on ? t.buttonActiveFill : t.barFill);
-            if (t.listView)
-            {
-                g.fillRoundedRectangle (r, t.corner);
-                g.setColour (t.buttonOutline);
-                g.drawRoundedRectangle (r, t.corner, 1.0f);
-            }
-            else
-            {
-                g.fillEllipse (r);
-                g.setColour (t.buttonOutline);
-                g.drawEllipse (r, 1.6f);
-            }
-            g.setColour (on ? t.buttonActiveText : t.text);
-            g.setFont (fonts::extraBold (12.0f));
+            g.setColour (on ? t.buttonActiveFill : t.buttonFill);
+            g.fillEllipse (r);
+            g.setColour (on ? t.buttonActiveFill : t.buttonBorder.withMultipliedAlpha (1.6f));
+            g.drawEllipse (r, 1.2f);
+            g.setColour (on ? t.buttonActiveText : t.buttonText);
+            g.setFont (fonts::semiBold (12.0f));
             g.drawText (juce::String (index + 1), getLocalBounds(), juce::Justification::centred);
         }
         void mouseEnter (const juce::MouseEvent&) override { owner.hoverTab = index; owner.repaintTabName(); }
@@ -487,7 +442,7 @@ public:
         int index;
     };
 
-    /** Static layer: paper, figure, horizon, group frames + titles, messages. Rendered once and cached. */
+    /** Static layer: background, halos, top-bar line, group panels + titles, messages. Rendered once and cached. */
     struct Backdrop : public juce::Component
     {
         explicit Backdrop (Content& o) : owner (o)
@@ -496,79 +451,45 @@ public:
             setInterceptsMouseClicks (false, false);
         }
 
+        static void drawHalo (juce::Graphics& g, const Theme::Halo& h, float w, float hgt)
+        {
+            if (h.opacity <= 0.0f || h.radius <= 0.0f)
+                return;
+            const juce::Point<float> c (h.x * w, h.y * hgt);
+            float far = 0.0f;
+            const juce::Point<float> corners[] = { { 0.0f, 0.0f }, { w, 0.0f }, { 0.0f, hgt }, { w, hgt } };
+            for (auto corner : corners)
+                far = juce::jmax (far, c.getDistanceFrom (corner));
+            const float r = juce::jmax (1.0f, h.radius * far);
+            juce::ColourGradient grad (h.colour.withAlpha (h.opacity), c, h.colour.withAlpha (0.0f), c.translated (r, 0.0f), true);
+            g.setGradientFill (grad);
+            g.fillAll();
+        }
+
         void paint (juce::Graphics& g) override
         {
             const auto& t = owner.ctx.theme;
             const auto w = (float) getWidth(), h = (float) getHeight();
-            const bool small = getHeight() < kLargeHeight;
 
-            g.fillAll (t.paperColor);
-            if (! t.topBarFill.isTransparent())
-            {
-                g.setColour (t.topBarFill);
-                g.fillRect (0.0f, 0.0f, w, 56.0f);
-                g.setColour (t.barBorder);
-                g.fillRect (0.0f, 56.0f, w, 1.0f);
-            }
-            if (t.listView)
-                if (auto* fx = owner.ctx.processor.getEffectHost(); fx != nullptr && fx->getNumParams() > 0)
-                {
-                    g.setColour (t.groupTitle);
-                    g.setFont (fonts::medium (12.5f));
-                    juce::String sub = "Airwindows: " + juce::String (fx->getInfo().name)
-                                       + juce::String::fromUTF8 ("  \xc2\xb7  ") + fx->getInfo().description;
-                    g.drawText (sub, juce::Rectangle<float> (14.0f, 60.0f, w - 28.0f, 18.0f), juce::Justification::centredLeft, true);
-                }
-            if (t.paper.isValid() && t.textureStrength > 0.0f)
-            {
-                juce::FillType ft (t.paper, juce::AffineTransform::scale (0.5f)); // 2x texture
-                ft.setOpacity (t.textureStrength);
-                g.setFillType (ft);
-                g.fillAll();
-                g.setOpacity (1.0f);
-            }
+            g.fillAll (t.background);
+            drawHalo (g, t.halo1, w, h);
+            drawHalo (g, t.halo2, w, h);
+            g.setColour (t.topBarLine);
+            g.fillRect (0.0f, (float) kTopH - 1.0f, w, 1.0f);
 
-            const float figW = small ? 69.0f : 121.0f, figH = small ? 68.0f : 119.0f;
-            if (t.horizonOpacity > 0.0f)
-            {
-                // The horizon never runs through a group frame.
-                juce::Graphics::ScopedSaveState save (g);
-                for (auto& f : owner.frames)
-                    g.excludeClipRegion (f.bounds.expanded (4.0f).getSmallestIntegerContainer());
-                g.setColour (t.horizonColor.withMultipliedAlpha (t.horizonOpacity));
-                g.drawLine (20.0f, h - 63.0f, w - figW - 30.0f, h - 63.5f, 1.0f);
-            }
-            // The figure sits in the bottom-right corner, but only when no group frame is there
-            // (a full last row would run through it).
-            const juce::Rectangle<float> figArea (w - figW, h - figH, figW, figH);
-            const bool figureFree = std::none_of (owner.frames.begin(), owner.frames.end(),
-                                                  [&] (const auto& f) { return f.bounds.intersects (figArea.reduced (8.0f)); });
-            if (t.figure.isValid() && figureFree)
-            {
-                g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
-                g.drawImage (t.figure, figArea,
-                             juce::RectanglePlacement::xRight | juce::RectanglePlacement::yBottom | juce::RectanglePlacement::onlyReduceInSize);
-            }
-
-            // group frames
+            // group panels
             for (auto& f : owner.frames)
             {
-                juce::Path p;
-                p.addRoundedRectangle (f.bounds, 10.0f);
-                if (t.frameGlowStrength > 0.0f && t.frameGlowRadius > 0.0f)
-                {
-                    juce::Path stroke;
-                    juce::PathStrokeType (2.0f).createStrokedPath (stroke, p);
-                    juce::DropShadow (t.frameGlowColor.withAlpha (t.frameGlowStrength), (int) t.frameGlowRadius, {}).drawForPath (g, stroke);
-                }
-                g.setColour (t.frameColor.withMultipliedAlpha (t.frameOpacity));
-                g.strokePath (p, juce::PathStrokeType (1.6f));
+                g.setColour (t.groupFill);
+                g.fillRoundedRectangle (f.bounds, t.corner + 2.0f);
+                g.setColour (t.groupBorder);
+                g.drawRoundedRectangle (f.bounds.reduced (0.5f), t.corner + 2.0f, 1.0f);
 
                 if (f.title.isNotEmpty())
                 {
                     g.setColour (t.groupTitle);
-                    g.setFont (fonts::extraBold (12.0f).withExtraKerningFactor (0.12f));
-                    g.drawText (f.title, f.bounds.withTrimmedLeft (12.0f).withTrimmedTop (6.0f).withHeight (18.0f),
+                    g.setFont (fonts::caps (11.0f, 0.1f));
+                    g.drawText (f.title.toUpperCase(), f.bounds.withTrimmedLeft (10.0f).withTrimmedRight (6.0f).withTrimmedTop (9.0f).withHeight (16.0f),
                                 juce::Justification::centredLeft, true);
                 }
             }
@@ -578,35 +499,30 @@ public:
 
             if (proc.hasUnknownEffect())
             {
-                g.setFont (fonts::extraBold (22.0f));
-                g.drawText ("This effect needs a newer Daylight_aw", juce::Rectangle<float> (36.0f, 74.0f, w - 140.0f, 30.0f), juce::Justification::centredLeft, true);
-                g.setFont (fonts::semiBold (14.0f));
+                g.setFont (fonts::semiBold (17.0f));
+                g.drawText ("This effect needs a newer Daylight_aw", juce::Rectangle<float> (28.0f, 82.0f, w - 56.0f, 26.0f), juce::Justification::centredLeft, true);
+                g.setColour (t.text.withAlpha (0.8f));
+                g.setFont (fonts::regular (13.0f));
                 g.drawFittedText ("The session uses \"" + proc.getUnknownEffectId() + "\". Audio passes through untouched and the "
                                   "saved settings are kept. Update Daylight_aw to use it.",
-                                  juce::Rectangle<int> (36, 108, getWidth() - 160, 60), juce::Justification::topLeft, 3);
+                                  juce::Rectangle<int> (28, 114, getWidth() - 56, 60), juce::Justification::topLeft, 3);
             }
             else if (auto* fx = proc.getEffectHost(); fx != nullptr && fx->getNumParams() == 0)
             {
-                g.setFont (fonts::extraBold (44.0f));
-                g.drawText (fx->getInfo().name, juce::Rectangle<float> (36.0f, 74.0f, w - 160.0f, 50.0f), juce::Justification::centredLeft, true);
-                g.setFont (fonts::semiBold (15.0f));
-                g.drawText ("this effect has no controls - it just works", juce::Rectangle<float> (36.0f, 128.0f, w - 160.0f, 22.0f), juce::Justification::centredLeft, true);
+                g.setFont (fonts::logo (34.0f).withExtraKerningFactor (0.03f));
+                g.drawText (fx->getInfo().name, juce::Rectangle<float> (28.0f, 76.0f, w - 56.0f, 44.0f), juce::Justification::centredLeft, true);
+                g.setColour (t.groupTitle);
+                g.setFont (fonts::caps (11.0f, 0.1f));
+                g.drawText ("THIS EFFECT HAS NO CONTROLS - IT JUST WORKS", juce::Rectangle<float> (28.0f, 124.0f, w - 56.0f, 18.0f), juce::Justification::centredLeft, true);
                 g.setColour (t.muted);
-                g.setFont (fonts::medium (13.0f));
-                g.drawFittedText (fx->getInfo().description, juce::Rectangle<int> (36, 152, getWidth() - 160, 36), juce::Justification::topLeft, 2);
+                g.setFont (fonts::regular (13.0f));
+                g.drawFittedText (fx->getInfo().description, juce::Rectangle<int> (28, 150, getWidth() - 56, 40), juce::Justification::topLeft, 2);
             }
             else if (! proc.hasEffect() && owner.selector == nullptr && owner.confirm == nullptr)
             {
-                // empty state hint pointing at the menu bar
-                juce::Path arrow;
-                arrow.startNewSubPath (330.0f, 132.0f);
-                arrow.cubicTo (320.0f, 107.0f, 330.0f, 80.0f, 352.0f, 64.0f);
-                arrow.startNewSubPath (340.0f, 62.0f);
-                arrow.lineTo (353.0f, 63.0f);
-                arrow.lineTo (349.0f, 76.0f);
-                g.strokePath (arrow, juce::PathStrokeType (1.8f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-                g.setFont (fonts::semiBold (17.0f));
-                g.drawText ("choose an effect to begin", juce::Rectangle<float> (230.0f, 140.0f, 260.0f, 24.0f), juce::Justification::centredLeft);
+                g.setColour (t.muted);
+                g.setFont (fonts::regular (14.0f));
+                g.drawText ("Choose an effect to begin", juce::Rectangle<float> (0.0f, h * 0.5f - 10.0f, w, 20.0f), juce::Justification::centred);
             }
 
             if (owner.tabs.size() > 1)
@@ -617,8 +533,8 @@ public:
                     auto name = owner.layout.pages[(size_t) shown].name;
                     if (name.isEmpty()) name = "Page " + juce::String (shown + 1);
                     g.setColour (t.muted);
-                    g.setFont (fonts::semiBold (11.0f));
-                    g.drawText (name, juce::Rectangle<float> (0.0f, h - 22.0f, w, 16.0f), juce::Justification::centred);
+                    g.setFont (fonts::regular (11.0f));
+                    g.drawText (name, juce::Rectangle<float> (0.0f, h - 20.0f, w, 14.0f), juce::Justification::centred);
                 }
             }
         }
@@ -626,7 +542,7 @@ public:
         Content& owner;
     };
 
-    void repaintTabName() { backdrop.repaint (0, getHeight() - 24, getWidth(), 20); }
+    void repaintTabName() { backdrop.repaint (0, getHeight() - 22, getWidth(), 18); }
 
     void setPage (int p)
     {
@@ -639,6 +555,9 @@ public:
         backdrop.repaint();
     }
 
+    juce::Component* currentAbout() { return about.get(); }
+    juce::Component* currentSettings() { return settingsPanel.get(); }
+
 private:
     void buildPage()
     {
@@ -649,16 +568,13 @@ private:
         for (auto& row : layout.pages[(size_t) page].rows)
             for (auto& group : row.groups)
                 for (auto& c : group.controls)
-                {
-                    auto* pc = controls.add (new ParamControl (ctx, c));
-                    addAndMakeVisible (pc);
-                }
+                    addAndMakeVisible (controls.add (new ParamControl (ctx, c)));
 
         // keep overlays on top
-        for (juce::Component* c : { (juce::Component*) selector.get(), (juce::Component*) settingsPanel.get(),
-                                    (juce::Component*) about.get(), (juce::Component*) info.get(),
-                                    (juce::Component*) confirm.get() })
-            if (c != nullptr) c->toFront (false);
+        for (juce::Component* c : { (juce::Component*) selector.get(), (juce::Component*) info.get(),
+                                    (juce::Component*) &dismisser, (juce::Component*) settingsPanel.get(),
+                                    (juce::Component*) about.get(), (juce::Component*) confirm.get() })
+            if (c != nullptr && (c != &dismisser || dismisser.isVisible())) c->toFront (false);
     }
 
     void layoutPage()
@@ -667,27 +583,21 @@ private:
         if (! juce::isPositiveAndBelow (page, (int) layout.pages.size()))
             return;
 
-        if (builtListView)
-        {
-            for (int i = 0; i < controls.size(); ++i)
-                controls[i]->setBounds (0, kListTop + i * kListRowH, getWidth(), kListRowH);
-            return;
-        }
-
         int ci = 0;
         float y = (float) kRowsTop;
         for (auto& row : layout.pages[(size_t) page].rows)
         {
-            float x = (float) kMargin;
+            float x = (float) kSide;
             for (auto& group : row.groups)
             {
                 const int n = (int) group.controls.size();
-                const float w = (float) n * kSlotW + (float) (n - 1) * (float) kGap;
+                const float w = (float) n * kColW + (float) (n - 1) * (float) kGap;
                 frames.push_back ({ { x, y, w, (float) kRowH }, group.title });
 
-                const float cellW = w / (float) n;
+                // controls share the panel below the title (padding 10 at the sides and bottom)
+                const float cellW = (w - 20.0f) / (float) n;
                 for (int i = 0; i < n && ci < controls.size(); ++i, ++ci)
-                    controls[ci]->setBounds (juce::Rectangle<float> (x + (float) i * cellW, y + 22.0f, cellW, (float) kRowH - 26.0f).toNearestInt());
+                    controls[ci]->setBounds (juce::Rectangle<float> (x + 10.0f + (float) i * cellW, y + 26.0f, cellW, (float) kRowH - 36.0f).toNearestInt());
 
                 x += w + (float) kGap;
             }
@@ -701,13 +611,11 @@ private:
         if (label != shownMenuLabel)
         {
             shownMenuLabel = label;
-            menuBar.repaint();
+            nameButton.repaint();
         }
     }
 
     EffectHost* builtHost = nullptr;
-    juce::Time userLayoutStamp;
-    bool builtListView = false;
     bool builtUnknown = false;
     juce::String shownMenuLabel;
 
@@ -718,27 +626,19 @@ private:
 
     Backdrop backdrop;
     Logo logo;
-    MenuBar menuBar;
+    NameButton nameButton;
     BypassButton bypass;
     PillButton abA, abB;
+    TrimKnob inTrim, outTrim;
     juce::OwnedArray<ParamControl> controls;
     juce::OwnedArray<TabButton> tabs;
+    Dismisser dismisser;
 
     std::unique_ptr<SelectorPanel> selector;
     std::unique_ptr<SettingsPanel> settingsPanel;
     std::unique_ptr<AboutPanel> about;
     std::unique_ptr<InfoPanel> info;
     std::unique_ptr<ConfirmDialog> confirm;
-
-    std::unique_ptr<juce::TooltipWindow> tooltipWindow;   // inside the content so it follows the zoom
-
-    void updateTooltips()
-    {
-        if (ctx.settings.getTooltips() && tooltipWindow == nullptr)
-            tooltipWindow = std::make_unique<juce::TooltipWindow> (this, 900);
-        else if (! ctx.settings.getTooltips())
-            tooltipWindow.reset();
-    }
 };
 
 // =============================================================================================
@@ -751,6 +651,7 @@ DaylightEditor::DaylightEditor (DaylightProcessor& p)
     setLookAndFeel (&lookAndFeel);
 
     content = std::make_unique<Content> (ctx);
+    content->onSizeChanged = [this] { applyZoom(); };
     // Settings changes arrive once, through GlobalSettings' change message (for every instance).
     addAndMakeVisible (*content);
 
@@ -773,21 +674,16 @@ DaylightEditor::~DaylightEditor()
 
 void DaylightEditor::loadTheme()
 {
-    switch (settings->getTheme())
+    if (settings->getTheme() == ThemeId::user)
     {
-        case ThemeId::dark: ctx.theme = Theme::builtInDark(); break;
-        case ThemeId::user:
-            ensureUserThemeExists (ThemeId::def);
-            ctx.theme = Theme::fromFolder (getUserThemeFolder(), Theme::builtInLight());
-            userThemeStamp = userThemeTime();
-            break;
-        case ThemeId::def: ctx.theme = Theme::builtInDefault(); break;
-        case ThemeId::light: ctx.theme = Theme::builtInLight(); break;
-        case ThemeId::original: ctx.theme = Theme::builtInOriginal(); break;
+        ensureUserThemeExists();
+        ctx.theme = Theme::fromFolder (getUserThemeFolder(), Theme::builtInDefault());
+        userThemeStamp = userThemeTime();
     }
-    if (Theme::knobStyleOverrideForTesting().isNotEmpty())
-        ctx.theme.knobStyle = Theme::knobStyleOverrideForTesting();
-    fonts::setUseSystemFont (ctx.theme.systemFont);
+    else
+    {
+        ctx.theme = Theme::builtInDefault();
+    }
     lookAndFeel.applyTheme();
 }
 
@@ -813,6 +709,12 @@ void DaylightEditor::showInfoPanel()
         content->openInfo();
 }
 
+void DaylightEditor::showAbout()
+{
+    if (content != nullptr)
+        content->toggleAbout();
+}
+
 void DaylightEditor::resized()
 {
     if (content != nullptr)
@@ -836,26 +738,18 @@ void DaylightEditor::changeListenerCallback (juce::ChangeBroadcaster* source)
 
 juce::Time DaylightEditor::userThemeTime()
 {
-    auto folder = getUserThemeFolder();
-    juce::Time newest;
-    for (auto name : { "theme.json", "paper.png", "figure.png" })
-        newest = juce::jmax (newest, folder.getChildFile (name).getLastModificationTime());
-    return newest;
+    return getUserThemeFolder().getChildFile ("theme.json").getLastModificationTime();
 }
 
 void DaylightEditor::timerCallback()
 {
     settings->reloadIfChanged();
-    content->checkUserLayout();
 
-    if (settings->getTheme() == ThemeId::user)
+    if (settings->getTheme() == ThemeId::user && userThemeTime() != userThemeStamp)
     {
         // live reload while someone edits the user theme
-        if (userThemeTime() != userThemeStamp)
-        {
-            loadTheme();
-            content->themeChanged();
-        }
+        loadTheme();
+        content->themeChanged();
     }
 }
 } // namespace dlaw

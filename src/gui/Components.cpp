@@ -11,81 +11,6 @@ juce::Point<float> polar (juce::Point<float> c, float radius, float degrees)
     return { c.x + radius * std::sin (a), c.y - radius * std::cos (a) };
 }
 
-/** Knob outline for the theme's knob.style (deterministic per control).
-    round: an exact circle.
-    rough: the original cut, hand-cut edge.
-    soft:  round, slightly uneven pencil circle (low, smooth wobble).
-    grain: practically round with a fine charcoal grain on the edge. */
-juce::Path knobOutline (const juce::String& style, float radius, int seed)
-{
-    if (style == "round")
-    {
-        juce::Path circle;
-        circle.addEllipse (-radius, -radius, radius * 2.0f, radius * 2.0f);
-        return circle;
-    }
-
-    juce::Random rnd ((juce::int64) seed * 7919 + 17);
-    const float p1 = rnd.nextFloat() * 6.28f, p2 = rnd.nextFloat() * 6.28f, p3 = rnd.nextFloat() * 6.28f;
-
-    const bool soft = style == "soft", grain = style == "grain";
-    const int n = soft || grain ? 240 : 72;
-
-    juce::Path p;
-    for (int i = 0; i <= n; ++i)
-    {
-        const float t = juce::MathConstants<float>::twoPi * (float) i / (float) n;
-        float r = radius;
-        if (soft)
-            r += 0.42f * std::sin (2.0f * t + p1) + 0.22f * std::sin (3.0f * t + p2) + 0.06f * std::sin (9.0f * t + p3);
-        else if (grain)
-            r += 0.12f * std::sin (2.0f * t + p1) + 0.09f * std::sin (19.0f * t + p2) + 0.07f * std::sin (37.0f * t + p3);
-        else
-            r += 0.45f * std::sin (3.0f * t + p1) + 0.3f * std::sin (7.0f * t + p2) + 0.2f * std::sin (13.0f * t + p3);
-        const juce::Point<float> pt { r * std::sin (t), -r * std::cos (t) };
-        if (i == 0) p.startNewSubPath (pt); else p.lineTo (pt);
-    }
-    p.closeSubPath();
-    return p;
-}
-
-/** Extra edge detail drawn over the knob for the soft and grain styles. */
-void drawKnobEdgeDetail (juce::Graphics& g, const juce::String& style, juce::Point<float> centre, float radius,
-                         float scale, int seed, juce::Colour edgeColour, juce::Colour fillColour)
-{
-    juce::Random rnd ((juce::int64) seed * 104729 + 3);
-    if (style == "soft")
-    {
-        // a second, lighter pencil pass, slightly off the first one and not quite closed
-        const float start = rnd.nextFloat() * 6.28f;
-        const float p1 = rnd.nextFloat() * 6.28f;
-        juce::Path retrace;
-        constexpr int n = 160;
-        for (int i = 0; i <= n; ++i)
-        {
-            const float t = start + juce::MathConstants<float>::twoPi * 0.82f * (float) i / (float) n;
-            const float r = (radius + 0.55f + 0.35f * std::sin (2.0f * t + p1)) * scale;
-            const juce::Point<float> pt { centre.x + r * std::sin (t), centre.y - r * std::cos (t) };
-            if (i == 0) retrace.startNewSubPath (pt); else retrace.lineTo (pt);
-        }
-        g.setColour (edgeColour.withMultipliedAlpha (0.45f));
-        g.strokePath (retrace, juce::PathStrokeType (0.9f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-    }
-    else if (style == "grain")
-    {
-        // tiny charcoal specks just inside and outside the edge
-        for (int i = 0; i < 70; ++i)
-        {
-            const float t = rnd.nextFloat() * juce::MathConstants<float>::twoPi;
-            const float d = (radius + (rnd.nextFloat() - 0.5f) * 1.6f) * scale;
-            const float sz = (0.35f + rnd.nextFloat() * 0.55f) * scale;
-            const bool outside = d > radius * scale;
-            g.setColour ((outside ? edgeColour : fillColour.contrasting (0.25f)).withMultipliedAlpha (outside ? 0.35f : 0.18f));
-            g.fillEllipse (centre.x + d * std::sin (t) - sz * 0.5f, centre.y - d * std::cos (t) - sz * 0.5f, sz, sz);
-        }
-    }
-}
-
 /** "0.5000" -> "0.500" (or "0.5000" while active); keeps text values and units as they are. */
 juce::String formatValue (const juce::String& raw, bool active)
 {
@@ -99,7 +24,56 @@ juce::String formatValue (const juce::String& raw, bool active)
     const auto decimals = active ? 4 : 3;
     return juce::String (numberPart.getDoubleValue(), decimals) + rest;
 }
+
+juce::String formatDb (float db)
+{
+    if (juce::exactlyEqual (db, 0.0f))
+        return "0.0";
+    return (db > 0.0f ? "+" : juce::String::fromUTF8 ("\xe2\x88\x92")) + juce::String (std::abs (db), 1);   // real minus sign
+}
 } // namespace
+
+// =============================================================================================
+namespace draw
+{
+void knob (juce::Graphics& g, const Theme& t, juce::Point<float> c, float d, float v, float ringWidth, float pointerWidth)
+{
+    // proportions from the design: ring r = 15/40, pointer from 5/40 to 13/40 of the knob size
+    const float r = d * 15.0f / 40.0f;
+    if (t.knobStyle == "round" || ! t.knobFill.isTransparent())
+    {
+        g.setColour (t.knobFill);
+        g.fillEllipse (juce::Rectangle<float> (r * 2.0f, r * 2.0f).withCentre (c));
+    }
+    g.setColour (t.knobRing);
+    g.drawEllipse (juce::Rectangle<float> (r * 2.0f, r * 2.0f).withCentre (c), ringWidth);
+
+    const float angle = -135.0f + 270.0f * juce::jlimit (0.0f, 1.0f, v);
+    juce::Path p;
+    p.startNewSubPath (polar (c, d * 5.0f / 40.0f, angle));
+    p.lineTo (polar (c, d * 13.0f / 40.0f, angle));
+    g.setColour (t.knobPointer);
+    g.strokePath (p, juce::PathStrokeType (pointerWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+}
+
+void chevron (juce::Graphics& g, float x, float y, bool up, juce::Colour colour, float s)
+{
+    juce::Path p;
+    if (up) { p.startNewSubPath (x - s, y + s * 0.45f); p.lineTo (x, y - s * 0.55f); p.lineTo (x + s, y + s * 0.45f); }
+    else    { p.startNewSubPath (x - s, y - s * 0.45f); p.lineTo (x, y + s * 0.55f); p.lineTo (x + s, y - s * 0.45f); }
+    g.setColour (colour);
+    g.strokePath (p, juce::PathStrokeType (1.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+}
+
+void star (juce::Graphics& g, juce::Point<float> c, float radius, bool filled, juce::Colour colour)
+{
+    juce::Path p;
+    p.addStar (c, 5, radius * 0.42f, radius);
+    g.setColour (colour);
+    if (filled) g.fillPath (p);
+    else        g.strokePath (p, juce::PathStrokeType (1.1f));
+}
+} // namespace draw
 
 // =============================================================================================
 void DaylightLookAndFeel::applyTheme()
@@ -107,82 +81,48 @@ void DaylightLookAndFeel::applyTheme()
     const auto& t = ctx.theme;
     setColour (juce::TextEditor::textColourId, t.panelText);
     setColour (juce::TextEditor::backgroundColourId, juce::Colours::transparentBlack);
-    setColour (juce::TextEditor::highlightColourId, t.panelText.withAlpha (0.2f));
+    setColour (juce::TextEditor::highlightColourId, t.accent.withAlpha (0.3f));
     setColour (juce::TextEditor::highlightedTextColourId, t.panelText);
     setColour (juce::CaretComponent::caretColourId, t.panelText);
-    setColour (juce::TextEditor::outlineColourId, t.panelBorder);
-    setColour (juce::TextEditor::focusedOutlineColourId, t.panelText);
+    setColour (juce::TextEditor::outlineColourId, t.buttonBorder);
+    setColour (juce::TextEditor::focusedOutlineColourId, t.accent);
     setColour (juce::Label::textColourId, t.panelText);
     setColour (juce::ScrollBar::thumbColourId, t.panelText.withAlpha (0.35f));
     setColour (juce::ListBox::backgroundColourId, juce::Colours::transparentBlack);
-    setColour (juce::TooltipWindow::backgroundColourId, t.panelFill.withAlpha (1.0f));
-    setColour (juce::TooltipWindow::textColourId, t.panelText);
-    setColour (juce::TooltipWindow::outlineColourId, t.panelBorder);
+    setColour (juce::PopupMenu::backgroundColourId, t.panelFill.withAlpha (1.0f));
+    setColour (juce::PopupMenu::textColourId, t.panelText);
+    setColour (juce::PopupMenu::headerTextColourId, t.muted);
+    setColour (juce::PopupMenu::highlightedBackgroundColourId, t.selectFill.withAlpha (1.0f).interpolatedWith (t.panelFill.withAlpha (1.0f), 0.4f));
+    setColour (juce::PopupMenu::highlightedTextColourId, t.selectText);
 }
 
-juce::Rectangle<int> DaylightLookAndFeel::getTooltipBounds (const juce::String& text, juce::Point<int> pos, juce::Rectangle<int> parentArea)
-{
-    const auto font = fonts::medium (12.0f);
-    int w = 0, lines = 0;
-    for (auto& line : juce::StringArray::fromLines (text))
-    {
-        w = juce::jmax (w, (int) fonts::width (font, line));
-        ++lines;
-    }
-    w = juce::jmin (w + 18, 320);
-    const int h = lines * 17 + 10;
-    return juce::Rectangle<int> (pos.x > parentArea.getCentreX() ? pos.x - (w + 12) : pos.x + 12,
-                                 pos.y > parentArea.getCentreY() ? pos.y - (h + 8) : pos.y + 18, w, h)
-        .constrainedWithin (parentArea);
-}
+juce::Font DaylightLookAndFeel::getLabelFont (juce::Label&) { return fonts::medium (13.0f); }
+juce::Font DaylightLookAndFeel::getPopupMenuFont()           { return fonts::medium (13.0f); }
 
-void DaylightLookAndFeel::drawTooltip (juce::Graphics& g, const juce::String& text, int width, int height)
+void DaylightLookAndFeel::drawPopupMenuBackground (juce::Graphics& g, int width, int height)
 {
     const auto& t = ctx.theme;
-    auto r = juce::Rectangle<float> (0.0f, 0.0f, (float) width, (float) height);
-    g.setColour (findColour (juce::TooltipWindow::backgroundColourId));
-    g.fillRoundedRectangle (r, 5.0f);
-    g.setColour (findColour (juce::TooltipWindow::outlineColourId));
-    g.drawRoundedRectangle (r.reduced (0.5f), 5.0f, 1.0f);
-    g.setColour (t.panelText);
-    g.setFont (fonts::medium (12.0f));
-    g.drawFittedText (text, juce::Rectangle<int> (9, 5, width - 18, height - 10), juce::Justification::topLeft, 8);
+    g.fillAll (t.panelFill.withAlpha (1.0f));
+    g.setColour (t.panelBorder);
+    g.drawRect (0, 0, width, height, 1);
 }
-
-void DaylightLookAndFeel::drawLinearSlider (juce::Graphics& g, int x, int y, int w, int h, float pos, float, float,
-                                            juce::Slider::SliderStyle, juce::Slider&)
-{
-    const auto& t = ctx.theme;
-    const float cy = (float) y + (float) h * 0.5f;
-    g.setColour (t.panelText.withAlpha (0.35f));
-    g.drawLine ((float) x, cy, (float) (x + w), cy, 1.6f);
-
-    // centre mark (0 dB)
-    const float mid = (float) x + (float) w * 0.5f;
-    g.drawLine (mid, cy - 4.0f, mid, cy + 4.0f, 1.2f);
-
-    g.setColour (t.buttonActiveFill);
-    g.fillEllipse (pos - 6.0f, cy - 6.0f, 12.0f, 12.0f);
-}
-
-juce::Font DaylightLookAndFeel::getLabelFont (juce::Label&) { return fonts::semiBold (13.0f); }
 
 void DaylightLookAndFeel::fillTextEditorBackground (juce::Graphics& g, int w, int h, juce::TextEditor&)
 {
-    g.setColour (ctx.theme.panelFill.withMultipliedAlpha (0.6f));
-    g.fillRoundedRectangle (0.0f, 0.0f, (float) w, (float) h, 4.0f);
+    g.setColour (ctx.theme.buttonFill);
+    g.fillRoundedRectangle (0.0f, 0.0f, (float) w, (float) h, ctx.theme.corner);
 }
 
 void DaylightLookAndFeel::drawTextEditorOutline (juce::Graphics& g, int w, int h, juce::TextEditor& e)
 {
-    g.setColour (e.hasKeyboardFocus (true) ? ctx.theme.panelText : ctx.theme.panelBorder);
-    g.drawRoundedRectangle (0.5f, 0.5f, (float) w - 1.0f, (float) h - 1.0f, 4.0f, 1.0f);
+    g.setColour (e.hasKeyboardFocus (true) ? ctx.theme.accent.withAlpha (0.7f) : ctx.theme.buttonBorder);
+    g.drawRoundedRectangle (0.5f, 0.5f, (float) w - 1.0f, (float) h - 1.0f, ctx.theme.corner, 1.0f);
 }
 
 void DaylightLookAndFeel::drawScrollbar (juce::Graphics& g, juce::ScrollBar&, int x, int y, int w, int h, bool vertical,
                                          int thumbStart, int thumbSize, bool over, bool)
 {
-    g.setColour (ctx.theme.panelText.withAlpha (over ? 0.45f : 0.25f));
+    g.setColour (ctx.theme.panelText.withAlpha (over ? 0.40f : 0.22f));
     auto r = vertical ? juce::Rectangle<int> (x + w / 2 - 2, thumbStart, 4, thumbSize)
                       : juce::Rectangle<int> (thumbStart, y + h / 2 - 2, thumbSize, 4);
     g.fillRoundedRectangle (r.toFloat(), 2.0f);
@@ -198,9 +138,21 @@ PillButton::PillButton (UiContext& c, const juce::String& buttonText, bool fille
 void PillButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
 {
     const auto& t = ctx.theme;
+    if (! isEnabled())
+        g.beginTransparencyLayer (0.35f);
+
+    if (link)
+    {
+        g.setColour (highlighted ? t.accent.brighter (0.25f) : t.accent);
+        g.setFont (fonts::medium (fontSize));
+        g.drawText (getButtonText(), getLocalBounds(), juce::Justification::centredLeft, true);
+        if (! isEnabled()) g.endTransparencyLayer();
+        return;
+    }
+
     auto r = getLocalBounds().toFloat().reduced (0.5f);
     const bool filled = primary || (fillOn && getToggleState());
-    const float radius = t.corner * 0.67f;
+    const float radius = t.corner;
 
     juce::Path shape;
     shape.addRoundedRectangle (r.getX(), r.getY(), r.getWidth(), r.getHeight(), radius, radius,
@@ -211,21 +163,74 @@ void PillButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
         g.setColour (t.buttonActiveFill);
         g.fillPath (shape);
     }
-    else if (highlighted || down)
+    else
     {
-        g.setColour (t.buttonOutline.withAlpha (down ? 0.16f : 0.08f));
+        g.setColour (t.buttonFill);
         g.fillPath (shape);
+        if (highlighted || down)
+        {
+            g.setColour (t.buttonText.withAlpha (down ? 0.10f : 0.05f));
+            g.fillPath (shape);
+        }
+        if (! joinedLeft && ! joinedRight)
+        {
+            g.setColour (t.buttonBorder);
+            g.strokePath (shape, juce::PathStrokeType (1.0f));
+        }
+    }
+
+    const auto textColour = filled ? t.buttonActiveText : t.buttonText;
+    g.setColour (textColour);
+    g.setFont (filled || joinedLeft || joinedRight ? fonts::semiBold (fontSize) : fonts::medium (fontSize));
+    auto area = getLocalBounds().reduced (10, 0);
+
+    if (icon != Icon::none)
+    {
+        const auto ic = area.removeFromLeft (14).toFloat().withSizeKeepingCentre (12.0f, 12.0f);
+        area.removeFromLeft (6);
+        juce::Path p;
+        if (icon == Icon::reset)
+        {
+            // circular arrow
+            p.addCentredArc (ic.getCentreX(), ic.getCentreY(), 4.8f, 4.8f, 0.0f, juce::degreesToRadians (-40.0f), juce::degreesToRadians (250.0f), true);
+            g.strokePath (p, juce::PathStrokeType (1.3f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+            const auto tip = polar (ic.getCentre(), 4.8f, -40.0f);
+            juce::Path head;
+            head.addTriangle (tip.translated (-3.2f, -1.6f), tip.translated (0.6f, -3.4f), tip.translated (0.9f, 0.9f));
+            g.fillPath (head);
+        }
+        else if (icon == Icon::change)
+        {
+            // two arrows: swap
+            const auto c = ic.getCentre();
+            juce::Path a;
+            a.startNewSubPath (c.x - 5.0f, c.y - 2.5f); a.lineTo (c.x + 4.5f, c.y - 2.5f);
+            a.startNewSubPath (c.x + 5.0f, c.y + 2.5f); a.lineTo (c.x - 4.5f, c.y + 2.5f);
+            a.startNewSubPath (c.x + 2.0f, c.y - 5.0f); a.lineTo (c.x + 4.8f, c.y - 2.5f); a.lineTo (c.x + 2.0f, c.y);
+            a.startNewSubPath (c.x - 2.0f, c.y);        a.lineTo (c.x - 4.8f, c.y + 2.5f); a.lineTo (c.x - 2.0f, c.y + 5.0f);
+            g.strokePath (a, juce::PathStrokeType (1.3f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+        }
+        else
+        {
+            // "i" in a circle
+            g.drawEllipse (ic.reduced (0.6f), 1.2f);
+            g.fillRect (juce::Rectangle<float> (1.4f, 4.2f).withCentre (ic.getCentre().translated (0.0f, 1.2f)));
+            g.fillEllipse (juce::Rectangle<float> (1.8f, 1.8f).withCentre (ic.getCentre().translated (0.0f, -2.6f)));
+        }
+        g.drawText (getButtonText(), area, juce::Justification::centredLeft, true);
+    }
+    else if (dropdown)
+    {
+        g.drawText (getButtonText(), area.withTrimmedRight (14), juce::Justification::centredLeft, true);
+        draw::chevron (g, (float) area.getRight() - 4.0f, (float) getHeight() * 0.5f, false, t.buttonText.withAlpha (0.8f), 3.0f);
+    }
+    else
+    {
+        g.drawText (getButtonText(), getLocalBounds().reduced (4, 0), juce::Justification::centred, true);
     }
 
     if (! isEnabled())
-        g.setOpacity (0.4f);
-
-    g.setColour (t.buttonOutline.withAlpha (0.6f));
-    g.strokePath (shape, juce::PathStrokeType (1.0f));
-
-    g.setColour (filled ? t.buttonActiveText : t.panelText);
-    g.setFont (fonts::semiBold (fontSize));
-    g.drawText (getButtonText(), getLocalBounds(), juce::Justification::centred, false);
+        g.endTransparencyLayer();
 }
 
 // =============================================================================================
@@ -233,85 +238,60 @@ BypassButton::BypassButton (UiContext& c)
     : ctx (c),
       attachment (c.processor.getBypass(), [this] (float) { repaint(); }, nullptr)
 {
-    setMouseCursor (juce::MouseCursor::PointingHandCursor);
     setTitle ("Bypass");
-    setTooltip ("Bypass (the same switch as your DAW's bypass)");
     attachment.sendInitialUpdate();
+}
+
+int BypassButton::preferredWidth() const
+{
+    return (int) std::ceil (fonts::width (fonts::caps (11.0f, 0.06f), "BYPASS") + 7.0f + kButtonSize) + 2;
+}
+
+juce::Rectangle<float> BypassButton::circle() const
+{
+    auto b = getLocalBounds().toFloat();
+    return { b.getRight() - kButtonSize - 1.0f, b.getCentreY() - kButtonSize * 0.5f, kButtonSize, kButtonSize };
+}
+
+bool BypassButton::hitTest (int x, int y)
+{
+    const auto c = circle();
+    return c.getCentre().getDistanceFrom ({ (float) x, (float) y }) <= c.getWidth() * 0.5f + 1.5f;
 }
 
 void BypassButton::paint (juce::Graphics& g)
 {
     const auto& t = ctx.theme;
     const bool on = ctx.processor.getBypass().get();
-    auto b = getLocalBounds().toFloat();
+    const auto c = circle();
 
-    if (t.listView)
+    g.setFont (fonts::caps (11.0f, 0.06f));
+    g.setColour (on ? t.accent : t.muted);
+    g.drawText ("BYPASS", getLocalBounds().toFloat().withRight (c.getX() - 7.0f), juce::Justification::centredRight, false);
+
+    if (on)
     {
-        // plain button with a checkbox, like a DAW's own controls
-        const auto font = fonts::medium (13.5f);
-        const float tw = fonts::width (font, "Bypass");
-        auto btn = juce::Rectangle<float> (b.getRight() - (tw + 42.0f), b.getCentreY() - 12.0f, tw + 40.0f, 24.0f);
-        g.setColour (t.barFill.withAlpha (1.0f).brighter (0.15f));
-        g.fillRoundedRectangle (btn, t.corner + 1.0f);
-        g.setColour (t.buttonOutline);
-        g.drawRoundedRectangle (btn.reduced (0.5f), t.corner + 1.0f, 1.0f);
-        auto box = juce::Rectangle<float> (btn.getX() + 9.0f, btn.getCentreY() - 7.0f, 14.0f, 14.0f);
-        if (on)
-        {
-            g.setColour (t.buttonActiveFill);
-            g.fillRoundedRectangle (box, 2.0f);
-            juce::Path tick;
-            tick.startNewSubPath (box.getX() + 3.2f, box.getCentreY());
-            tick.lineTo (box.getX() + 6.0f, box.getBottom() - 3.5f);
-            tick.lineTo (box.getRight() - 3.0f, box.getY() + 3.5f);
-            g.setColour (t.buttonActiveText);
-            g.strokePath (tick, juce::PathStrokeType (1.6f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-        }
-        else
-        {
-            g.setColour (t.barFill.withAlpha (1.0f));
-            g.fillRoundedRectangle (box, 2.0f);
-            g.setColour (t.buttonOutline);
-            g.drawRoundedRectangle (box.reduced (0.5f), 2.0f, 1.0f);
-        }
-        g.setColour (t.text);
-        g.setFont (font);
-        g.drawText ("Bypass", btn.withTrimmedLeft (28.0f), juce::Justification::centredLeft, false);
-        return;
+        g.setColour (t.buttonActiveFill);
+        g.fillEllipse (c);
     }
-
-    // label
-    g.setFont (fonts::extraBold (11.0f).withExtraKerningFactor (0.1f));
-    g.setColour (t.text);
-    g.drawText ("BYPASS", b.withTrimmedRight (34.0f), juce::Justification::centredRight, false);
-
-    auto circle = juce::Rectangle<float> (b.getRight() - 27.0f, b.getCentreY() - 13.0f, 26.0f, 26.0f);
-    if (t.barGlow > 0.0f)
-    {
-        juce::Path p; p.addEllipse (circle);
-        juce::DropShadow (t.frameGlowColor.withAlpha (t.barGlow), 10, {}).drawForPath (g, p);
-    }
-    g.setColour (on ? t.buttonActiveFill : t.barFill);
-    g.fillEllipse (circle);
-    g.setColour (t.buttonOutline);
-    g.drawEllipse (circle.reduced (0.8f), 1.6f);
+    g.setColour (on ? t.buttonActiveFill : t.buttonText.withAlpha (0.28f));
+    g.drawEllipse (c.reduced (0.75f), 1.5f);
 
     // power icon
-    auto c = circle.getCentre();
+    const auto m = c.getCentre();
     juce::Path icon;
-    icon.addCentredArc (c.x, c.y + 0.5f, 4.2f, 4.2f, 0.0f, juce::degreesToRadians (35.0f), juce::degreesToRadians (325.0f), true);
-    icon.startNewSubPath (c.x, c.y - 5.0f);
-    icon.lineTo (c.x, c.y - 0.5f);
-    g.setColour (on ? t.buttonActiveText : t.text);
+    icon.addCentredArc (m.x, m.y + 0.4f, 3.6f, 3.6f, 0.0f, juce::degreesToRadians (40.0f), juce::degreesToRadians (320.0f), true);
+    icon.startNewSubPath (m.x, m.y - 4.6f);
+    icon.lineTo (m.x, m.y - 0.6f);
+    g.setColour (on ? t.buttonActiveText : t.buttonText.withAlpha (0.85f));
     g.strokePath (icon, juce::PathStrokeType (1.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 }
 
 void BypassButton::mouseUp (const juce::MouseEvent& e)
 {
-    if (getLocalBounds().contains (e.getPosition()))
+    if (! e.mods.isPopupMenu() && hitTest (e.getPosition().x, e.getPosition().y))
         attachment.setValueAsCompleteGesture (ctx.processor.getBypass().get() ? 0.0f : 1.0f);
 }
-
 
 // =============================================================================================
 TrimKnob::TrimKnob (UiContext& c, juce::AudioParameterFloat& p, const juce::String& l)
@@ -319,18 +299,19 @@ TrimKnob::TrimKnob (UiContext& c, juce::AudioParameterFloat& p, const juce::Stri
       attachment (p, [this] (float v) { db = v; repaint(); }, nullptr)
 {
     attachment.sendInitialUpdate();
-    setTitle (label);
-    setTooltip ("Drag (Shift = fine) or scroll. Double-click: 0 dB.");
+    setTitle (label == "IN" ? "Input trim" : "Output trim");
+    setMouseCursor (juce::MouseCursor::UpDownResizeCursor);
 }
 
-juce::Rectangle<float> TrimKnob::trackArea() const
+int TrimKnob::preferredWidth() const
 {
-    return { 7.0f, 20.0f, (float) getWidth() - 14.0f, 16.0f };
+    return (int) std::ceil (fonts::width (fonts::caps (11.0f, 0.06f), label)) + 6 + 22 + 6 + 32;
 }
 
 juce::Rectangle<float> TrimKnob::knobArea() const
 {
-    return juce::Rectangle<float> (40.0f, 40.0f).withCentre ({ (float) getWidth() * 0.5f, 20.0f + 22.0f });
+    const float x = std::ceil (fonts::width (fonts::caps (11.0f, 0.06f), label)) + 6.0f;
+    return { x, (float) getHeight() * 0.5f - 11.0f, 22.0f, 22.0f };
 }
 
 void TrimKnob::set (float newDb, bool asGesture)
@@ -347,78 +328,36 @@ void TrimKnob::set (float newDb, bool asGesture)
 void TrimKnob::paint (juce::Graphics& g)
 {
     const auto& t = ctx.theme;
-    const bool active = hover || dragging;
-    const auto text = (db > 0.0f ? "+" : db < 0.0f ? "-" : "") + juce::String (std::abs (db), 1) + " dB";
-
-    if (t.listView)
-    {
-        // small fader: name and value above the track
-        g.setColour (t.panelText);
-        g.setFont (fonts::medium (13.0f));
-        g.drawText (label, juce::Rectangle<float> (0.0f, 0.0f, (float) getWidth(), 16.0f), juce::Justification::centredLeft, true);
-        g.setColour (t.valueText);
-        g.drawText (text, juce::Rectangle<float> (0.0f, 0.0f, (float) getWidth(), 16.0f), juce::Justification::centredRight, true);
-
-        const auto track = trackArea();
-        g.setColour (active ? t.sliderTrack.brighter (0.12f) : t.sliderTrack);
-        g.fillRoundedRectangle (track, juce::jmin (2.0f, t.corner));
-        g.setColour (t.sliderCentre);
-        g.fillRect (juce::Rectangle<float> (track.getCentreX() - 0.5f, track.getY(), 1.0f, track.getHeight()));
-        const float hx = track.getX() + 6.5f + param.convertTo0to1 (db) * (track.getWidth() - 13.0f);
-        auto handle = juce::Rectangle<float> (13.0f, 14.0f).withCentre ({ hx, track.getCentreY() });
-        g.setColour (t.sliderHandle);
-        g.fillRoundedRectangle (handle, 3.0f);
-        g.setColour (t.sliderHandleBorder);
-        g.drawRoundedRectangle (handle.reduced (0.5f), 3.0f, 1.0f);
-        return;
-    }
     const auto k = knobArea();
-    const auto c = k.getCentre();
-    const float s = k.getWidth() / 64.0f * 1.4f;   // 44 px design knob drawn at ~40 px
+    const bool active = hover || dragging;
 
-    g.setColour (t.panelText);
-    auto nameFont = fonts::semiBold (12.5f);
-    g.setFont (nameFont);
-    const auto nameArea = juce::Rectangle<float> (0.0f, 0.0f, (float) getWidth(), 16.0f);
-    g.drawText (label, nameArea, juce::Justification::centred, true);
-    if (active)
-    {
-        const float w = juce::jmin ((float) getWidth() - 8.0f, fonts::width (nameFont, label));
-        g.fillRect (juce::Rectangle<float> (nameArea.getCentreX() - w * 0.5f, nameArea.getBottom() - 1.0f, w, 1.4f));
-    }
+    g.setFont (fonts::caps (11.0f, 0.06f));
+    g.setColour (t.muted);
+    g.drawText (label, juce::Rectangle<float> (0.0f, 0.0f, k.getX() - 6.0f, (float) getHeight()), juce::Justification::centredLeft, false);
 
-    // centre tick (0 dB) and end ticks
-    g.setColour (t.knobTicks);
-    for (float a : { -135.0f, 0.0f, 135.0f })
-        g.drawLine ({ polar (c, 15.5f * s, a), polar (c, 18.5f * s, a) }, juce::exactlyEqual (a, 0.0f) ? 1.4f : 1.6f);
+    // the mini knob: a slightly thicker ring + pointer, like the design (2.5 / 3.5 at 40 px)
+    draw::knob (g, t, k.getCentre(), k.getWidth(), param.convertTo0to1 (db), 1.4f, 1.9f);
 
-    g.setColour (t.knobShadow);
-    g.fillEllipse (juce::Rectangle<float> (28.0f * s, 28.0f * s).withCentre (c.translated (0.0f, 1.8f * s)));
-
-    auto disc = knobOutline (t.knobStyle, 14.0f, 99);
-    disc.applyTransform (juce::AffineTransform::scale (s).translated (c));
-    g.setColour (t.knobFill);
-    g.fillPath (disc);
-    g.setColour (t.knobEdge);
-    g.strokePath (disc, juce::PathStrokeType (1.3f));
-    drawKnobEdgeDetail (g, t.knobStyle, c, 14.0f, s, 99, t.knobEdge, t.knobFill);
-
-    const float angle = -135.0f + 270.0f * param.convertTo0to1 (db);
-    g.setColour (t.knobPointer);
-    g.drawLine ({ polar (c, 2.0f * s, angle), polar (c, 11.5f * s, angle) }, 2.2f);
-
-    g.setColour (t.panelText);
-    g.setFont (active ? fonts::extraBold (12.5f) : fonts::semiBold (12.5f));
-    g.drawText (text, juce::Rectangle<float> (0.0f, k.getBottom() + 3.0f, (float) getWidth(), 16.0f), juce::Justification::centred, true);
+    const bool zero = juce::exactlyEqual (db, 0.0f);
+    g.setFont (active ? fonts::semiBold (12.0f) : fonts::regular (12.0f));
+    g.setColour (zero ? t.text : t.accent);
+    g.drawText (formatDb (db), juce::Rectangle<float> (k.getRight() + 6.0f, 0.0f, (float) getWidth() - k.getRight() - 6.0f, (float) getHeight()),
+                juce::Justification::centredLeft, false);
 }
 
 void TrimKnob::mouseDown (const juce::MouseEvent& e)
 {
     dragging = true;
-    dragFine = e.mods.isShiftDown();
+    rightDrag = e.mods.isPopupMenu();
+    gestureOpen = false;
+    dragFine = e.mods.isShiftDown() || rightDrag;
     dragStartDb = db;
-    dragAnchorY = ctx.theme.listView ? e.position.x : e.position.y;
-    attachment.beginGesture();
+    dragAnchorY = e.position.y;
+    if (! rightDrag)
+    {
+        attachment.beginGesture();
+        gestureOpen = true;
+    }
     repaint();
 }
 
@@ -426,37 +365,39 @@ void TrimKnob::mouseDrag (const juce::MouseEvent& e)
 {
     if (! dragging)
         return;
-    const bool fine = e.mods.isShiftDown();
-    const bool horizontal = ctx.theme.listView;
-    const float pos = horizontal ? e.position.x : e.position.y;
+    if (! gestureOpen)
+    {
+        // a right click only becomes a fine drag once the mouse really moves
+        if (std::abs (e.position.y - dragAnchorY) < ParamControl::kRightDragThreshold)
+            return;
+        attachment.beginGesture();
+        gestureOpen = true;
+    }
+    const bool fine = e.mods.isShiftDown() || rightDrag;
     if (fine != dragFine)
     {
         dragFine = fine;          // re-anchor: switching precision never jumps the value
         dragStartDb = db;
-        dragAnchorY = pos;
+        dragAnchorY = e.position.y;
     }
     const float range = param.range.end - param.range.start;
-    if (horizontal)
-    {
-        const float pixels = trackArea().getWidth() * (fine ? ParamControl::kFineFactor : 1.0f);
-        set (dragStartDb + (pos - dragAnchorY) / pixels * range, true);
-        return;
-    }
     const float pixels = ParamControl::kDragPixels * (fine ? ParamControl::kFineFactor : 1.0f);
     set (dragStartDb + (dragAnchorY - e.position.y) / pixels * range, true);
 }
 
 void TrimKnob::mouseUp (const juce::MouseEvent&)
 {
-    if (dragging)
-    {
+    if (gestureOpen)
         attachment.endGesture();
-        dragging = false;
-        repaint();
-    }
+    gestureOpen = dragging = rightDrag = false;
+    repaint();
 }
 
-void TrimKnob::mouseDoubleClick (const juce::MouseEvent&) { set (0.0f, false); }
+void TrimKnob::mouseDoubleClick (const juce::MouseEvent& e)
+{
+    if (! e.mods.isPopupMenu())
+        set (0.0f, false);
+}
 
 void TrimKnob::mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& w)
 {
@@ -471,44 +412,26 @@ ParamControl::ParamControl (UiContext& c, const ControlSpec& s)
     : ctx (c), spec (s),
       attachment (c.processor.getSlot (s.param), [this] (float v) { value = v; repaint(); }, nullptr)
 {
-    edge = knobOutline (ctx.theme.knobStyle, 22.0f, spec.param + 1);
-    edgeStyle = ctx.theme.knobStyle;
     attachment.sendInitialUpdate();
     setTitle (spec.label);
     setRepaintsOnMouseActivity (false);
-
-    juce::String tip;
-    if (auto* fx = ctx.processor.getEffectHost())
-    {
-        const auto original = fx->getParamNames()[spec.param];
-        if (original != spec.label)
-            tip << "Airwindows name: " << original << "\n";
-    }
-    tip << (spec.type == ControlType::knob ? "Drag (Shift = fine) or scroll. Double-click: default.\nDouble-click the value to type it."
-                                           : "Click or drag to choose. Double-click: default.");
-    setTooltip (tip);
 }
 
 ParamControl::~ParamControl() = default;
 
 juce::Rectangle<float> ParamControl::controlArea() const
 {
-    if (ctx.theme.listView)   // fader row: name | track | value
-        return { 244.0f, ((float) getHeight() - 20.0f) * 0.5f, 240.0f, 20.0f };
-
+    // name 16 + 6 + knob 46 + 6 + value 15
     auto b = getLocalBounds().toFloat();
-    const float total = 18.0f + 2.0f + 64.0f + 2.0f + 18.0f;
+    const float total = 16.0f + 6.0f + kKnobSize + 6.0f + 15.0f;
     const float top = b.getCentreY() - total * 0.5f;
-    return { b.getCentreX() - 32.0f, top + 20.0f, 64.0f, 64.0f };
+    return { b.getCentreX() - kKnobSize * 0.5f, top + 22.0f, kKnobSize, kKnobSize };
 }
 
 juce::Rectangle<float> ParamControl::valueArea() const
 {
-    if (ctx.theme.listView)
-        return { 492.0f, 0.0f, (float) getWidth() - 496.0f, (float) getHeight() };
-
     auto k = controlArea();
-    return { (float) getLocalBounds().getX(), k.getBottom() + 2.0f, (float) getWidth(), 18.0f };
+    return { 0.0f, k.getBottom() + 5.0f, (float) getWidth(), 16.0f };
 }
 
 int ParamControl::stepIndex (float v) const
@@ -527,8 +450,6 @@ float ParamControl::snap (float v) const
 
 juce::String ParamControl::valueText() const
 {
-    if (auto* fx = ctx.processor.getEffectHost(); fx != nullptr && ctx.theme.listView)
-        return fx->getDisplayText (spec.param, value);   // exactly as the original reports it
     if (auto* fx = ctx.processor.getEffectHost())
         return formatValue (fx->getDisplayText (spec.param, value), hover || dragging);
     return {};
@@ -538,137 +459,61 @@ void ParamControl::paint (juce::Graphics& g)
 {
     const auto& t = ctx.theme;
     const bool active = hover || dragging;
-
-    if (t.listView)
-    {
-        // ---- fader row, like a DAW's own view of a plugin without a GUI ----
-        g.setColour (t.text);
-        g.setFont (fonts::medium (13.5f));
-        g.drawText (spec.label, juce::Rectangle<float> (0.0f, 0.0f, 236.0f, (float) getHeight()), juce::Justification::centredRight, true);
-
-        const auto track = controlArea();
-        g.setColour (active ? t.sliderTrack.brighter (0.12f) : t.sliderTrack);
-        g.fillRoundedRectangle (track, juce::jmin (2.0f, t.corner));
-        g.setColour (t.sliderCentre);
-        g.fillRect (juce::Rectangle<float> (track.getCentreX() - 0.5f, track.getY(), 1.0f, track.getHeight()));
-
-        const float hx = track.getX() + 7.5f + value * (track.getWidth() - 15.0f);   // handle stays inside the track
-        auto handle = juce::Rectangle<float> (15.0f, 16.0f).withCentre ({ hx, track.getCentreY() });
-        g.setColour (t.sliderHandle);
-        g.fillRoundedRectangle (handle, 3.0f);
-        g.setColour (t.sliderHandleBorder);
-        g.drawRoundedRectangle (handle.reduced (0.5f), 3.0f, 1.0f);
-        g.setColour (t.sliderCentre);
-        g.fillRect (juce::Rectangle<float> (hx - 0.5f, handle.getY() + 4.0f, 1.0f, 8.0f));
-
-        g.setColour (t.valueText);
-        g.setFont (fonts::medium (13.5f));
-        g.drawText (valueText(), valueArea(), juce::Justification::centredLeft, true);
-        return;
-    }
-    auto k = controlArea();
-    const float s = k.getWidth() / 64.0f;
-    auto c = k.getCentre();
-    auto at = [&] (float x, float y) { return juce::Point<float> (k.getX() + x * s, k.getY() + y * s); };
+    const auto k = controlArea();
+    const auto c = k.getCentre();
 
     // name
-    g.setColour (t.text);
-    auto nameFont = fonts::semiBold (13.0f);
-    g.setFont (nameFont);
-    auto nameArea = juce::Rectangle<float> (0.0f, k.getY() - 20.0f, (float) getWidth(), 18.0f);
-    g.drawText (spec.label, nameArea, juce::Justification::centred, true);
-    if (active)
-    {
-        const float w = juce::jmin ((float) getWidth() - 8.0f, fonts::width (nameFont, spec.label));
-        g.fillRect (juce::Rectangle<float> (nameArea.getCentreX() - w * 0.5f, nameArea.getBottom() - 1.0f, w, 1.6f));
-    }
-
-    const float angle = -135.0f + 270.0f * value;
+    g.setColour (active ? t.text : t.nameText);
+    g.setFont (fonts::regular (13.0f));
+    g.drawText (spec.label, juce::Rectangle<float> (0.0f, k.getY() - 22.0f, (float) getWidth(), 16.0f), juce::Justification::centred, true);
 
     if (spec.type == ControlType::toggle)
     {
+        // a small vertical switch in the same outline style as the knobs
         const bool on = value >= 0.5f;
-        juce::Path lane;
-        lane.addRoundedRectangle (juce::Rectangle<float> (at (25, 8), at (39, 56)), 7.0f * s);
-        g.setColour (t.knobTicks.withAlpha (0.06f));
-        g.fillPath (lane);
-        g.setColour (t.knobTicks);
-        g.strokePath (lane, juce::PathStrokeType (1.6f));
-        g.drawLine ({ at (21, 10), at (24, 10) }, 1.6f);
-        g.drawLine ({ at (21, 54), at (24, 54) }, 1.6f);
-
-        const float cy = on ? 19.0f : 45.0f;
-        g.setColour (t.knobShadow);
-        g.fillEllipse (juce::Rectangle<float> (21.5f * s, 21.0f * s).withCentre (at (32, cy + 2.5f)));
-        auto cap = edge;
-        cap.applyTransform (juce::AffineTransform::scale (10.5f / 22.0f * s).translated (at (32, cy)));
-        g.setColour (t.knobFill);
-        g.fillPath (cap);
-        g.setColour (t.knobEdge);
-        g.strokePath (cap, juce::PathStrokeType (1.3f));
+        auto lane = juce::Rectangle<float> (16.0f, 38.0f).withCentre (c);
+        g.setColour (on ? t.knobPointer.withAlpha (0.18f) : t.knobFill);
+        g.fillRoundedRectangle (lane, 8.0f);
+        g.setColour (t.knobRing);
+        g.drawRoundedRectangle (lane, 8.0f, 1.6f);
+        auto cap = juce::Rectangle<float> (10.0f, 10.0f).withCentre ({ c.x, on ? lane.getY() + 9.0f : lane.getBottom() - 9.0f });
+        g.setColour (on ? t.knobPointer : t.knobRing.withMultipliedAlpha (1.6f));
+        g.fillEllipse (cap);
     }
     else
     {
         if (spec.type == ControlType::stepped)
         {
             const int n = juce::jmax (2, spec.steps);
-            g.setColour (t.knobTicks);
+            const int current = stepIndex (value);
             for (int i = 0; i < n; ++i)
             {
                 const float a = -135.0f + 270.0f * (float) i / (float) (n - 1);
+                g.setColour (i == current ? t.knobPointer : t.knobTicks);
                 if (n <= 12)
-                    g.fillEllipse (juce::Rectangle<float> (4.4f * s, 4.4f * s).withCentre (polar (c, 29.0f * s, a)));
+                    g.fillEllipse (juce::Rectangle<float> (3.4f, 3.4f).withCentre (polar (c, kKnobSize * 0.5f + 1.0f, a)));
                 else
-                    g.drawLine ({ polar (c, 26.5f * s, a), polar (c, 30.0f * s, a) }, 1.4f);
+                    g.drawLine ({ polar (c, kKnobSize * 0.5f - 1.0f, a), polar (c, kKnobSize * 0.5f + 2.0f, a) }, 1.2f);
             }
+            const float pos = (float) current / (float) (n - 1);
+            draw::knob (g, t, c, kKnobSize, pos, 1.6f, 2.4f);
         }
         else
         {
-            g.setColour (t.knobTicks);
-            g.drawLine ({ polar (c, 25.0f * s, -135.0f), polar (c, 29.0f * s, -135.0f) }, 1.8f);
-            g.drawLine ({ polar (c, 25.0f * s, 135.0f), polar (c, 29.0f * s, 135.0f) }, 1.8f);
-        }
-
-        g.setColour (t.knobShadow);
-        g.fillEllipse (juce::Rectangle<float> (44.0f * s, 44.0f * s).withCentre (c.translated (0.0f, 2.5f * s)));
-
-        if (edgeStyle != t.knobStyle)   // theme changed while open
-        {
-            edge = knobOutline (t.knobStyle, 22.0f, spec.param + 1);
-            edgeStyle = t.knobStyle;
-        }
-        auto disc = edge;
-        disc.applyTransform (juce::AffineTransform::scale (s).translated (c));
-        g.setColour (t.knobFill);
-        g.fillPath (disc);
-        g.setColour (t.knobEdge);
-        g.strokePath (disc, juce::PathStrokeType (t.knobStyle == "soft" || t.knobStyle == "round" ? 1.3f : 1.5f));
-        drawKnobEdgeDetail (g, t.knobStyle, c, 22.0f, s, spec.param + 1, t.knobEdge, t.knobFill);
-
-        g.setColour (t.knobPointer);
-        if (spec.type == ControlType::stepped)
-        {
-            const float a = -135.0f + 270.0f * (float) stepIndex (value) / (float) (juce::jmax (2, spec.steps) - 1);
-            juce::Path tri;
-            tri.addTriangle (polar (c, 20.0f * s, a), polar (c, 12.5f * s, a - 14.0f), polar (c, 12.5f * s, a + 14.0f));
-            g.fillPath (tri);
-        }
-        else
-        {
-            g.drawLine ({ polar (c, 3.0f * s, angle), polar (c, 18.0f * s, angle) }, 2.6f);
+            draw::knob (g, t, c, kKnobSize, value, 1.6f, 2.4f);
         }
     }
 
     // value
-    g.setColour (t.text);
-    g.setFont (active ? fonts::extraBold (13.0f) : fonts::semiBold (13.0f));
+    g.setColour (active ? t.text : t.value);
+    g.setFont (fonts::regular (12.0f));
     g.drawText (valueText(), valueArea(), juce::Justification::centred, true);
 }
 
 void ParamControl::resized()
 {
     if (editor != nullptr)
-        editor->setBounds (valueArea().toNearestInt().reduced (6, 0));
+        editor->setBounds (valueArea().toNearestInt().reduced (6, -2));
 }
 
 void ParamControl::mouseEnter (const juce::MouseEvent&) { hover = true; repaint(); }
@@ -683,20 +528,26 @@ void ParamControl::setFromGesture (float v)
 
 void ParamControl::mouseDown (const juce::MouseEvent& e)
 {
-    if (! controlArea().expanded (6.0f).contains (e.position))
+    if (! controlArea().expanded (8.0f).contains (e.position))
         return;
 
-    if (spec.type == ControlType::toggle)
+    rightDrag = e.mods.isPopupMenu();
+    if (spec.type == ControlType::toggle && ! rightDrag)
     {
         attachment.setValueAsCompleteGesture (value >= 0.5f ? 0.25f : 0.75f);
         return;
     }
 
     dragging = true;
-    dragFine = e.mods.isShiftDown();
+    gestureOpen = false;
+    dragFine = e.mods.isShiftDown() || rightDrag;
     dragStartValue = value;
-    dragAnchorY = ctx.theme.listView ? e.position.x : e.position.y;
-    attachment.beginGesture();
+    dragAnchorY = e.position.y;
+    if (! rightDrag)
+    {
+        attachment.beginGesture();
+        gestureOpen = true;
+    }
     repaint();
 }
 
@@ -705,33 +556,32 @@ void ParamControl::mouseDrag (const juce::MouseEvent& e)
     if (! dragging)
         return;
 
-    const bool fine = e.mods.isShiftDown();
-    const bool horizontal = ctx.theme.listView;   // faders move sideways, knobs up/down
-    const float pos = horizontal ? e.position.x : e.position.y;
+    if (! gestureOpen)
+    {
+        // Right button: only a real movement starts a (fine) drag; a plain right-click does nothing.
+        if (std::abs (e.position.y - dragAnchorY) < kRightDragThreshold)
+            return;
+        attachment.beginGesture();
+        gestureOpen = true;
+    }
+
+    const bool fine = e.mods.isShiftDown() || rightDrag;
     if (fine != dragFine)
     {
         // re-anchor so switching precision never jumps the value
         dragFine = fine;
         dragStartValue = value;
-        dragAnchorY = pos;
-    }
-
-    if (horizontal)
-    {
-        // relative drag along the track: clicking never makes the value jump
-        const float pixels = controlArea().getWidth() * (fine ? kFineFactor : 1.0f);
-        setFromGesture (juce::jlimit (0.0f, 1.0f, dragStartValue + (pos - dragAnchorY) / pixels));
-        return;
+        dragAnchorY = e.position.y;
     }
 
     const float pixels = kDragPixels * (fine ? kFineFactor : 1.0f);
     float v = dragStartValue + (dragAnchorY - e.position.y) / pixels;
 
-    if (spec.type == ControlType::stepped)
+    if (spec.type != ControlType::knob)
     {
-        // one step per 30 px
+        // one step per 30 px (fine: per 90 px)
         const int n = juce::jmax (2, spec.steps);
-        const int delta = (int) std::round ((dragAnchorY - e.position.y) / 30.0f);
+        const int delta = (int) std::round ((dragAnchorY - e.position.y) / (fine ? 90.0f : 30.0f));
         v = ((float) juce::jlimit (0, n - 1, stepIndex (dragStartValue) + delta) + 0.5f) / (float) n;
     }
 
@@ -740,21 +590,23 @@ void ParamControl::mouseDrag (const juce::MouseEvent& e)
 
 void ParamControl::mouseUp (const juce::MouseEvent&)
 {
-    if (dragging)
-    {
+    if (gestureOpen)
         attachment.endGesture();
-        dragging = false;
+    if (dragging)
         repaint();
-    }
+    gestureOpen = dragging = rightDrag = false;
 }
 
 void ParamControl::mouseDoubleClick (const juce::MouseEvent& e)
 {
+    if (e.mods.isPopupMenu())
+        return;
+
     if (valueArea().contains (e.position))
     {
         // type an exact value
         editor = std::make_unique<juce::TextEditor>();
-        editor->setFont (fonts::semiBold (13.0f));
+        editor->setFont (fonts::regular (12.0f));
         editor->setJustification (juce::Justification::centred);
         editor->setText (formatValue (valueText(), true), false);
         editor->selectAll();
@@ -765,7 +617,7 @@ void ParamControl::mouseDoubleClick (const juce::MouseEvent& e)
         return;
     }
 
-    if (controlArea().expanded (6.0f).contains (e.position) && spec.type != ControlType::toggle)
+    if (controlArea().expanded (8.0f).contains (e.position) && spec.type != ControlType::toggle)
         if (auto* fx = ctx.processor.getEffectHost())
             attachment.setValueAsCompleteGesture (snap (fx->getDefault (spec.param)));
 }

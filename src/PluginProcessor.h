@@ -62,8 +62,13 @@ public:
     juce::AudioProcessorParameter* getBypassParameter() const override { return bypassParam; }
 
     // ---- Daylight --------------------------------------------------------------------------
-    /** Chooses the effect. Only possible once per instance (message thread). */
+    /** Chooses the effect of a new instance (message thread). Fails when one is already chosen. */
     bool selectEffect (const std::string& effectId);
+
+    /** Replaces the current effect with another one (message thread): the new effect starts at its
+        defaults, A/B and the preset name are cleared, trims and bypass stay. Audio never runs a block
+        with the old effect's values on the new effect. Same as selectEffect when none is chosen. */
+    bool changeEffect (const std::string& effectId);
 
     bool hasEffect() const noexcept { return effectHost != nullptr; }
     EffectHost* getEffectHost() const noexcept { return effectHost.get(); }
@@ -108,7 +113,9 @@ private:
 
     void setSlotNamesFromEffect();
     void presetNameChanged();
-    std::vector<float> captureEffectValues() const;
+    std::vector<float> captureEffectValues (const EffectHost*) const;
+    std::shared_ptr<EffectHost> makeHost (const std::string& effectId) const;
+    void installHost (std::shared_ptr<EffectHost> host);
     void applyEffectValues (const std::vector<float>& values);
 
     std::array<SlotParameter*, (size_t) kNumSlots> slots {};
@@ -116,8 +123,13 @@ private:
     juce::AudioParameterFloat* outTrimParam = nullptr;
     juce::AudioParameterBool* bypassParam = nullptr;
 
-    std::unique_ptr<EffectHost> effectHost;          // owned, created on the message thread, never replaced
-    std::atomic<EffectHost*> activeHost { nullptr };  // what the audio thread uses
+    // The effect is created and replaced on the message thread. Other threads that need it longer
+    // (getStateInformation) take a copy of the shared_ptr under stateLock, so a replaced effect is only
+    // freed when nobody uses it any more - never on the audio thread.
+    std::shared_ptr<EffectHost> effectHost;
+    std::atomic<EffectHost*> activeHost { nullptr };  // what the audio thread uses (swapped under the callback lock)
+    std::atomic<bool> paramsReady { true };           // false while a changed effect's defaults are being set
+    std::atomic<double> tailSeconds { 0.0 };
 
     juce::String unknownEffectId;
     juce::String unknownStateXml;                     // kept verbatim so saving never loses it

@@ -1,7 +1,7 @@
 // Daylight_aw automatic tests.
 //
 //   DaylightTests                    run all tests (exit code 0 = everything passed)
-//   DaylightTests --snapshots <dir>  also render every effect's GUI in both themes to PNG files
+//   DaylightTests --snapshots <dir>  also render every effect's GUI (Default theme) and the panels to PNG files
 //
 // The most important test is the null test: every effect run through Daylight_aw must give
 // bit-identical output to the original Airwindows code run directly.
@@ -13,7 +13,6 @@
 #include <atomic>
 
 #include "gui/PluginEditor.h"
-#include "gui/UserLayouts.h"
 
 #include "PluginProcessor.h"
 #include "gui/Layout.h"
@@ -383,68 +382,291 @@ void testPresets()
     root.deleteRecursively();
 }
 
-void testOriginalTheme()
+void testThemes()
 {
-    std::cout << "Original theme + list view ..." << std::endl;
-    const auto t = Theme::builtInOriginal();
-    check (t.listView && t.systemFont && ! t.paper.isValid() && ! t.figure.isValid() && t.warnings.isEmpty(),
-           "Original theme: list view, system font, no images, no warnings");
-    check (! Theme::builtInLight().listView && ! Theme::builtInDark().listView, "Light/Dark keep the designed view");
-    check (themeIdFromString (toString (ThemeId::original)) == ThemeId::original, "theme id round trip");
-    for (auto id : { ThemeId::def, ThemeId::light, ThemeId::dark, ThemeId::original, ThemeId::user })
-        check (themeIdFromString (toString (id)) == id, "theme id round trip: " + toString (id));
-    check (themeIdFromString ("") == ThemeId::def && themeIdFromString ("nonsense") == ThemeId::def,
-           "missing or unknown theme setting falls back to Default");
-
+    std::cout << "Themes ..." << std::endl;
     const auto d = Theme::builtInDefault();
-    check (d.warnings.isEmpty() && d.name == "Default" && d.knobStyle == "round" && ! d.listView
-           && ! d.paper.isValid() && ! d.figure.isValid(), "Default theme: round knobs, designed view, no images, no warnings");
-    check (Theme::builtInLight().knobStyle == "grain" && Theme::builtInDark().knobStyle == "grain",
-           "Light/Dark keep their knob edge");
-    check (Theme::fromJson ("{\"tokens\":{\"knob.style\":\"round\"}}", Theme::builtInLight()).warnings.isEmpty(),
-           "knob.style round is accepted in user themes");
+    check (d.warnings.isEmpty() && d.name == "Default" && d.knobStyle == "ring", "Default theme loads without warnings, ring knobs");
+    check (d.background == juce::Colour (0xff07080b) && d.knobPointer == juce::Colour (0xffc657ec)
+           && d.groupTitle == juce::Colour (0xff2fc4a5) && d.halo1.opacity > 0.0f && d.halo2.opacity > 0.0f,
+           "Default theme = the deep-space look (background, violet pointer, teal titles, two halos)");
+    check (d.minimumContrast() >= 4.5f, "Default theme text contrast >= 4.5:1");
 
-    for (auto& e : getAllEffects())
-    {
-        std::vector<ParamFacts> facts;
-        auto p = makeProcessor();
-        p->selectEffect (e.id);
-        auto* fx = p->getEffectHost();
-        for (int i = 0; i < fx->getNumParams(); ++i)
-            facts.push_back ({ fx->getParamNames()[i], 0 });
-        const auto l = buildListLayout (facts);
-        bool ordered = true;
-        int k = 0;
-        for (auto& page : l.pages)
-        {
-            ordered = ordered && (int) page.rows.size() <= kListRowsPerPage;
-            for (auto& row : page.rows)
-                ordered = ordered && row.groups[0].controls[0].param == k++
-                          && row.groups[0].controls[0].label == facts[(size_t) (k - 1)].name;
-        }
-        check (ordered && k == fx->getNumParams(), juce::String ("list view: every parameter in original order: ") + e.id);
-        check (l.small == (fx->getNumParams() <= 5), juce::String ("list view window size: ") + e.id);
-    }
+    for (auto old : { "light", "dark", "original", "", "nonsense", "default" })
+        check (themeIdFromString (old) == ThemeId::def, juce::String ("old/unknown theme setting -> Default: ") + old);
+    check (themeIdFromString ("user") == ThemeId::user && themeIdFromString (toString (ThemeId::user)) == ThemeId::user, "User theme id round trip");
+
+    auto broken = Theme::fromJson ("{ broken", d);
+    check (! broken.warnings.isEmpty() && broken.background == d.background, "broken theme.json -> Default values + warning");
+    auto partly = Theme::fromJson (R"({"tokens":{"background.color":"#102030","knob.pointer":"red","knob.style":"wobbly","halo1.opacity":5}})", d);
+    check (partly.background == juce::Colour (0xff102030) && partly.knobPointer == d.knobPointer && partly.knobStyle == "ring"
+           && juce::exactlyEqual (partly.halo1.opacity, 1.0f) && partly.warnings.size() == 2,
+           "theme tokens: valid ones used, invalid ones fall back with a warning, numbers clamped");
+
+    // User theme folder: a 1.0 theme is moved aside, never deleted; a 1.1 theme is left alone.
+    auto folder = getUserThemeFolder();
+    folder.deleteRecursively();
+    folder.createDirectory();
+    folder.getChildFile ("theme.json").replaceWithText (R"({"formatVersion": 1, "name": "User", "tokens": {"paper.color": "#E2DFD7"}})");
+    folder.getChildFile ("paper.png").replaceWithText ("png");
+    check (ensureUserThemeExists(), "user theme: migrate 1.0 theme");
+    const auto old = folder.getChildFile ("old_1.0");
+    check (old.getChildFile ("theme.json").loadFileAsString().contains ("paper.color") && old.getChildFile ("paper.png").existsAsFile(),
+           "user theme: the 1.0 files are kept in old_1.0");
+    const auto fresh = juce::JSON::parse (folder.getChildFile ("theme.json").loadFileAsString());
+    check ((int) fresh.getProperty ("formatVersion", 0) == 2 && fresh.getProperty ("name", {}).toString() == "User"
+           && folder.getChildFile (kThemeGuideFileName).existsAsFile(), "user theme: new copy of Default + guide");
+    auto user = Theme::fromFolder (folder, d);
+    check (user.warnings.isEmpty() && user.background == d.background, "user theme copy loads cleanly and looks like Default");
+
+    folder.getChildFile ("theme.json").replaceWithText (R"({"formatVersion": 2, "tokens": {"background.color": "#000000"}})");
+    check (ensureUserThemeExists() && ! folder.getChildFile ("old_1.0 (2)").exists()
+           && folder.getChildFile ("theme.json").loadFileAsString().contains ("#000000"), "user theme: a 1.1 theme is never replaced");
+    folder.getChildFile ("theme.json").replaceWithText ("{ broken");
+    check (ensureUserThemeExists() && folder.getChildFile ("theme.json").loadFileAsString() == "{ broken",
+           "user theme: a broken file is left for the user to fix");
+    folder.deleteRecursively();
 }
 
-void testNewAndLastAdded()
+void testBrowserData()
 {
-    std::cout << "New + Last added folders ..." << std::endl;
+    std::cout << "Effect browser: New, Last 6 months, families ..." << std::endl;
     check (compareVersions ("0.1.0", "0.1.0") == 0 && compareVersions ("0.2.0", "0.10.0") < 0
            && compareVersions ("1.0.0", "0.9.9") > 0, "version compare");
-    int n = 0, last = 0;
+    int newCount = 0, recent = 0, latest = 0;
+    juce::String newest;
     for (auto& e : getAllEffects())
     {
         check (compareVersions (e.since, kVersion) <= 0, juce::String ("'since' not newer than this build: ") + e.id);
-        if (e.isNew) ++n;
-        if (e.isLastAdded) ++last;
+        if (e.isNew) ++newCount;
+        if (e.isRecent) ++recent;
+        if (e.isLatest) ++latest;
+        if (juce::String (e.released) > newest) newest = e.released;
     }
-    check (n > 0 && n < 60, "New folder holds the recent releases only");
-    check (findEffect ("ultralight3") != nullptr && findEffect ("ultralight3")->isNew, "newest release is in New");
-    check (findEffect ("channelx")->isNew, "release from 11 weeks before 1.0.0 is in New");
-    check (! findEffect ("bezeq4")->isNew, "release from 5 months before 1.0.0 is not in New");
-    check (! findEffect ("purestgain")->isNew, "old classic is not in New");
-    check (last == 0, "Last added is empty in the first release");
+    check (newCount == 2 && findEffect ("punchydeluxe2")->isNew && findEffect ("pointydeluxe2")->isNew,
+           "New = the 2 effects added in 1.1.0 (" + juce::String (newCount) + ")");
+    check (recent == 24, "Last 6 months: 24 effects (" + juce::String (recent) + ")");
+    check (newest == "2026-11-14", "newest release date in the manifest");
+    check (findEffect ("punchydeluxe2")->isLatest && ! findEffect ("punchydeluxe")->isLatest
+           && findEffect ("pointydeluxe2")->isLatest && ! findEffect ("pointydeluxe")->isLatest,
+           "PunchyDeluxe2 / PointyDeluxe2 are the latest of their families");
+    check (findEffect ("ultralight3")->isRecent && findEffect ("bezeq4")->isRecent && ! findEffect ("purestgain")->isRecent,
+           "Last 6 months reaches 6 months back from the newest effect");
+
+    check (latest == 425, "425 families, one latest version each (" + juce::String (latest) + ")");
+    check (findEffect ("totape9")->isLatest && ! findEffect ("totape8")->isLatest && ! findEffect ("totape5")->isLatest,
+           "ToTape9 is the latest ToTape");
+    check (juce::String (findEffect ("totape8")->family) == "ToTape", "ToTape8 belongs to the ToTape family");
+    check (findEffect ("desk4")->isLatest && findEffect ("desk")->isLatest, "Desk4 is its own effect, not Desk version 4");
+    check (findEffect ("kplate140")->isLatest && findEffect ("kplate240")->isLatest, "kPlate140 and kPlate240 are two effects");
+    check (findEffect ("channel9")->isLatest && ! findEffect ("channel4")->isLatest, "Channel9 is the latest Channel");
+    check (findEffect ("consolexchannel")->isLatest && findEffect ("consolex2channel")->isLatest,
+           "numbers inside a name don't make versions (ConsoleXChannel / ConsoleX2Channel)");
+}
+
+void testSettingsAndCollections()
+{
+    std::cout << "Settings, collections, Latest versions only ..." << std::endl;
+    auto file = getUserDataFolder().getChildFile ("settings.json");
+    file.getParentDirectory().createDirectory();
+
+    // an old settings file (1.0): Light theme, tooltips on, an older version as favourite
+    file.replaceWithText (R"({"formatVersion":1,"theme":"light","zoom":125,"tooltips":true,"favourites":["totape8","nonexistent"],"recent":["galactic3"]})");
+    {
+        GlobalSettings s;
+        check (s.getTheme() == ThemeId::def && s.getZoom() == 125 && s.getLatestOnly(), "1.0 settings: Light -> Default, zoom kept, Latest view on");
+        check (s.getFavourites().contains ("totape8") && s.getCollections().empty(), "1.0 settings: favourites kept, no collections");
+
+        const auto* t8 = findEffect ("totape8");
+        const auto* t9 = findEffect ("totape9");
+        check (s.isListed (*t9) && s.isListed (*t8), "Latest view: a favourited older version stays listed");
+        s.toggleFavourite ("totape8");
+        check (! s.isListed (*t8), "Latest view: removed from favourites -> older version hidden");
+
+        const int clip = s.addCollection ("Clippers");
+        const int bus = s.addCollection ("Mix bus");
+        const int dup = s.addCollection ("clippers");
+        check (s.getCollections().size() == 3 && s.getCollections()[(size_t) dup].name == "clippers 2", "collection names are made unique");
+        s.toggleInCollection (clip, "totape8");
+        s.toggleInCollection (bus, "totape8");
+        s.toggleInCollection (bus, "galactic3");
+        check (s.isInCollection (clip, "totape8") && s.isInCollection (bus, "totape8"), "one effect can be in several collections");
+        check (s.isListed (*t8), "Latest view: an older version in a collection stays listed");
+        s.renameCollection (bus, "Bus");
+        s.moveCollection (bus, -1);
+        check (s.getCollections()[0].name == "Bus" && s.getCollections()[1].name == "Clippers", "rename + move collection");
+        s.removeCollection (s.findCollection ("Clippers"));
+        check (s.findCollection ("Clippers") < 0 && s.isInCollection (s.findCollection ("Bus"), "totape8"),
+               "deleting a collection leaves the effects in other collections");
+        s.toggleInCollection (s.findCollection ("Bus"), "totape8");
+        check (! s.isListed (*t8), "Latest view: in no favourite and no collection -> hidden again");
+        s.setLatestOnly (false);
+        check (s.isListed (*t8), "All versions view lists everything");
+        s.toggleFavourite ("galactic3");
+    }
+    {
+        GlobalSettings s;   // read back from the file
+        check (! s.getLatestOnly() && s.findCollection ("Bus") >= 0 && s.isInCollection (s.findCollection ("Bus"), "galactic3")
+               && s.isFavourite ("galactic3") && s.getRecent().contains ("galactic3"), "settings + collections saved and read back");
+        check (! file.loadFileAsString().contains ("tooltips"), "the old tooltips setting is gone from the file");
+    }
+    file.replaceWithText (R"({"collections":[{"name":"A","effects":["totape9",3,null]},{"name":"a"},{"name":""}],"latestOnly":"yes"})");
+    {
+        GlobalSettings s;
+        check (s.getCollections().size() == 1 && s.getCollections()[0].ids.size() == 1, "odd collections data is ignored safely");
+    }
+    file.deleteFile();
+}
+
+void testBrowserPanel()
+{
+    std::cout << "Effect browser panel ..." << std::endl;
+    getUserDataFolder().getChildFile ("settings.json").deleteFile();
+    juce::SharedResourcePointer<GlobalSettings> settings;
+    auto p = makeProcessor();
+    UiContext ctx { *p, *settings, Theme::builtInDefault() };
+    SelectorPanel panel (ctx, [] (const EffectInfo&) {});
+    panel.setSize (676, 495);
+
+    auto ids = [&]
+    {
+        juce::StringArray a;
+        for (auto* e : panel.getItems()) a.add (e->id);
+        return a;
+    };
+
+    check (panel.getFolderKeys().contains ("New") && panel.getFolderKeys().contains ("Last6"), "New and Last 6 months shown");
+    panel.showFolder ("New");
+    check (panel.getItems().size() == 2, "New lists the 2 added effects");
+    panel.showFolder ("Last6");
+    bool sorted = true;
+    for (size_t i = 1; i < panel.getItems().size(); ++i)
+        sorted = sorted && juce::String (panel.getItems()[i - 1]->released) >= juce::String (panel.getItems()[i]->released);
+    size_t expected = 0;
+    for (auto& e : getAllEffects())
+        if (e.isRecent && settings->isListed (e)) ++expected;
+    check (panel.getItems().size() == expected && expected < 24 && sorted,
+           "Last 6 months: newest first, older versions hidden in the Latest view (" + juce::String ((int) expected) + ")");
+    settings->setLatestOnly (false);
+    panel.refresh();
+    check (panel.getItems().size() == 24, "Last 6 months, all versions: 24 effects");
+
+    settings->setLatestOnly (true);
+    panel.showFolder ("Tape");
+    check (ids().contains ("totape9") && ! ids().contains ("totape8"), "Latest view: Tape folder shows ToTape9, not ToTape8");
+    settings->toggleFavourite ("totape8");
+    panel.refresh();
+    check (ids().contains ("totape8"), "Latest view: a favourited ToTape8 shows in its category");
+    panel.showFolder ("Favourites");
+    check (ids().contains ("totape8"), "Favourites always show what is in them");
+    settings->toggleFavourite ("totape8");
+    panel.showFolder ("Tape");
+    check (! ids().contains ("totape8"), "Latest view: ToTape8 hidden again once it is no favourite");
+    settings->setLatestOnly (false);
+    panel.refresh();
+    check (ids().contains ("totape8") && ids().contains ("totape5"), "All versions: every ToTape");
+
+    const int c = settings->addCollection ("Clippers");
+    settings->toggleInCollection (c, "adclip8");
+    settings->toggleInCollection (c, "nonexistent");
+    panel.refresh();
+    check (panel.getFolderKeys().contains ("col:Clippers"), "a collection appears under Favourites");
+    panel.showFolder ("col:Clippers");
+    check (ids() == juce::StringArray ("adclip8"), "collection lists its effects; unknown ids are skipped");
+    settings->removeCollection (c);
+    panel.refresh();
+    check (! panel.getFolderKeys().contains ("col:Clippers"), "a deleted collection disappears");
+    settings->setLatestOnly (true);
+    getUserDataFolder().getChildFile ("settings.json").deleteFile();
+}
+
+void testChangeEffect()
+{
+    std::cout << "Change effect ..." << std::endl;
+    auto p = makeProcessor();
+    check (p->selectEffect ("totape9"), "first effect chosen");
+    check (! p->selectEffect ("galactic3"), "selectEffect never replaces a chosen effect");
+
+    juce::AudioBuffer<float> warm (2, 4800);
+    fillNoise (warm, 1);
+    runProcessor (*p, warm, 512);
+    p->getSlot (0).setValueNotifyingHost (0.9f);
+    p->switchAB (1);
+
+    std::srand (1234);   // the original effects seed their dither noise with rand(): same seed for both instances
+    check (p->changeEffect ("galactic3"), "change ToTape9 -> Galactic3");
+    auto* fx = p->getEffectHost();
+    check (juce::String (fx->getInfo().id) == "galactic3" && p->getActiveAB() == 0 && p->getPresetName().isEmpty(),
+           "after a change: new effect, A/B and preset name reset");
+    check (p->getSlotName (0) == fx->getParamNames()[0], "the host sees the new parameter names");
+    bool defaults = true;
+    for (int i = 0; i < fx->getNumParams(); ++i)
+        defaults = defaults && juce::exactlyEqual (p->getSlot (i).get(), fx->getDefault (i));
+    check (defaults, "the new effect starts at its own defaults");
+
+    auto fresh = makeProcessor();
+    std::srand (1234);
+    fresh->selectEffect ("galactic3");
+    juce::AudioBuffer<float> a (2, 24000), b (2, 24000);
+    fillNoise (a, 7);
+    b.makeCopyOf (a);
+    std::srand (777);
+    runProcessor (*p, a, 512);
+    std::srand (777);
+    runProcessor (*fresh, b, 512);
+    check (maxDiff (a, b, 2) == 0.0, "after a change the new effect is bit-identical to a fresh instance");
+    check (p->getTailLengthSeconds() > 0.0 && juce::exactlyEqual (p->getTailLengthSeconds(), fresh->getTailLengthSeconds()),
+           "the tail reported to the DAW follows the new effect");
+
+    juce::MemoryBlock saved;
+    p->getStateInformation (saved);
+    auto q = makeProcessor();
+    q->setStateInformation (saved.getData(), (int) saved.getSize());
+    check (q->hasEffect() && juce::String (q->getEffectHost()->getInfo().id) == "galactic3", "a changed effect is saved with the session");
+
+    // A session / undo state of another effect, loaded into an instance: it switches to that effect.
+    auto r = makeProcessor();
+    r->selectEffect ("totape9");
+    r->getSlot (1).setValueNotifyingHost (0.25f);
+    juce::MemoryBlock other;
+    r->getStateInformation (other);
+    p->setStateInformation (other.getData(), (int) other.getSize());
+    check (juce::String (p->getEffectHost()->getInfo().id) == "totape9" && juce::exactlyEqual (p->getSlot (1).get(), 0.25f),
+           "loading a ToTape9 state into a Galactic3 instance restores ToTape9 with its values (DAW undo)");
+    check (! p->changeEffect ("nonexistent") && juce::String (p->getEffectHost()->getInfo().id) == "totape9",
+           "an unknown id changes nothing");
+
+    // Changing while the audio thread runs (blocks under the callback lock, like a DAW) and the host saves.
+    std::atomic<bool> stop { false }, finite { true };
+    std::atomic<int> blocks { 0 };
+    std::thread audio ([&]
+    {
+        juce::AudioBuffer<float> buf (2, 256);
+        juce::MidiBuffer midi;
+        int seed = 0;
+        while (! stop)
+        {
+            fillNoise (buf, ++seed);
+            {
+                const juce::ScopedLock sl (p->getCallbackLock());
+                p->processBlock (buf, midi);
+            }
+            if (! allFinite (buf)) finite = false;
+            ++blocks;
+        }
+    });
+    const char* ids[] = { "galactic3", "totape9", "kcathedral5", "pop3", "debess", "punchydeluxe2" };
+    for (int i = 0; i < 30; ++i)
+    {
+        p->changeEffect (ids[i % 6]);
+        juce::MemoryBlock mb;
+        p->getStateInformation (mb);
+        std::this_thread::sleep_for (std::chrono::milliseconds (3));
+    }
+    stop = true;
+    audio.join();
+    check (finite && blocks > 0 && juce::String (p->getEffectHost()->getInfo().id) == "punchydeluxe2",
+           "30 effect changes while audio runs: no crash, no NaN/inf (" + juce::String (blocks.load()) + " blocks)");
 }
 
 void testEffectDocs()
@@ -655,76 +877,10 @@ void testStateExtras()
 }
 
 
-// ---------------------------------------------------------------------------------------------
-void testUserLayouts()
-{
-    std::cout << "User layouts ..." << std::endl;
-    juce::TemporaryFile tempDir;
-    userlayouts::setFolderForTesting (tempDir.getFile());
-
-    auto sameControls = [] (const EffectLayout& a, const EffectLayout& b)
-    {
-        std::vector<std::tuple<int, int, int, juce::String, juce::String>> x, y;
-        auto collect = [] (const EffectLayout& l, auto& out)
-        {
-            for (auto& p : l.pages) for (auto& r : p.rows) for (auto& g : r.groups) for (auto& c : g.controls)
-                out.emplace_back (c.param, (int) c.type, c.steps, c.label, g.title);
-        };
-        collect (a, x); collect (b, y);
-        return x == y && a.pages.size() == b.pages.size() && a.small == b.small;
-    };
-
-    for (auto& e : getAllEffects())
-    {
-        auto p = makeProcessor();
-        p->selectEffect (e.id);
-        auto* fx = p->getEffectHost();
-        if (fx->getNumParams() == 0)
-            continue;
-        std::vector<ParamFacts> facts;
-        for (int i = 0; i < fx->getNumParams(); ++i)
-            facts.push_back ({ fx->getParamNames()[i], fx->detectSteps (i) });
-
-        // "Edit layout" writes a copy of what is on screen: reading it back gives the same layout
-        check (userlayouts::create (*fx), juce::String ("user layout created: ") + e.id);
-        bool isUser = false;
-        const auto json = userlayouts::effectiveJson (e.id, isUser);
-        const auto original = buildLayout (facts, userlayouts::builtInJson (e.id));
-        const auto copy = buildLayout (facts, json);
-        check (isUser && copy.warnings.isEmpty() && sameControls (original, copy),
-               juce::String ("user layout copy = built-in layout: ") + e.id);
-    }
-
-    // a user's edit wins; broken files never lose parameters
-    auto p = makeProcessor();
-    p->selectEffect ("totape9");
-    auto* fx = p->getEffectHost();
-    std::vector<ParamFacts> facts;
-    for (int i = 0; i < fx->getNumParams(); ++i)
-        facts.push_back ({ fx->getParamNames()[i], 0 });
-
-    userlayouts::fileFor ("totape9").replaceWithText (R"({"groups":[{"title":"Mine","controls":[{"param":"Output","label":"Loud"},"Nope"]}]})");
-    bool isUser = false;
-    auto l = buildLayout (facts, userlayouts::effectiveJson ("totape9", isUser));
-    check (isUser && l.pages[0].rows[0].groups[0].controls[0].label == "Loud", "user layout used");
-    check (l.numControls() == fx->getNumParams() && l.warnings.size() >= 2, "unknown name + missing parameters repaired");
-
-    userlayouts::fileFor ("totape9").replaceWithText ("{ broken");
-    l = buildLayout (facts, userlayouts::effectiveJson ("totape9", isUser));
-    check (l.numControls() == fx->getNumParams() && ! l.warnings.isEmpty(), "broken user layout falls back safely");
-
-    check (userlayouts::remove ("totape9") && ! userlayouts::fileFor ("totape9").exists(), "remove user layout");
-    userlayouts::effectiveJson ("totape9", isUser);
-    check (! isUser, "built-in layout after remove");
-
-    userlayouts::setFolderForTesting ({});
-    tempDir.getFile().deleteRecursively();
-}
-
 void testLayouts()
 {
     std::cout << "Layouts ..." << std::endl;
-    int small = 0, large = 0, tabbed = 0;
+    int sizes[4] = {}, tabbed = 0;
     for (auto& e : getAllEffects())
     {
         EffectHost host (e, 48000.0);
@@ -751,10 +907,23 @@ void testLayouts()
             }
         }
 
-        if (layout.pages.size() > 1) ++tabbed;
-        if (layout.small) ++small; else ++large;
+        // window size follows the packed rows: 1 Small, 2 Medium, 3 Large; pages only in Large
+        const int expectRows = layout.pages.size() > 1 ? 3 : layout.pages.empty() ? 1 : juce::jmax (1, (int) layout.pages[0].rows.size());
+        check (layout.rows == expectRows, juce::String ("window rows = packed rows: ") + e.id);
+        if (layout.hasTabs()) ++tabbed;
+        ++sizes[juce::jlimit (1, 3, layout.rows)];
     }
-    std::cout << "  small " << small << ", large " << large << ", with tabs " << tabbed << std::endl;
+    std::cout << "  small " << sizes[1] << ", medium " << sizes[2] << ", large " << sizes[3] << ", with tabs " << tabbed << std::endl;
+    check (sizes[2] > 0, "some effects use the Medium window");
+
+    {
+        EffectHost host (*findEffect ("totape9"), 48000.0);
+        std::vector<ParamFacts> facts;
+        for (int i = 0; i < host.getNumParams(); ++i)
+            facts.push_back ({ host.getParamNames()[i], host.detectSteps (i) });
+        const auto l = buildLayout (facts, builtInLayoutJson ("totape9"));
+        check (l.rows == 2 && windowHeightForRows (l.rows) == kMediumHeight, "ToTape9 opens Medium (2 rows)");
+    }
 
     // Stepped / switch detection on known effects
     for (auto [id, index, steps] : { std::tuple { "golem", 2, 6 }, std::tuple { "adclip9", 4, 3 },
@@ -773,11 +942,11 @@ void renderSnapshots (const juce::File& dir)
     juce::SharedResourcePointer<GlobalSettings> settings;
     const auto originalTheme = settings->getTheme();
 
-    // Every effect in the Default theme; a sample in the others (sizes and positions are identical in
-    // every designed theme, and the list view is checked for every effect by testOriginalTheme).
+    // Every effect in the Default theme; a sample in the User theme (a copy of Default: proves it loads).
     const juce::StringArray sample { "totape9", "stonefirecomp", "debess", "cliponly3", "golem", "monitoring3",
                                      "pauldither", "kcathedral5", "consolexchannel", "galactic3" };
-    for (auto theme : { ThemeId::def, ThemeId::light, ThemeId::dark, ThemeId::original })
+    ensureUserThemeExists();
+    for (auto theme : { ThemeId::def, ThemeId::user })
     {
         settings->setTheme (theme);
 
@@ -788,6 +957,7 @@ void renderSnapshots (const juce::File& dir)
             {
                 if (panel == 1) d->showSettingsPanel();
                 if (panel == 2) d->showInfoPanel();
+                if (panel == 3) d->showAbout();
             }
             auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 1.0f);
             juce::PNGImageFormat png;
@@ -829,6 +999,10 @@ void renderSnapshots (const juce::File& dir)
             p->getSlot (0).setValueNotifyingHost (0.8f);
             shoot (*p, "zz_totape9_settings", 1);
             shoot (*p, "zz_totape9_info", 2);
+            shoot (*p, "zz_totape9_about", 3);
+            p->getInputTrim().setValueNotifyingHost (p->getInputTrim().convertTo0to1 (-2.0f));
+            p->getBypass().setValueNotifyingHost (1.0f);
+            shoot (*p, "zz_totape9_trim_bypass");
 
             auto small = makeProcessor();
             small->selectEffect ("debess");
@@ -846,6 +1020,13 @@ void renderSnapshots (const juce::File& dir)
 int main (int argc, char* argv[])
 {
     juce::ScopedJuceInitialiser_GUI juceInit;
+
+    // Never touch the real Documents/big_tyme_designs folder: settings, themes and favourites
+    // written by the tests go to a temporary folder.
+    juce::TemporaryFile userFolder;
+    userFolder.getFile().createDirectory();
+    setUserDataFolderForTesting (userFolder.getFile());
+    struct CleanUp { juce::File f; ~CleanUp() { f.deleteRecursively(); } } cleanUp { userFolder.getFile() };
 
     if (argc > 1 && juce::String (argv[1]) == "--list-steps")
     {
@@ -866,10 +1047,12 @@ int main (int argc, char* argv[])
     testLayouts();
     testPresets();
     testEffectDocs();
-    testNewAndLastAdded();
-    testOriginalTheme();
+    testBrowserData();
+    testThemes();
+    testSettingsAndCollections();
+    testBrowserPanel();
+    testChangeEffect();
     testStateExtras();
-    testUserLayouts();
     testThreadedStress();
     testOldSessions (juce::File (DAYLIGHT_FIXTURES_DIR));
     testAllEffects();
@@ -932,7 +1115,7 @@ int main (int argc, char* argv[])
             dir.createDirectory();
             juce::SharedResourcePointer<GlobalSettings> settings;
             const auto original = settings->getTheme();
-            for (auto theme : { ThemeId::def, ThemeId::light, ThemeId::dark, ThemeId::original })
+            for (auto theme : { ThemeId::def })
             {
                 settings->setTheme (theme);
                 for (auto id : { "totape9", "golem", "monitoring3", "pauldither", "debess" })
@@ -950,35 +1133,6 @@ int main (int argc, char* argv[])
                     juce::PNGImageFormat().writeImageToStream (img, os);
                 }
             }
-            settings->setTheme (original);
-        }
-
-    for (int i = 1; i + 1 < argc; ++i)
-        if (juce::String (argv[i]) == "--knob-styles")
-        {
-            // design preview: the same effects with every knob style, both themes, 2x resolution
-            const auto dir = juce::File::getCurrentWorkingDirectory().getChildFile (argv[i + 1]);
-            dir.createDirectory();
-            juce::SharedResourcePointer<GlobalSettings> settings;
-            const auto original = settings->getTheme();
-            for (auto style : { "round", "rough", "soft", "grain" })
-                for (auto theme : { ThemeId::light, ThemeId::dark })
-                {
-                    Theme::knobStyleOverrideForTesting() = style;
-                    settings->setTheme (theme);
-                    for (auto id : { "totape9", "golem" })
-                    {
-                        auto p = makeProcessor();
-                        p->selectEffect (id);
-                        std::unique_ptr<juce::AudioProcessorEditor> ed (p->createEditor());
-                        auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 2.0f);
-                        auto f = dir.getChildFile (juce::String (style) + "_" + id + "_" + toString (theme) + ".png");
-                        f.deleteFile();
-                        juce::FileOutputStream os (f);
-                        juce::PNGImageFormat().writeImageToStream (img, os);
-                    }
-                }
-            Theme::knobStyleOverrideForTesting() = {};
             settings->setTheme (original);
         }
 

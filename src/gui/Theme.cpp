@@ -14,14 +14,6 @@ juce::String resourceText (const char* name)
     return {};
 }
 
-juce::Image resourceImage (const char* name)
-{
-    int size = 0;
-    if (auto* data = BinaryData::getNamedResource (name, size))
-        return juce::ImageCache::getFromMemory (data, size);
-    return {};
-}
-
 bool parseColour (const juce::var& v, juce::Colour& out)
 {
     if (! v.isString())
@@ -68,6 +60,12 @@ juce::Colour over (juce::Colour top, juce::Colour bottom)
 {
     return bottom.interpolatedWith (top.withAlpha (1.0f), top.getFloatAlpha());
 }
+
+juce::File& testUserFolder()
+{
+    static juce::File f;
+    return f;
+}
 } // namespace
 
 // ---------------------------------------------------------------------------------------------
@@ -79,7 +77,7 @@ Theme Theme::fromJson (const juce::String& jsonText, const Theme& base)
     auto root = juce::JSON::parse (jsonText);
     if (! root.isObject())
     {
-        t.warnings.add ("theme.json could not be read - using defaults.");
+        t.warnings.add ("theme.json could not be read - using the Default values.");
         return t;
     }
 
@@ -89,7 +87,7 @@ Theme Theme::fromJson (const juce::String& jsonText, const Theme& base)
     auto tokens = root.getProperty ("tokens", {});
     if (! tokens.isObject())
     {
-        t.warnings.add ("theme.json has no \"tokens\" section - using defaults.");
+        t.warnings.add ("theme.json has no \"tokens\" section - using the Default values.");
         return t;
     }
 
@@ -107,152 +105,77 @@ Theme Theme::fromJson (const juce::String& jsonText, const Theme& base)
         if (! parseNumber (v, target, lo, hi))
             t.warnings.add (juce::String (key) + ": invalid number");
     };
+    auto halo = [&] (const juce::String& prefix, Halo& h)
+    {
+        colour ((prefix + ".color").toRawUTF8(), h.colour);
+        number ((prefix + ".opacity").toRawUTF8(), h.opacity, 0.0f, 1.0f);
+        number ((prefix + ".x").toRawUTF8(), h.x, -0.5f, 1.5f);
+        number ((prefix + ".y").toRawUTF8(), h.y, -0.5f, 1.5f);
+        number ((prefix + ".radius").toRawUTF8(), h.radius, 0.0f, 2.0f);
+    };
 
-    colour ("paper.color", t.paperColor);
-    number ("paper.textureStrength", t.textureStrength, 0.0f, 1.0f);
-    colour ("horizon.color", t.horizonColor);
-    number ("horizon.opacity", t.horizonOpacity, 0.0f, 1.0f);
+    colour ("background.color", t.background);
+    halo ("halo1", t.halo1);
+    halo ("halo2", t.halo2);
+    colour ("topBar.line", t.topBarLine);
 
     colour ("ink.text", t.text);
     colour ("ink.muted", t.muted);
+    colour ("ink.name", t.nameText);
+    colour ("ink.value", t.value);
     colour ("ink.groupTitle", t.groupTitle);
+    colour ("ink.accent", t.accent);
 
-    colour ("frame.color", t.frameColor);
-    number ("frame.opacity", t.frameOpacity, 0.0f, 1.0f);
-    colour ("frame.glowColor", t.frameGlowColor);
-    number ("frame.glowRadius", t.frameGlowRadius, 0.0f, 40.0f);
-    number ("frame.glowStrength", t.frameGlowStrength, 0.0f, 1.0f);
+    colour ("group.fill", t.groupFill);
+    colour ("group.border", t.groupBorder);
 
-    colour ("knob.fill", t.knobFill);
-    colour ("knob.edge", t.knobEdge);
-    colour ("knob.pointer", t.knobPointer);
-    colour ("knob.shadow", t.knobShadow);
-    colour ("knob.ticks", t.knobTicks);
     {
         const auto v = tokens.getProperty ("knob.style", {});
         if (! v.isVoid())
         {
             const auto style = v.toString().trim().toLowerCase();
-            if (style == "round" || style == "rough" || style == "soft" || style == "grain")
+            if (style == "ring" || style == "round")
                 t.knobStyle = style;
             else
-                t.warnings.add ("knob.style: use \"round\", \"rough\", \"soft\" or \"grain\"");
+                t.warnings.add ("knob.style: use \"ring\" or \"round\"");
         }
     }
+    colour ("knob.fill", t.knobFill);
+    colour ("knob.ring", t.knobRing);
+    colour ("knob.pointer", t.knobPointer);
+    colour ("knob.ticks", t.knobTicks);
 
-    colour ("bar.fill", t.barFill);
-    colour ("bar.border", t.barBorder);
-    number ("bar.glow", t.barGlow, 0.0f, 1.0f);
+    colour ("button.fill", t.buttonFill);
+    colour ("button.border", t.buttonBorder);
+    colour ("button.text", t.buttonText);
+    colour ("button.activeFill", t.buttonActiveFill);
+    colour ("button.activeText", t.buttonActiveText);
 
     colour ("panel.fill", t.panelFill);
     colour ("panel.border", t.panelBorder);
     colour ("panel.text", t.panelText);
-    number ("panel.glow", t.panelGlow, 0.0f, 1.0f);
-
-    colour ("button.outline", t.buttonOutline);
-    colour ("button.activeFill", t.buttonActiveFill);
-    colour ("button.activeText", t.buttonActiveText);
-
-    colour ("logo.color", t.logoColor);
-    number ("logo.glow", t.logoGlow, 0.0f, 1.0f);
-
-    auto choice = [&] (const char* key, bool& target, const char* whenTrue, const char* whenFalse)
-    {
-        auto v = tokens.getProperty (key, {});
-        if (v.isVoid()) return;
-        const auto s = v.toString().trim().toLowerCase();
-        if (s == whenTrue) target = true;
-        else if (s == whenFalse) target = false;
-        else t.warnings.add (juce::String (key) + ": use \"" + whenFalse + "\" or \"" + whenTrue + "\"");
-    };
-    choice ("style.view", t.listView, "list", "designed");
-    choice ("style.font", t.systemFont, "system", "shantell");
-    number ("style.corner", t.corner, 0.0f, 12.0f);
-    colour ("style.topBar", t.topBarFill);
-
-    colour ("slider.track", t.sliderTrack);
-    colour ("slider.handle", t.sliderHandle);
-    colour ("slider.handleBorder", t.sliderHandleBorder);
-    colour ("slider.centre", t.sliderCentre);
-    colour ("value.text", t.valueText);
     colour ("select.fill", t.selectFill);
     colour ("select.text", t.selectText);
+
+    colour ("logo.color", t.logo);
+    number ("style.corner", t.corner, 0.0f, 12.0f);
 
     return t;
 }
 
 Theme Theme::builtInDefault()
 {
-    static const Theme cached = []
-    {
-        Theme t = fromJson (resourceText ("default_theme_json"), builtInLight());
-        t.paper = {};    // flat colours, no images
-        t.figure = {};
-        return t;
-    }();
-    return cached;
-}
-
-Theme Theme::builtInLight()
-{
-    static const Theme cached = []
-    {
-        Theme t = fromJson (resourceText ("light_theme_json"), Theme {});
-        t.paper = resourceImage ("light_paper_png");
-        t.figure = resourceImage ("light_figure_png");
-        return t;
-    }();
-    return cached;
-}
-
-Theme Theme::builtInDark()
-{
-    static const Theme cached = []
-    {
-        Theme t = fromJson (resourceText ("dark_theme_json"), builtInLight());
-        t.paper = resourceImage ("dark_paper_png");
-        t.figure = resourceImage ("dark_figure_png");
-        return t;
-    }();
-    return cached;
-}
-
-Theme Theme::builtInOriginal()
-{
-    static const Theme cached = []
-    {
-        Theme t = fromJson (resourceText ("original_theme_json"), builtInLight());
-        t.paper = {};    // no images: flat, like a DAW's own plugin view
-        t.figure = {};
-        return t;
-    }();
+    static const Theme cached = fromJson (resourceText ("default_theme_json"), Theme {});
     return cached;
 }
 
 Theme Theme::fromFolder (const juce::File& folder, const Theme& base)
 {
     auto json = folder.getChildFile ("theme.json");
-    Theme t = json.existsAsFile() ? fromJson (json.loadFileAsString(), base) : base;
+    Theme t = json.existsAsFile() && json.getSize() < 256 * 1024 ? fromJson (json.loadFileAsString(), base) : base;
 
     if (! json.existsAsFile())
-        t.warnings.add ("theme.json not found - using defaults.");
-
-    auto loadImage = [&] (const char* fileName) -> juce::Image
-    {
-        auto f = folder.getChildFile (fileName);
-        if (! f.existsAsFile())
-            return {};
-        auto img = juce::ImageFileFormat::loadFrom (f);
-        if (! img.isValid() || img.getWidth() > 4096 || img.getHeight() > 4096)
-        {
-            t.warnings.add (juce::String (fileName) + " could not be used (missing, broken or larger than 4096 px).");
-            return {};
-        }
-        return img;
-    };
-
-    t.paper = loadImage ("paper.png");
-    t.figure = loadImage ("figure.png");
+        t.warnings.add ("theme.json not found - using the Default values.");
 
     if (t.minimumContrast() < 4.5f)
         t.warnings.add ("Low contrast: some text may be hard to read (" + juce::String (t.minimumContrast(), 1) + ":1, aim for 4.5:1).");
@@ -262,37 +185,28 @@ Theme Theme::fromFolder (const juce::File& folder, const Theme& base)
 
 float Theme::minimumContrast() const
 {
-    const auto bg = paperColor;
+    const auto bg = background;
     const auto panel = over (panelFill, bg);
-    const auto bar = over (barFill, bg);
-    return juce::jmin (contrast (text, bg), contrast (panelText, panel), contrast (text, bar), contrast (groupTitle, bg));
+    return juce::jmin (contrast (text, bg), contrast (nameText, bg), contrast (panelText, panel), contrast (groupTitle, bg));
 }
 
 // ---------------------------------------------------------------------------------------------
 juce::String toString (ThemeId id)
 {
-    switch (id)
-    {
-        case ThemeId::dark: return "dark";
-        case ThemeId::user: return "user";
-        case ThemeId::original: return "original";
-        case ThemeId::light: return "light";
-        case ThemeId::def: break;
-    }
-    return "default";
+    return id == ThemeId::user ? "user" : "default";
 }
 
 ThemeId themeIdFromString (const juce::String& s)
 {
-    if (s == "dark") return ThemeId::dark;
-    if (s == "user") return ThemeId::user;
-    if (s == "original") return ThemeId::original;
-    if (s == "light") return ThemeId::light;
-    return ThemeId::def;
+    return s == "user" ? ThemeId::user : ThemeId::def;   // old "light", "dark", "original" -> Default
 }
+
+void setUserDataFolderForTesting (const juce::File& f) { testUserFolder() = f; }
 
 juce::File getUserDataFolder()
 {
+    if (testUserFolder() != juce::File())
+        return testUserFolder();
     return juce::File::getSpecialLocation (juce::File::userDocumentsDirectory)
         .getChildFile (kVendorName)
         .getChildFile (kPluginName);
@@ -303,47 +217,40 @@ juce::File getUserThemeFolder()
     return getUserDataFolder().getChildFile ("Themes").getChildFile ("User");
 }
 
-bool ensureUserThemeExists (ThemeId from)
+bool ensureUserThemeExists()
 {
     auto folder = getUserThemeFolder();
-    if (folder.getChildFile ("theme.json").existsAsFile())
-        return true;
-
-    if (! folder.createDirectory())
-        return false;
-
-    const bool dark = from == ThemeId::dark;
-    const bool original = from == ThemeId::original;
-    const bool def = from == ThemeId::def;
-    auto write = [&] (const char* resource, const char* fileName)
-    {
-        int size = 0;
-        if (auto* data = BinaryData::getNamedResource (resource, size))
-            return folder.getChildFile (fileName).replaceWithData (data, (size_t) size);
-        return false;
-    };
-
-    bool ok = write (def ? "default_theme_json" : original ? "original_theme_json" : dark ? "dark_theme_json" : "light_theme_json",
-                     "theme.json");
-    if (! original && ! def)
-    {
-        write (dark ? "dark_paper_png" : "light_paper_png", "paper.png");
-        write (dark ? "dark_figure_png" : "light_figure_png", "figure.png");
-    }
-    write ("theme_readme_md", "README.md");
-
-    // Give the copy its own name so it is recognisable.
     auto jsonFile = folder.getChildFile ("theme.json");
-    if (ok)
+    auto guide = folder.getChildFile (kThemeGuideFileName);
+
+    if (jsonFile.existsAsFile())
     {
-        auto parsed = juce::JSON::parse (jsonFile.loadFileAsString());
-        if (auto* obj = parsed.getDynamicObject())
+        const auto root = juce::JSON::parse (jsonFile.loadFileAsString());
+        // Only a theme that explicitly comes from Daylight_aw 1.0 (formatVersion 1) is moved aside;
+        // a broken or hand-made file stays where it is (it falls back safely to the Default values).
+        const bool fromVersion1 = root.isObject() && (int) root.getProperty ("formatVersion", 2) < 2;
+        if (! fromVersion1)
         {
-            obj->setProperty ("name", "User");
-            obj->setProperty ("author", "");
-            ok = jsonFile.replaceWithText (juce::JSON::toString (parsed));
+            if (! guide.existsAsFile())
+                guide.replaceWithText (resourceText ("theme_guide_txt"));
+            return true;
         }
+
+        auto old = folder.getNonexistentChildFile ("old_1.0", {}, true);   // "old_1.0", then "old_1.0 (2)" ...
+        if (! old.createDirectory())
+            return false;
+        for (auto& f : folder.findChildFiles (juce::File::findFiles, false))
+            if (! f.moveFileTo (old.getChildFile (f.getFileName())))
+                return false;
     }
-    return ok;
+    else if (! folder.createDirectory())
+    {
+        return false;
+    }
+
+    auto text = resourceText ("default_theme_json")
+                    .replace ("\"name\": \"Default\"", "\"name\": \"User\"")
+                    .replace ("\"author\": \"big_tyme_designs\"", "\"author\": \"\"");
+    return jsonFile.replaceWithText (text) && guide.replaceWithText (resourceText ("theme_guide_txt"));
 }
 } // namespace dlaw

@@ -1,8 +1,6 @@
 #include "Fonts.h"
 #include "BinaryData.h"
 
-#include <atomic>
-
 namespace dlaw::fonts
 {
 namespace
@@ -24,9 +22,12 @@ juce::Font make (const juce::Typeface::Ptr& tf, float height)
 
 struct Faces : public juce::DeletedAtShutdown
 {
-    juce::Typeface::Ptr medium { load ("shantell_medium_ttf") };
-    juce::Typeface::Ptr semiBold { load ("shantell_semibold_ttf") };
-    juce::Typeface::Ptr extraBold { load ("shantell_extrabold_ttf") };
+    juce::Typeface::Ptr inter400 { load ("inter_400_ttf") };
+    juce::Typeface::Ptr inter500 { load ("inter_500_ttf") };
+    juce::Typeface::Ptr inter600 { load ("inter_600_ttf") };
+    juce::Typeface::Ptr inter700 { load ("inter_700_ttf") };
+    juce::Typeface::Ptr jost300 { load ("jost_300_ttf") };
+    juce::Typeface::Ptr jost400 { load ("jost_400_ttf") };
 
     ~Faces() override { instance() = nullptr; }
     static Faces*& instance() { static Faces* p = nullptr; return p; }
@@ -39,29 +40,18 @@ Faces& faces()
         p = new Faces();
     return *p;
 }
-
-std::atomic<bool>& systemMode()
-{
-    static std::atomic<bool> on { false };
-    return on;
-}
-
-juce::Font systemFont (float h, bool bold)
-{
-   #if JUCE_WINDOWS
-    const juce::String family ("Segoe UI");
-   #else
-    const juce::String family (juce::Font::getDefaultSansSerifFontName());
-   #endif
-    return juce::Font (juce::FontOptions (family, h, bold ? juce::Font::bold : juce::Font::plain));
-}
 } // namespace
 
-void setUseSystemFont (bool on) { systemMode() = on; }
+// JUCE's font height is the full line height (ascent + descent); CSS sizes are the em size.
+// Inter's line height is ~1.21 em and Jost's ~1.45 em, so the em sizes from the design match.
+juce::Font regular (float h)     { return make (faces().inter400, h * 1.21f); }
+juce::Font medium (float h)      { return make (faces().inter500, h * 1.21f); }
+juce::Font semiBold (float h)    { return make (faces().inter600, h * 1.21f); }
+juce::Font bold (float h)        { return make (faces().inter700, h * 1.21f); }
+juce::Font logo (float h)        { return make (faces().jost300, h * 1.445f); }
+juce::Font logoRegular (float h) { return make (faces().jost400, h * 1.445f); }
 
-juce::Font medium (float h)    { return systemMode() ? systemFont (h, false) : make (faces().medium, h); }
-juce::Font semiBold (float h)  { return systemMode() ? systemFont (h, false) : make (faces().semiBold, h); }
-juce::Font extraBold (float h) { return systemMode() ? systemFont (h, true)  : make (faces().extraBold, h); }
+juce::Font caps (float h, float tracking) { return bold (h).withExtraKerningFactor (tracking); }
 
 float width (const juce::Font& f, const juce::String& text)
 {
