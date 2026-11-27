@@ -156,11 +156,9 @@ CI fails if the generated files are stale (`--check`).
 - pluginval at strictness 10 (Linux, Windows, macOS). auval strict (macOS).
 - ASan/UBSan build of the tests.
 
-## Stages
+## Versions
 
-- **A** (this build). Engine with all 21 V1 effects, selector, generic and 3 hand layouts, themes,
-  zoom, trims, A/B, about, CI.
-- **B** (done, v0.2). Hand-made layouts for all 21 V1 effects.
-- **C** (presets done, v0.2). User presets (`.dlpreset`, per effect: save / load / rename / trash). Next: polish from test feedback.
-- **D.** Release routine, upstream sync, signed/notarised Mac builds (optional, needs an Apple
-  developer account).
+- **1.0.0** (2026-11-07): 531 effects, Default/Light/Dark/Original/User themes, user layouts, manual.
+- **1.1.0** (2026-11-26): deep-space look (Inter/Jost), Default + User themes only, three window sizes,
+  collections, Latest versions only (families), New / Last 6 months, change effect, 533 effects.
+- Details per version: `CHANGELOG.md`. Possible later: MIDI learn, signed/notarised Mac builds.
